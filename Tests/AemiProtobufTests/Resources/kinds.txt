@@ -1,0 +1,35 @@
+a_int32: -5
+a_int64: -9000000000
+a_uint32: 4000000000
+a_uint64: 18000000000000000000
+a_sint32: -300
+a_sint64: -5000000000
+a_fixed32: 7
+a_fixed64: 8000000000
+a_sfixed32: -9
+a_sfixed64: -10000000000
+a_bool: true
+a_float: 1.5
+a_double: -2.25
+a_string: "héllo"
+a_bytes: "\000\377"
+color: BLUE
+leaf { name: "L" }
+maybe: 0
+maybe_leaf { }
+r_sint32: -1
+r_sint32: 2
+r_sint32: -3
+r_fixed64: 1
+r_fixed64: 2
+r_double: 0.5
+r_double: -0.5
+r_bool: true
+r_bool: false
+r_color: GREEN
+r_color: BLUE
+r_string: "a"
+r_string: ""
+r_bytes: "x"
+r_leaf { name: "one" }
+r_leaf { }

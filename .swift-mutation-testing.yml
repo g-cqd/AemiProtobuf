@@ -1,0 +1,12 @@
+# swift-mutation-testing: the wire core's tests against mutants of its source. `Scripts/quality.sh mutation` runs it.
+test-target: AemiProtobufCoreTests
+timeout: 120
+output: .build/mutation-report.json
+markdown-output: .build/mutation-summary.md
+# Only the shipped source is mutated; the tests, benchmarks and models are not.
+exclude:
+  - "/Tests/"
+  - "/Benchmarks/"
+  - "/Models/"
+  - "/Scripts/"
+operator-tier: default

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package p.q;
+
+message Deep {
+  string tag = 1;
+}
+
+message Inner {
+  string label = 1;
+  repeated int32 nums = 2;
+  Deep deep = 3;
+}
+
+message Outer {
+  message Nested {
+    string note = 1;
+  }
+  string name = 1;
+  Inner inner = 2;
+  repeated Inner items = 3;
+  Nested nested = 4;
+}

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package test.oneof;
+
+message Choice {
+  string label = 1;
+  oneof value {
+    int32 number = 2;
+    string text = 3;
+  }
+  optional int64 maybe = 4;
+}

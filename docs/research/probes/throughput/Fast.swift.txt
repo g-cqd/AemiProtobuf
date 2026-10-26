@@ -1,0 +1,155 @@
+import AemiKernel
+import AemiKernels
+
+struct FAddress: Equatable { var street = ""; var city = ""; var zip: Int32 = 0 }
+struct FUser: Equatable {
+    var id: Int64 = 0; var name = ""; var email = ""; var active = false; var score = 0.0
+    var tags: [String] = []; var samples: [Int32] = []; var address: FAddress? = nil
+    var delta: Int32 = 0; var stamp: UInt64 = 0
+}
+
+@inline(__always) func putTag(_ f: UInt64, _ w: UInt64, _ o: inout [UInt8]) { Varint.append(f << 3 | w, to: &o) }
+@inline(__always) func putStr(_ s: String, _ o: inout [UInt8]) {
+    var s = s
+    s.withUTF8 { b in Varint.append(UInt64(b.count), to: &o); o.append(contentsOf: b) }
+}
+func sizeAddr(_ a: FAddress) -> Int {
+    var n = 0
+    if !a.street.isEmpty { n += 1 + vsz(UInt64(a.street.utf8.count)) + a.street.utf8.count }
+    if !a.city.isEmpty { n += 1 + vsz(UInt64(a.city.utf8.count)) + a.city.utf8.count }
+    if a.zip != 0 { n += 1 + vsz(UInt64(bitPattern: Int64(a.zip))) }
+    return n
+}
+@inline(__always) func vsz(_ v: UInt64) -> Int { (63 - (v | 1).leadingZeroBitCount) / 7 + 1 }
+func encodeAddr(_ a: FAddress, _ o: inout [UInt8]) {
+    if !a.street.isEmpty { putTag(1, 2, &o); putStr(a.street, &o) }
+    if !a.city.isEmpty { putTag(2, 2, &o); putStr(a.city, &o) }
+    if a.zip != 0 { putTag(3, 0, &o); Varint.append(UInt64(bitPattern: Int64(a.zip)), to: &o) }
+}
+func encodeUser(_ u: FUser, _ o: inout [UInt8]) {
+    if u.id != 0 { putTag(1, 0, &o); Varint.append(UInt64(bitPattern: u.id), to: &o) }
+    if !u.name.isEmpty { putTag(2, 2, &o); putStr(u.name, &o) }
+    if !u.email.isEmpty { putTag(3, 2, &o); putStr(u.email, &o) }
+    if u.active { putTag(4, 0, &o); o.append(1) }
+    if u.score != 0 { putTag(5, 1, &o); withUnsafeBytes(of: u.score.bitPattern.littleEndian) { o.append(contentsOf: $0) } }
+    for t in u.tags { putTag(6, 2, &o); putStr(t, &o) }
+    if !u.samples.isEmpty {
+        putTag(7, 2, &o)
+        var n = 0
+        for s in u.samples { n += vsz(UInt64(bitPattern: Int64(s))) }
+        Varint.append(UInt64(n), to: &o)
+        for s in u.samples { Varint.append(UInt64(bitPattern: Int64(s)), to: &o) }
+    }
+    if let a = u.address { putTag(8, 2, &o); Varint.append(UInt64(sizeAddr(a)), to: &o); encodeAddr(a, &o) }
+    if u.delta != 0 { putTag(9, 0, &o); Varint.append(UInt64(UInt32(bitPattern: (u.delta << 1) ^ (u.delta >> 31))), to: &o) }
+    if u.stamp != 0 { putTag(10, 1, &o); withUnsafeBytes(of: u.stamp.littleEndian) { o.append(contentsOf: $0) } }
+}
+func sizeUser(_ u: FUser) -> Int {
+    var o: [UInt8] = []; o.reserveCapacity(128); encodeUser(u, &o); return o.count
+}
+func encodeUsers(_ us: [FUser]) -> [UInt8] {
+    var o: [UInt8] = []; o.reserveCapacity(us.count * 100)
+    var tmp: [UInt8] = []; tmp.reserveCapacity(256)
+    for u in us {
+        tmp.removeAll(keepingCapacity: true); encodeUser(u, &tmp)
+        putTag(1, 2, &o); Varint.append(UInt64(tmp.count), to: &o); o.append(contentsOf: tmp)
+    }
+    return o
+}
+
+struct Bad: Error {}
+nonisolated(unsafe) var strMode = 0  // 0 validate+make, 1 make no-validate, 2 validate only (empty string), 3 skip
+struct R {
+    let p: UnsafeRawBufferPointer; var i = 0; let end: Int
+    init(_ p: UnsafeRawBufferPointer, _ s: Int, _ e: Int) { self.p = p; i = s; end = e }
+    @inline(__always) mutating func varint() throws -> UInt64 {
+        var r: UInt64 = 0; var shift: UInt64 = 0
+        while i < end {
+            let b = p[i]; i += 1
+            if shift == 63, b & 0x7F > 1 { throw Bad() }
+            r |= UInt64(b & 0x7F) << shift
+            if b & 0x80 == 0 { return r }
+            shift += 7; if shift > 63 { throw Bad() }
+        }
+        throw Bad()
+    }
+    @inline(__always) mutating func str() throws -> String {
+        let n = Int(try varint()); guard n >= 0, n <= end - i else { throw Bad() }
+        let sub = UnsafeBufferPointer(start: p.baseAddress!.assumingMemoryBound(to: UInt8.self) + i, count: n)
+        i += n
+        switch strMode {
+        case 0: guard let s = String(validating: sub, as: UTF8.self) else { throw Bad() }; return s
+        case 1: return String(decoding: sub, as: UTF8.self)
+        case 4: guard AemiKernels.firstInvalidUTF8(base: sub.baseAddress ?? UnsafePointer(bitPattern: 1)!, count: n) == n else { throw Bad() }; return String(decoding: sub, as: UTF8.self)
+        case 2: guard validUTF8(sub) else { throw Bad() }; return ""
+        default: return ""
+        }
+    }
+    mutating func skip(_ w: UInt64) throws {
+        switch w {
+        case 0: _ = try varint()
+        case 1: guard end - i >= 8 else { throw Bad() }; i += 8
+        case 2: let n = Int(try varint()); guard n >= 0, n <= end - i else { throw Bad() }; i += n
+        case 5: guard end - i >= 4 else { throw Bad() }; i += 4
+        default: throw Bad()
+        }
+    }
+}
+func decodeAddr(_ p: UnsafeRawBufferPointer, _ s: Int, _ e: Int) throws -> FAddress {
+    var r = R(p, s, e); var a = FAddress()
+    while r.i < e {
+        let t = try r.varint(); let w = t & 7
+        switch (t >> 3, w) {
+        case (1, 2): a.street = try r.str()
+        case (2, 2): a.city = try r.str()
+        case (3, 0): a.zip = Int32(truncatingIfNeeded: try r.varint())
+        default: try r.skip(w)
+        }
+    }
+    return a
+}
+func decodeUser(_ p: UnsafeRawBufferPointer, _ s: Int, _ e: Int) throws -> FUser {
+    var r = R(p, s, e); var u = FUser()
+    while r.i < e {
+        let t = try r.varint(); let w = t & 7
+        switch (t >> 3, w) {
+        case (1, 0): u.id = Int64(bitPattern: try r.varint())
+        case (2, 2): u.name = try r.str()
+        case (3, 2): u.email = try r.str()
+        case (4, 0): u.active = try r.varint() != 0
+        case (5, 1): guard e - r.i >= 8 else { throw Bad() }; u.score = Double(bitPattern: UInt64(littleEndian: p.loadUnaligned(fromByteOffset: r.i, as: UInt64.self))); r.i += 8
+        case (6, 2): u.tags.append(try r.str())
+        case (7, 2):
+            let n = Int(try r.varint()); guard n >= 0, n <= e - r.i else { throw Bad() }
+            let stop = r.i + n
+            while r.i < stop { u.samples.append(Int32(truncatingIfNeeded: try r.varint())) }
+        case (7, 0): u.samples.append(Int32(truncatingIfNeeded: try r.varint()))
+        case (8, 2):
+            let n = Int(try r.varint()); guard n >= 0, n <= e - r.i else { throw Bad() }
+            u.address = try decodeAddr(p, r.i, r.i + n); r.i += n
+        case (9, 0): let z = UInt32(truncatingIfNeeded: try r.varint()); u.delta = Int32(bitPattern: z >> 1) ^ -Int32(bitPattern: z & 1)
+        case (10, 1): guard e - r.i >= 8 else { throw Bad() }; u.stamp = UInt64(littleEndian: p.loadUnaligned(fromByteOffset: r.i, as: UInt64.self)); r.i += 8
+        default: try r.skip(w)
+        }
+    }
+    return u
+}
+func decodeUsers(_ bytes: [UInt8]) throws -> [FUser] {
+    try bytes.withUnsafeBytes { p in
+        var r = R(p, 0, p.count); var out: [FUser] = []
+        while r.i < p.count {
+            let t = try r.varint()
+            if t == (1 << 3 | 2) {
+                let n = Int(try r.varint()); guard n >= 0, n <= p.count - r.i else { throw Bad() }
+                out.append(try decodeUser(p, r.i, r.i + n)); r.i += n
+            } else { try r.skip(t & 7) }
+        }
+        return out
+    }
+}
+
+func validUTF8(_ b: UnsafeBufferPointer<UInt8>) -> Bool {
+    var it = b.makeIterator(); var d = UTF8(); var dec = UnicodeScalar.self
+    var p = UTF8()
+    while true { switch p.decode(&it) { case .scalarValue: continue; case .emptyInput: return true; case .error: return false } }
+}

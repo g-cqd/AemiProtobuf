@@ -1,0 +1,17 @@
+_site/
+.build/
+.DS_Store
+.swiftpm/
+*.profdata
+*.profraw
+*.xcodeproj
+*.xcworkspace
+/.benchmarkBaselines/
+DerivedData/
+Package.resolved
+target/
+.lake/
+Benchmarks/Comparison/results/
+Benchmarks/Comparison/.build/
+.benchmarkBaselines/
+.swift-mutation-testing-cache/

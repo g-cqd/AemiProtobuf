@@ -1,0 +1,5 @@
+name: "o"
+inner { label: "in" nums: 1 nums: 300 deep { tag: "t" } }
+items { label: "a" }
+items { label: "b" nums: -1 deep { tag: "u" } }
+nested { note: "n" }

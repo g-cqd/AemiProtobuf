@@ -1,0 +1,134 @@
+{
+  "createdAt": "2026-10-25T14:45:13Z",
+  "formatVersion": 1,
+  "scope": {
+    "excludePatterns": [
+      "/Benchmarks/",
+      "/Models/",
+      "/Scripts/",
+      "/Tests/"
+    ],
+    "operators": [
+      "ArithmeticOperatorReplacement",
+      "BooleanLiteralReplacement",
+      "LogicalOperatorReplacement",
+      "NegateConditional",
+      "RelationalOperatorReplacement",
+      "RemoveSideEffects",
+      "SwapTernary"
+    ],
+    "sourcesPath": "Sources/AemiProtobufCore"
+  },
+  "score": 98.94736842105263,
+  "toolVersion": "1.6.3",
+  "undetected": [
+    {
+      "file": "Sources/AemiProtobufCore/WireWriter.swift",
+      "fingerprint": "22eb813c48bc71e36104e0a633df5945",
+      "line": 19,
+      "operator": "RemoveSideEffects",
+      "original": "bytes.reserveCapacity(capacity)",
+      "replacement": "",
+      "status": "survived"
+    },
+    {
+      "file": "Sources/AemiProtobufCore/WireReader+Payloads.swift",
+      "fingerprint": "bc41fe4c85fd0dca5b45aa7c3025e4bf",
+      "line": 13,
+      "operator": "LogicalOperatorReplacement",
+      "original": "&&",
+      "replacement": "||",
+      "status": "survived"
+    },
+    {
+      "file": "Sources/AemiProtobufCore/WireReader+Skip.swift",
+      "fingerprint": "74d36b9a4b3fd0abacf4d7291402456d",
+      "line": 30,
+      "operator": "BooleanLiteralReplacement",
+      "original": "true",
+      "replacement": "false",
+      "status": "survived"
+    },
+    {
+      "file": "Sources/AemiProtobufCore/WireReader.swift",
+      "fingerprint": "ec45e647bdc070d1d9f34a52810b72ad",
+      "line": 87,
+      "operator": "LogicalOperatorReplacement",
+      "original": "&&",
+      "replacement": "||",
+      "status": "survived"
+    },
+    {
+      "file": "Sources/AemiProtobufCore/FrameEncoder.swift",
+      "fingerprint": "928b8424edcc210e43988f005f6f2aeb",
+      "line": 6,
+      "operator": "RelationalOperatorReplacement",
+      "original": "<=",
+      "replacement": "<",
+      "status": "survived"
+    },
+    {
+      "file": "Sources/AemiProtobufCore/FrameEncoder.swift",
+      "fingerprint": "4ae65207eecb585273aa7e082dffaf6f",
+      "line": 9,
+      "operator": "RemoveSideEffects",
+      "original": "out.reserveCapacity(5 + payload.count)",
+      "replacement": "",
+      "status": "survived"
+    },
+    {
+      "file": "Sources/AemiProtobufCore/FrameEncoder.swift",
+      "fingerprint": "a2d23375c45c1a79568c1d6b8b95d17b",
+      "line": 9,
+      "operator": "ArithmeticOperatorReplacement",
+      "original": "+",
+      "replacement": "-",
+      "status": "survived"
+    },
+    {
+      "file": "Sources/AemiProtobufCore/FrameEncoder.swift",
+      "fingerprint": "0e2dc753b1e323371fb47ad56ae707bf",
+      "line": 18,
+      "operator": "ArithmeticOperatorReplacement",
+      "original": "+",
+      "replacement": "-",
+      "status": "survived"
+    },
+    {
+      "file": "Sources/AemiProtobufCore/WireReader+PackedVarints.swift",
+      "fingerprint": "716148a0f732e571ed72f97d3fadb60a",
+      "line": 41,
+      "operator": "RemoveSideEffects",
+      "original": "out.reserveCapacity(scoped.remainingVarintCount)",
+      "replacement": "",
+      "status": "survived"
+    },
+    {
+      "file": "Sources/AemiProtobufCore/WireReader+Payloads.swift",
+      "fingerprint": "1f2a6c0d83209fb35e4e0cc852f022a3",
+      "line": 46,
+      "operator": "RelationalOperatorReplacement",
+      "original": ">=",
+      "replacement": ">",
+      "status": "survived"
+    },
+    {
+      "file": "Sources/AemiProtobufCore/WireWriter+PackedVarints.swift",
+      "fingerprint": "580f213dd0a71c5d1453110a72e8d7b4",
+      "line": 37,
+      "operator": "RemoveSideEffects",
+      "original": "reserve(additional: size + 11)",
+      "replacement": "",
+      "status": "survived"
+    },
+    {
+      "file": "Sources/AemiProtobufCore/WireWriter+PackedVarints.swift",
+      "fingerprint": "8f29b64b0ef21d30486433972e89fac2",
+      "line": 37,
+      "operator": "ArithmeticOperatorReplacement",
+      "original": "+",
+      "replacement": "-",
+      "status": "survived"
+    }
+  ]
+}

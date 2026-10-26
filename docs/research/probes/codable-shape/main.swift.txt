@@ -1,0 +1,63 @@
+import Foundation
+
+final class Log { var lines: [String] = [] }
+struct E: Encoder {
+    let log: Log; var codingPath: [CodingKey] = []; var userInfo: [CodingUserInfoKey: Any] = [:]
+    func container<K: CodingKey>(keyedBy: K.Type) -> KeyedEncodingContainer<K> { log.lines.append("keyed<\(K.self)>"); return .init(KC<K>(log: log)) }
+    func unkeyedContainer() -> UnkeyedEncodingContainer { log.lines.append("unkeyed"); return UC(log: log) }
+    func singleValueContainer() -> SingleValueEncodingContainer { log.lines.append("single"); return SC(log: log) }
+}
+struct KC<K: CodingKey>: KeyedEncodingContainerProtocol {
+    let log: Log; var codingPath: [CodingKey] = []
+    func note(_ t: Any.Type, _ k: K) { log.lines.append("  \(t) key=\(k.stringValue) int=\(k.intValue.map(String.init) ?? "nil")") }
+    mutating func encodeNil(forKey key: K) throws { note(Never.self, key) }
+    mutating func encode(_ v: Bool, forKey key: K) throws { note(Bool.self, key) }
+    mutating func encode(_ v: String, forKey key: K) throws { note(String.self, key) }
+    mutating func encode(_ v: Double, forKey key: K) throws { note(Double.self, key) }
+    mutating func encode(_ v: Float, forKey key: K) throws { note(Float.self, key) }
+    mutating func encode(_ v: Int, forKey key: K) throws { note(Int.self, key) }
+    mutating func encode(_ v: Int8, forKey key: K) throws { note(Int8.self, key) }
+    mutating func encode(_ v: Int16, forKey key: K) throws { note(Int16.self, key) }
+    mutating func encode(_ v: Int32, forKey key: K) throws { note(Int32.self, key) }
+    mutating func encode(_ v: Int64, forKey key: K) throws { note(Int64.self, key) }
+    mutating func encode(_ v: UInt, forKey key: K) throws { note(UInt.self, key) }
+    mutating func encode(_ v: UInt8, forKey key: K) throws { note(UInt8.self, key) }
+    mutating func encode(_ v: UInt16, forKey key: K) throws { note(UInt16.self, key) }
+    mutating func encode(_ v: UInt32, forKey key: K) throws { note(UInt32.self, key) }
+    mutating func encode(_ v: UInt64, forKey key: K) throws { note(UInt64.self, key) }
+    mutating func encode<T: Encodable>(_ v: T, forKey key: K) throws {
+        note(T.self, key); try v.encode(to: E(log: log))
+    }
+    mutating func encodeIfPresent<T: Encodable>(_ v: T?, forKey key: K) throws { log.lines.append("  encodeIfPresent<\(T.self)> key=\(key.stringValue) nil=\(v == nil)"); if let v { try v.encode(to: E(log: log)) } }
+    mutating func nestedContainer<N: CodingKey>(keyedBy: N.Type, forKey key: K) -> KeyedEncodingContainer<N> { .init(KC<N>(log: log)) }
+    mutating func nestedUnkeyedContainer(forKey key: K) -> UnkeyedEncodingContainer { UC(log: log) }
+    mutating func superEncoder() -> Encoder { E(log: log) }
+    mutating func superEncoder(forKey key: K) -> Encoder { E(log: log) }
+}
+struct UC: UnkeyedEncodingContainer {
+    let log: Log; var codingPath: [CodingKey] = []; var count = 0
+    mutating func encodeNil() throws { log.lines.append("    u.nil") }
+    mutating func encode<T: Encodable>(_ v: T) throws { log.lines.append("    u.encode<\(T.self)>"); try v.encode(to: E(log: log)) }
+    mutating func nestedContainer<N: CodingKey>(keyedBy: N.Type) -> KeyedEncodingContainer<N> { .init(KC<N>(log: log)) }
+    mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer { UC(log: log) }
+    mutating func superEncoder() -> Encoder { E(log: log) }
+}
+struct SC: SingleValueEncodingContainer {
+    let log: Log; var codingPath: [CodingKey] = []
+    mutating func encodeNil() throws { log.lines.append("    s.nil") }
+    mutating func encode<T: Encodable>(_ v: T) throws { log.lines.append("    s.encode<\(T.self)>") ; if !(v is any FixedWidthInteger) && !(v is String) && !(v is Bool) { try v.encode(to: E(log: log)) } }
+}
+func run<T: Encodable>(_ title: String, _ v: T) {
+    let l = Log(); try? v.encode(to: E(log: l)); print("== \(title)"); l.lines.forEach { print($0) }
+}
+struct Plain: Codable { var id: Int64; var delta: Int32; var name: String; var opt: Int32? ; var blob: Data; var raw: [UInt8]; var m: [String: Int32]; var im: [Int32: String] }
+struct Keyed: Codable { var id: Int64; var name: String
+  enum CodingKeys: Int, CodingKey { case id = 1, name = 2 } }
+enum Color: Int32, Codable { case red = 0, green = 1 }
+enum OneOf: Codable { case a(Int32), b(String) }
+struct WithEnum: Codable { var c: Color; var o: OneOf; var tags: [String] }
+run("synthesized keys (no CodingKeys)", Plain(id: 1, delta: 2, name: "n", opt: nil, blob: Data([1]), raw: [1], m: ["k": 1], im: [3: "x"]))
+run("Int-raw CodingKeys", Keyed(id: 1, name: "n"))
+run("enum + oneof-like + repeated", WithEnum(c: .green, o: .b("s"), tags: ["a", "b"]))
+// Decoder-side: what does decode vs decodeIfPresent look like? Synthesized init calls:
+print("== member order is declaration order; Mirror-free field count not available to encoder")

@@ -1,0 +1,29 @@
+# Every external tool the quality gates run, pinned. Sourced by Scripts/tools.sh; nothing else reads versions.
+#
+# Release archives are pinned by version and SHA-256 per platform and checked before anything runs. Baseline fingerprints move
+# between tool versions, so an unpinned tool would turn a gate red with no change of ours. To upgrade: change the version and the
+# hashes together, run `Scripts/quality.sh analyzers`, and read the findings diff before committing.
+
+# github.com/g-cqd/<tool>/releases
+DEADWOOD_VERSION=0.11.1
+DEADWOOD_SHA_macos_arm64=a1d994ed94fa90d099674d4ece67c4e8fb73feb3f7b1bb2729efd753e1e0fdff
+DEADWOOD_SHA_linux_x86_64=426603937db22edfb3a751a603870734995bafc77dea7476cdd4e838d73473f3
+DOLLY_VERSION=0.11.0
+DOLLY_SHA_macos_arm64=5e20c29c15e3c40a9d25fe873205230933cfe7bf97e7d229acb0ee0b63336701
+DOLLY_SHA_linux_x86_64=e80df75641f93c52cadf5e623cde96512e550493ea6d28548d9b6006d06f6a34
+ARCLEAK_VERSION=0.12.0
+ARCLEAK_SHA_macos_arm64=50c583159eb06ce26bc556473bd632b572da48f3da245f1c30c73bf5b9e88ae1
+ARCLEAK_SHA_linux_x86_64=eb44da159e99ed744a6816eb147fbd038d0fc4f38de6e6eef7d3cec4ab57e64e
+
+# fcheck and modeler publish no release archive yet, so they are built from a pinned commit (about eight minutes, then cached).
+# The commit hash is the pin: git verifies the content it names.
+FCHECK_COMMIT=f6649874e73a2b0d315d11d7044c624615f0b8cd
+MODELER_COMMIT=2c699c7036aa58491e69b738bd70f02dff74192c
+
+# github.com/tlaplus/tlaplus/releases: the TLC model checker.
+TLA2TOOLS_VERSION=1.7.4
+TLA2TOOLS_SHA=936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88
+
+# github.com/ericodx/swift-mutation-testing/releases: macOS only.
+MUTATION_VERSION=1.6.3
+MUTATION_SHA_macos_arm64=db68be192958bdb48ebac4b5cdf90c26db78fbdfba769d7908a0a3d36003ee3a

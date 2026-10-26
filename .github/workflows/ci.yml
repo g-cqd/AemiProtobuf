@@ -1,0 +1,77 @@
+# Standalone: every job calls Scripts/quality.sh, the same entry point the git hooks use, so a gate cannot differ between a developer
+# machine and CI. No reusable workflow from another repository.
+#
+# NOT YET RUN: written locally, and the repository has not been pushed. The first push will show what the runners lack; read a red
+# first run before changing anything. Known gaps are listed in docs/roadmap/0013.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["README.md", "docs/**", ".gitignore", ".githooks/**"]
+  pull_request:
+    paths-ignore: ["README.md", "docs/**", ".gitignore", ".githooks/**"]
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"   # Mondays: the mutation job
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  static:
+    name: Format, lint, analyzers
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - run: brew install swiftlint
+      - name: Cache tools
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/aemiprotobuf/tools
+          key: tools-${{ runner.os }}-${{ hashFiles('Scripts/tools.lock') }}
+      - run: Scripts/quality.sh fast
+
+  test:
+    name: Tests (debug and release)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - run: Scripts/quality.sh test
+
+  models:
+    name: Lean, TLA+ (TLC), modeler
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Lean
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Cache tools
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/aemiprotobuf/tools
+          key: tools-${{ runner.os }}-${{ hashFiles('Scripts/tools.lock') }}
+      - run: Scripts/tools.sh install tla2tools modeler
+      - run: Scripts/model.sh
+
+  bench:
+    name: Allocation thresholds
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - run: Scripts/quality.sh bench
+
+  mutation:
+    name: Mutation testing
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - run: Scripts/quality.sh mutation

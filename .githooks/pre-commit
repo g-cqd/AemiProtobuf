@@ -1,0 +1,7 @@
+#!/bin/sh
+# Enable once per clone:  git config core.hooksPath .githooks
+# The fast gates: formatting, SwiftLint metrics, and the static analyzers (about ten seconds). Fix formatting with
+#   swift-format format -i -r Sources Tests Benchmarks Package.swift
+set -e
+cd "$(git rev-parse --show-toplevel)"
+exec Scripts/quality.sh fast

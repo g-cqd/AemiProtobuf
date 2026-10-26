@@ -1,0 +1,21 @@
+#!/bin/sh
+# Enable once per clone:  git config core.hooksPath .githooks
+# Everything except mutation testing: the fast gates, the suite in debug and release, the models, the allocation thresholds.
+# A push that changes only documents, workflows or hooks cannot change what the suite tests, so it runs the fast gates only.
+set -e
+cd "$(git rev-parse --show-toplevel)"
+zero=0000000000000000000000000000000000000000
+code_changed=0
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+    [ "$local_sha" = "$zero" ] && continue
+    if [ "$remote_sha" = "$zero" ]; then base=$(git merge-base "$local_sha" origin/main 2>/dev/null || echo ""); else base=$remote_sha; fi
+    if [ -z "$base" ]; then code_changed=1; continue; fi
+    if git diff --name-only "$base" "$local_sha" | grep -vE '^(\.github/|\.githooks/|docs/|README\.md$|AGENTS\.md$|LICENSE$)' | grep -q .; then
+        code_changed=1
+    fi
+done
+if [ "$code_changed" -eq 0 ]; then
+    echo "pre-push: only documents, workflows or hooks changed; running the fast gates"
+    exec Scripts/quality.sh fast
+fi
+exec Scripts/quality.sh all

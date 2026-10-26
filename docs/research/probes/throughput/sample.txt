@@ -1,0 +1,1 @@
+id: 150 name: "ann" email: "a@b.c" active: true score: 1.5 tags: "x" tags: "y" samples: 1 samples: 300 samples: -1 address { street: "s" city: "c" zip: 7 } delta: -3 stamp: 9

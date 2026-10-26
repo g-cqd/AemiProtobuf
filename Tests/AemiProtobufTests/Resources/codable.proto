@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+enum Level {
+  LOW = 0;
+  HIGH = 1;
+}
+
+message Inner {
+  string label = 1;
+  int32 count = 2;
+}
+
+message Outer {
+  int64 id = 1;
+  optional string name = 2;
+  double ratio = 3;
+  repeated string tags = 4;
+  repeated int32 samples = 5;
+  Inner inner = 6;
+  repeated Inner items = 7;
+  bytes blob = 8;
+  Level level = 9;
+  optional int32 maybe_zero = 10;
+  bool ok = 11;
+  uint32 small = 12;
+}

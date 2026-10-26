@@ -1,0 +1,52 @@
+import SwiftProtobuf
+import Foundation
+
+func makeFast(_ n: Int) -> [FUser] {
+    (0..<n).map { i in
+        FUser(id: Int64(i) * 7919 + 1, name: "user-\(i)-name", email: "user\(i)@example.com", active: i % 2 == 0,
+              score: Double(i) * 0.25 + 0.5, tags: ["alpha", "beta\(i % 10)", "gamma"], samples: (0..<8).map { Int32($0 * 37 - 5 + i) },
+              address: FAddress(street: "\(i) Main Street", city: "Springfield", zip: Int32(10000 + i % 9000)),
+              delta: Int32(i % 50) - 25, stamp: UInt64(1_700_000_000 + i))
+    }
+}
+func toPB(_ f: FUser) -> User {
+    var u = User(); u.id = f.id; u.name = f.name; u.email = f.email; u.active = f.active; u.score = f.score
+    u.tags = f.tags; u.samples = f.samples; u.delta = f.delta; u.stamp = f.stamp
+    if let a = f.address { var x = Address(); x.street = a.street; x.city = a.city; x.zip = a.zip; u.address = x }
+    return u
+}
+func median(_ runs: Int, _ f: () throws -> Void) rethrows -> Double {
+    var t: [Double] = []
+    for _ in 0..<runs {
+        let c = ContinuousClock(); let d = try c.measure { try f() }
+        t.append(Double(d.components.attoseconds) / 1e18 + Double(d.components.seconds))
+    }
+    t.sort(); return t[t.count / 2]
+}
+let n = 1000
+let fast = makeFast(n)
+var pbUsers = Users(); pbUsers.users = fast.map(toPB)
+let pbBytes: [UInt8] = try pbUsers.serializedBytes()
+let fastBytes = encodeUsers(fast)
+print("bytes: pb=\(pbBytes.count) fast=\(fastBytes.count) equal=\(pbBytes == fastBytes)")
+let back = try decodeUsers(pbBytes)
+print("fast decode roundtrip equal:", back == fast)
+let pbBack = try Users(serializedBytes: fastBytes)
+print("pb decodes fast output equal:", pbBack == pbUsers)
+let mb = Double(pbBytes.count) / 1e6
+let reps = 200
+var sink = 0
+let pbEnc = median(15) { for _ in 0..<reps { let b: [UInt8] = try! pbUsers.serializedBytes(); sink &+= b.count } } / Double(reps)
+let faEnc = median(15) { for _ in 0..<reps { sink &+= encodeUsers(fast).count } } / Double(reps)
+let pbDec = median(15) { for _ in 0..<reps { sink &+= try! Users(serializedBytes: pbBytes).users.count } } / Double(reps)
+let faDec = median(15) { for _ in 0..<reps { sink &+= try! decodeUsers(pbBytes).count } } / Double(reps)
+func row(_ l: String, _ s: Double) { print(l.padding(toLength: 22, withPad: " ", startingAt: 0), String(format: "%8.1f us  %7.0f MB/s", s * 1e6, mb / s)) }
+row("swift-protobuf encode", pbEnc); row("hand fast encode", faEnc)
+row("swift-protobuf decode", pbDec); row("hand fast decode", faDec)
+print(String(format: "encode x%.1f decode x%.1f", pbEnc / faEnc, pbDec / faDec), sink > 0)
+
+for (m, l) in [(0, "validate+make"), (1, "make, no validate"), (2, "validate only"), (3, "no strings"), (4, "kernel validate+make")] {
+    strMode = m
+    let s = median(15) { for _ in 0..<reps { sink &+= try! decodeUsers(pbBytes).count } } / Double(reps)
+    row("hand decode: " + l, s)
+}

@@ -1,0 +1,5 @@
+name = "AemiProtobufModels"
+defaultTargets = ["AemiProtobufModels"]
+
+[[lean_lib]]
+name = "AemiProtobufModels"
