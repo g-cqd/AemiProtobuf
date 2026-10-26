@@ -1,0 +1,40 @@
+// The schema the comparison's protobuf side implements by hand. `protoc --decode=Users` against the bytes it writes is the
+// independent check that those bytes are a valid message of this schema (Scripts/compare.sh does it).
+syntax = "proto3";
+
+message Profile {
+  string bio = 1;
+  optional string company = 2;
+  int64 public_repos = 3;
+  optional string location = 4;
+}
+
+message User {
+  int64 id = 1;
+  string login = 2;
+  optional string name = 3;
+  optional string email = 4;
+  int64 followers = 5;
+  int64 following = 6;
+  bool is_admin = 7;
+  double score = 8;
+  repeated string tags = 9;
+  Profile profile = 10;
+}
+
+message Users {
+  repeated User users = 1;
+}
+
+// The number and string workloads.
+message Doubles {
+  repeated double values = 1;
+}
+
+message Int64s {
+  repeated int64 values = 1;
+}
+
+message Strings {
+  repeated string values = 1;
+}
