@@ -57,7 +57,7 @@ struct ProtoFieldScalar {
             case .double: "try r.readDouble()"
             case .string: "try r.readString()"
             case .bytes: swiftType == "Data" ? "Data(try r.readBytes())" : "try r.readBytes()"
-            case .enumeration: "\(swiftType)(rawValue: try r.readInt32())"
+            case .enumeration: "ProtoEnumeration.value(\(swiftType).self, try r.readInt32())"
             case .message:
                 "try r.readMessage { r throws(WireError) in try \(swiftType).__aepbDecode(from: &r) }"
         }
