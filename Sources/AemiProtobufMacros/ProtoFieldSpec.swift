@@ -10,4 +10,9 @@ struct ProtoFieldSpec {
     let swiftType: String
     /// A map's key kind and Swift type.
     var key: (kind: ProtoKind, swiftType: String)? = nil
+    /// A proto2 `required` field: optional in Swift, and the coders refuse a message without it.
+    var required = false
+
+    /// The name without backticks, as a path to a missing required field spells it.
+    var plainName: String { name.filter { $0 != "`" } }
 }

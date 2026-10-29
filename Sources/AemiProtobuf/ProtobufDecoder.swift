@@ -46,9 +46,12 @@ public struct ProtobufDecoder: Sendable {
 
     private func decodeFast<F: AemiProtoFastDecodable>(_ type: F.Type, _ bytes: [UInt8]) throws -> F {
         do throws(WireError) {
-            return try WireReader.withReader(over: bytes, limits: limits) { r throws(WireError) in
+            let decoded = try WireReader.withReader(over: bytes, limits: limits) { r throws(WireError) in
                 try F.__aepbDecode(from: &r)
             }
+            // After the whole message: a required field may arrive in a later occurrence of its message.
+            if let path = decoded.__aepbMissingRequired() { throw WireError.missingRequired(path) }
+            return decoded
         } catch {
             throw ProtobufDecodingError.underlying(error)
         }

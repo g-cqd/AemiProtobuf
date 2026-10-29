@@ -50,8 +50,12 @@ enum ProtoKind: String, CaseIterable {
         switch self {
             case .fixed32, .sfixed32, .float: ".fixed32"
             case .fixed64, .sfixed64, .double: ".fixed64"
-            case .string, .bytes, .message, .group: ".lengthDelimited"
+            case .string, .bytes, .message: ".lengthDelimited"
+            case .group: ".startGroup"
             default: ".varint"
         }
     }
+
+    /// A message or a group: a nested `@ProtoMessage`.
+    var isMessage: Bool { self == .message || self == .group }
 }

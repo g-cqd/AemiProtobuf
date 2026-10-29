@@ -7,8 +7,8 @@ import AemiKernel
 public struct WireWriter {
     /// The bytes written so far.
     public internal(set) var bytes: [UInt8]
-    private let limits: WireLimits
-    private var depth = 0
+    let limits: WireLimits
+    var depth = 0
 
     /// - Parameters:
     ///   - limits: nesting and message-size bounds for ``appendMessage(field:_:)``.

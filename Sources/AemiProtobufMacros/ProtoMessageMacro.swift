@@ -52,6 +52,7 @@ struct ProtoMessageMacro: ExtensionMacro, MemberMacro {
             ProtoMessageCodegen.merge(fields, keepsUnknown: keepsUnknown)
         ]
         .map { "\(access)\($0)" }
+        if let check = ProtoMessageCodegen.missingRequired(fields) { members.append(access + check) }
         if !declaresCodingKeys(decl) { members.append(ProtoMessageCodegen.codingKeys(fields)) }
         return [
             try ProtoExtension.make(

@@ -1,7 +1,7 @@
 public import AemiProtobufCore
 
 /// A type that can directly decode its fields from a `WireReader` without `Codable` container overhead.
-public protocol AemiProtoFastDecodable {
+public protocol AemiProtoFastDecodable: AemiProtoRequiredFields {
     static func __aepbDecode(from reader: inout WireReader) throws(WireError) -> Self
 
     /// Merges the message in `reader` into `self`, as the encoding guide merges a message given more than once: a scalar

@@ -72,41 +72,19 @@ enum ProtoFieldParser {
             return nil
         }
         guard let (shape, swiftType) = shapeAndType(of: type, name, binding, in: context) else { return nil }
-        var kind = arguments.kind ?? ProtoKind.inferred(for: swiftType)
-        if kind == .group { kind = .message }
+        let kind = arguments.kind ?? ProtoKind.inferred(for: swiftType)
         guard fits(kind, swiftType, name, binding, in: context) else { return nil }
-        return ProtoFieldSpec(name: name, number: arguments.number, kind: kind, shape: shape, swiftType: swiftType)
-    }
-
-    /// The kinds a map key may have: every integer, `bool` and `string`.
-    static let mapKeyKinds: Set<ProtoKind> = [
-        .int32, .int64, .uint32, .uint64, .sint32, .sint64, .fixed32, .fixed64, .sfixed32, .sfixed64, .bool, .string
-    ]
-
-    private static func mapField(
-        _ dictionary: DictionaryTypeSyntax, _ name: String, _ arguments: Arguments, _ node: some SyntaxProtocol,
-        in context: some MacroExpansionContext
-    ) -> ProtoFieldSpec? {
-        guard arguments.kind == nil else {
-            error(node, "'\(name)' is a map: give its kinds as key: and value:", in: context)
+        if kind == .group, shape == .single {
+            error(binding, "'\(name)': a group is optional or repeated, as proto2 declares it", in: context)
             return nil
         }
-        guard let keyType = scalarName(dictionary.key, name, node, in: context),
-            let valueType = scalarName(dictionary.value, name, node, in: context)
-        else { return nil }
-        let keyKind = arguments.key ?? ProtoKind.inferred(for: keyType)
-        guard mapKeyKinds.contains(keyKind) else {
-            error(node, "'\(name)': a map key cannot be a protobuf \(keyKind.rawValue)", in: context)
+        if arguments.required, shape != .optional {
+            error(binding, "'\(name)': a required field is Optional in Swift, so its absence can be seen", in: context)
             return nil
         }
-        let valueKind = arguments.value ?? ProtoKind.inferred(for: valueType)
-        guard fits(keyKind, keyType, name, node, in: context), fits(valueKind, valueType, name, node, in: context)
-        else {
-            return nil
-        }
-        return ProtoFieldSpec(
-            name: name, number: arguments.number, kind: valueKind, shape: .map, swiftType: valueType,
-            key: (keyKind, keyType))
+        var spec = ProtoFieldSpec(name: name, number: arguments.number, kind: kind, shape: shape, swiftType: swiftType)
+        spec.required = arguments.required
+        return spec
     }
 
     static func fits(

@@ -2,7 +2,7 @@ public import AemiProtobufCore
 
 /// A `oneof`: an enumeration with one associated value per member, each case marked `@ProtoField(number)`. `@ProtoOneof` writes
 /// the conformance; the message holding it marks the property `@ProtoOneof var kind: Kind? = nil` (roadmap 0026).
-public protocol AemiProtoOneof {
+public protocol AemiProtoOneof: AemiProtoRequiredFields {
     /// Writes the member that is set, even at its default: a member has presence.
     func __aepbEncode(into writer: inout WireWriter) throws(WireError)
 

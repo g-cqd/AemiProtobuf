@@ -57,8 +57,7 @@ enum ProtoMessageCodegen {
                 }
                 return "if \(scalar.isSet("self.\(f.name)")) {\n\(record(f, scalar, "self.\(f.name)"))\n}"
             case .optional:
-                let inner = f.kind == .message ? message(f.number, "__v") : record(f, scalar, "__v")
-                return "if let __v = self.\(f.name) {\n\(inner)\n}"
+                return "if let __v = self.\(f.name) {\n\(whole(f, scalar, "__v"))\n}"
             case .repeated:
                 if scalar.isBulkCopyable {
                     return "w.appendPackedLittleEndian(field: \(f.number), self.\(f.name))"
@@ -76,14 +75,26 @@ enum ProtoMessageCodegen {
                         }
                         """
                 }
-                let element = f.kind == .message ? message(f.number, "__e") : record(f, scalar, "__e")
-                return "for __e in self.\(f.name) {\n\(element)\n}"
+                return "for __e in self.\(f.name) {\n\(whole(f, scalar, "__e"))\n}"
+        }
+    }
+
+    /// One whole field of `value`: a group between its tags, a message with its length, or a tagged scalar.
+    private static func whole(_ f: ProtoFieldSpec, _ scalar: ProtoFieldScalar, _ value: String) -> String {
+        switch f.kind {
+            case .group: group(f.number, value)
+            case .message: message(f.number, value)
+            default: record(f, scalar, value)
         }
     }
 
     /// A whole tagged field of a non-message value.
     private static func record(_ f: ProtoFieldSpec, _ scalar: ProtoFieldScalar, _ value: String) -> String {
         "w.appendTag(\(f.number), \(f.kind.wireType))\n\(scalar.write(value))"
+    }
+
+    private static func group(_ number: Int, _ value: String) -> String {
+        "try w.appendGroup(field: \(number)) { w throws(WireError) in try \(value).__aepbEncode(into: &w) }"
     }
 
     private static func message(_ number: Int, _ value: String) -> String {
@@ -107,13 +118,14 @@ enum ProtoMessageCodegen {
                 return [
                     "case (\(f.number), \(wire)): try r.readMessage { r throws(WireError) in try self.\(f.name).__aepbMerge(from: &r) }"
                 ]
-            case .optional where f.kind == .message:
+            case .optional where f.kind.isMessage:
+                let read = f.kind == .group ? "r.readGroup(tag)" : "r.readMessage"
                 return [
                     """
                     case (\(f.number), \(wire)):
                     var __m = self.\(f.name) ?? \(f.swiftType)()
                     self.\(f.name) = nil
-                    try r.readMessage { r throws(WireError) in try __m.__aepbMerge(from: &r) }
+                    try \(read) { r throws(WireError) in try __m.__aepbMerge(from: &r) }
                     self.\(f.name) = __m
                     """
                 ]
@@ -159,5 +171,30 @@ enum ProtoMessageCodegen {
         guard scalar.readsOptionalValue else { return body(scalar.read) }
         let otherwise = scalar.unknown.map { " else { \($0) }" } ?? ""
         return "do { let __raw = try r.readInt32(); if let __v = \(scalar.read) { \(body("__v")) }\(otherwise) }"
+    }
+
+    // MARK: Required fields
+
+    /// `__aepbMissingRequired()`: the absent required fields, then every nested message, in declaration order. Nil when the
+    /// type has neither, so the protocol's default (no required field) applies.
+    static func missingRequired(_ fields: [ProtoFieldSpec]) -> String? {
+        var checks: [String] = []
+        for f in fields {
+            let name = f.plainName
+            if f.required { checks.append("if self.\(f.name) == nil { return [\"\(name)\"] }") }
+            switch f.shape {
+                case .oneof:
+                    checks.append("if let __p = self.\(f.name)?.__aepbMissingRequired() { return [\"\(name)\"] + __p }")
+                case .single where f.kind.isMessage:
+                    checks.append("if let __p = self.\(f.name).__aepbMissingRequired() { return [\"\(name)\"] + __p }")
+                case .optional where f.kind.isMessage:
+                    checks.append("if let __p = self.\(f.name)?.__aepbMissingRequired() { return [\"\(name)\"] + __p }")
+                case .repeated where f.kind.isMessage, .map where f.kind.isMessage:
+                    checks.append("if let __p = self.\(f.name).__aepbMissingRequired() { return [\"\(name)\"] + __p }")
+                default: continue
+            }
+        }
+        guard !checks.isEmpty else { return nil }
+        return "func __aepbMissingRequired() -> [String]? {\n" + checks.joined(separator: "\n") + "\nreturn nil\n}"
     }
 }
