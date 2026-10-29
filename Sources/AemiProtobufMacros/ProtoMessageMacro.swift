@@ -18,7 +18,10 @@ struct ProtoMessageMacro: ExtensionMacro {
         }
         guard let fields = ProtoFieldParser.fields(of: decl, in: context) else { return [] }
         let access = accessModifier(of: decl)
-        var members = [ProtoMessageCodegen.encode(fields), ProtoMessageCodegen.decode(fields)].map { "\(access)\($0)" }
+        var members = [
+            ProtoMessageCodegen.encode(fields), ProtoMessageCodegen.decode, ProtoMessageCodegen.merge(fields)
+        ]
+        .map { "\(access)\($0)" }
         if !declaresCodingKeys(decl) { members.append(ProtoMessageCodegen.codingKeys(fields)) }
         // The declared list is read from syntax, because `protocols` omits `Codable` (a typealias for two protocols).
         let declared = Set(decl.inheritanceClause?.inheritedTypes.map(\.type.trimmedDescription) ?? [])

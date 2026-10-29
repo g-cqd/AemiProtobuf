@@ -120,15 +120,19 @@ struct ProtoMessageDiagnosticsTests {
 
                     static func __aepbDecode(from r: inout WireReader) throws(WireError) -> Self {
                         var result = Self()
+                        try result.__aepbMerge(from: &r)
+                        return result
+                    }
+
+                    mutating func __aepbMerge(from r: inout WireReader) throws(WireError) {
                         while let tag = try r.nextTag() {
                             switch (tag.fieldNumber.rawValue, tag.wireType) {
                             case (1, .varint):
-                                result.a = Int64(truncatingIfNeeded: Int64(bitPattern: try r.readVarint()))
+                                self.a = Int64(truncatingIfNeeded: Int64(bitPattern: try r.readVarint()))
                             default:
                                 try r.skipField(tag)
                             }
                         }
-                        return result
                     }
 
                     enum CodingKeys: Int, CodingKey {

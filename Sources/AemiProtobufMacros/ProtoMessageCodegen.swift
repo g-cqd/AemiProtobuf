@@ -5,18 +5,24 @@ enum ProtoMessageCodegen {
         return "func __aepbEncode(into w: inout WireWriter) throws(WireError) {\n\(body)\n}"
     }
 
-    static func decode(_ fields: [ProtoFieldSpec]) -> String {
+    static let decode = """
+        static func __aepbDecode(from r: inout WireReader) throws(WireError) -> Self {
+        var result = Self()
+        try result.__aepbMerge(from: &r)
+        return result
+        }
+        """
+
+    static func merge(_ fields: [ProtoFieldSpec]) -> String {
         let cases = fields.flatMap(decodeCases).joined(separator: "\n")
         return """
-            static func __aepbDecode(from r: inout WireReader) throws(WireError) -> Self {
-            var result = Self()
+            mutating func __aepbMerge(from r: inout WireReader) throws(WireError) {
             while let tag = try r.nextTag() {
             switch (tag.fieldNumber.rawValue, tag.wireType) {
             \(cases)
             default: try r.skipField(tag)
             }
             }
-            return result
             }
             """
     }
@@ -74,11 +80,26 @@ enum ProtoMessageCodegen {
         let scalar = ProtoFieldScalar(kind: f.kind, swiftType: f.swiftType)
         let wire = f.kind.wireType
         switch f.shape {
+            // A message given again merges into the one already read (the encoding guide's merge); a scalar's last wins.
+            case .single where f.kind == .message:
+                return [
+                    "case (\(f.number), \(wire)): try r.readMessage { r throws(WireError) in try self.\(f.name).__aepbMerge(from: &r) }"
+                ]
+            case .optional where f.kind == .message:
+                return [
+                    """
+                    case (\(f.number), \(wire)):
+                    var __m = self.\(f.name) ?? \(f.swiftType)()
+                    self.\(f.name) = nil
+                    try r.readMessage { r throws(WireError) in try __m.__aepbMerge(from: &r) }
+                    self.\(f.name) = __m
+                    """
+                ]
             case .single, .optional:
-                return ["case (\(f.number), \(wire)): \(assign("result.\(f.name)", scalar))"]
+                return ["case (\(f.number), \(wire)): \(assign("self.\(f.name)", scalar))"]
             case .repeated:
                 guard f.kind.isPackable else {
-                    return ["case (\(f.number), \(wire)): \(append("result.\(f.name)", scalar))"]
+                    return ["case (\(f.number), \(wire)): \(append("self.\(f.name)", scalar))"]
                 }
                 // A repeated number is read packed or unpacked, whichever the writer chose, or both. A packed run adds no level of
                 // nesting, and its element count is known before the first element is read.
@@ -87,17 +108,17 @@ enum ProtoMessageCodegen {
                     ? "try r.readPackedLittleEndian(\(f.swiftType).self)"
                     : scalar.bulkVarintEncoding.map { "try r.readPackedVarints(\(f.swiftType).self\($0))" }
                 let packed =
-                    bulk.map { "case (\(f.number), .lengthDelimited): result.\(f.name).append(contentsOf: \($0))" }
+                    bulk.map { "case (\(f.number), .lengthDelimited): self.\(f.name).append(contentsOf: \($0))" }
                         ?? """
                         case (\(f.number), .lengthDelimited):
                         try r.readPayload { r throws(WireError) in
-                        result.\(f.name).reserveCapacity(result.\(f.name).count + r.remainingVarintCount)
-                        while !r.isAtEnd { \(append("result.\(f.name)", scalar)) }
+                        self.\(f.name).reserveCapacity(self.\(f.name).count + r.remainingVarintCount)
+                        while !r.isAtEnd { \(append("self.\(f.name)", scalar)) }
                         }
                         """
                 return [
                     packed,
-                    "case (\(f.number), \(wire)): \(append("result.\(f.name)", scalar))"
+                    "case (\(f.number), \(wire)): \(append("self.\(f.name)", scalar))"
                 ]
         }
     }
