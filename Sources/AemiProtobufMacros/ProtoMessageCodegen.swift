@@ -38,7 +38,10 @@ enum ProtoMessageCodegen {
             """
     }
 
+    /// Integer keys equal to the field numbers. A message with no field has a key type with no case and no raw type: an
+    /// enumeration with no case cannot declare one.
     static func codingKeys(_ fields: [ProtoFieldSpec]) -> String {
+        guard !fields.isEmpty else { return "enum CodingKeys: CodingKey {}" }
         let cases = fields.map { "case \($0.name) = \($0.number)" }.joined(separator: "\n")
         return "enum CodingKeys: Int, CodingKey {\n\(cases)\n}"
     }

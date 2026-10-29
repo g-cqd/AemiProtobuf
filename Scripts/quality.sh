@@ -21,7 +21,7 @@ fail() { printf '[FAIL] %s\n' "$1" >&2; exit "${2:-1}"; }
 # What the analyzers read: the whole package, because reachability and clone detection are whole-program. Benchmarks/ is left out:
 # the Benchmark plugin finds its entry point by name, which no syntax-level analyzer can see, so every benchmark looks dead.
 CORPUS="Sources Tests"
-SWIFT_FILES="Sources Tests Benchmarks Package.swift"
+SWIFT_FILES="Sources Tests Benchmarks Conformance Package.swift"
 
 # The toolchain's own swift-format: on PATH from a toolchain install, otherwise Xcode's, otherwise the `swift format` subcommand.
 swift_format() {

@@ -1,5 +1,5 @@
 ---
-status: not-started
+status: in-progress
 blocked-by: []
 date: 2026-10-25
 ---
@@ -13,3 +13,20 @@ Order (research 2026-10-29-conformance-review): the macro's correctness first (0
 installed abseil; a testee executable in a dev-only package, as `Benchmarks/Comparison`; JSON requests answered "skipped" until
 0010. Acceptance: the runner's binary tests pass for proto3 and proto2, each remaining failure in a committed failure list with a
 reason, and the run in CI or, if the runner build is too slow for it, a script and the recorded result.
+
+## Done
+
+The official suite from protobuf v36.2, built with CMake against the installed abseil (`Scripts/conformance.sh`, which also
+regenerates the testee's sources with protoc-gen-aemi): `Conformance/`, a dev-only package whose testee answers binary requests
+for `TestAllTypesProto3`, `TestAllTypesProto2`, the editions proto2 and proto3 copies and `TestAllTypesEdition2023`, and
+"skipped" for JSON, JSPB and text format. Result with `--enforce_recommended`: **2,833 passed, 0 failed**, 2,816 skipped (JSON and
+JSPB) in the binary and JSON suite; the text-format suite skips all 909. The failure list is empty.
+
+The run found two defects, each fixed red then green: a message with no fields did not compile (`CodingKeys` with no case and
+a raw type; `google.protobuf.Empty`), and a tag written in more than five bytes was accepted (`BadTag_OverlongVarint`, four
+tests). CI job `conformance` builds the runner and protoc from the same tag (cached by protobuf and abseil version) and runs it.
+
+## Open
+
+- JSON and text format (2,816 and 909 tests): roadmap 0010 and a text-format item.
+- The generated differential (a seeded message generator with `protoc --encode` as the oracle).

@@ -113,10 +113,14 @@ public struct WireReader {
     /// - Returns: `nil` when the input is exhausted. An end-group tag is returned like any other.
     /// - Throws: ``WireError/truncated(at:)``, ``WireError/malformedVarint(at:)``, ``WireError/invalidTag(_:at:)`` or
     ///   ``WireError/invalidWireType(_:at:)``.
+    ///   A tag is a 32-bit value, read in at most five bytes as C++ reads it: a longer encoding is `invalidTag`, even of a small
+    ///   number.
     public mutating func nextTag() throws(WireError) -> FieldTag? {
         guard offset < end else { return nil }
         tagOffset = offset
-        return try FieldTag(rawValue: try readVarint(), at: tagOffset)
+        let raw = try readVarint()
+        guard offset - tagOffset <= 5 else { throw .invalidTag(raw, at: tagOffset) }
+        return try FieldTag(rawValue: raw, at: tagOffset)
     }
 
     /// Reads a varint. Accepts a non-minimal encoding of up to ten bytes; refuses an eleventh byte and a tenth byte above 1.

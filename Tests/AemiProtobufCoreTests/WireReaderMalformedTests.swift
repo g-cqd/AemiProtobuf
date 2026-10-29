@@ -32,7 +32,9 @@ struct WireReaderMalformedTests {
     /// a value above 32 bits (the conformance suite's `BadTag_OverlongVarint`).
     @Test func `a tag written in more than five bytes is refused, and five is accepted`() throws {
         let overlong: [UInt8] = [0x88, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00, 0x01]
-        #expect(throws: WireError.invalidTag(8, at: 0)) { _ = try read(overlong) { r throws(WireError) in try r.nextTag() } }
+        #expect(throws: WireError.invalidTag(8, at: 0)) {
+            _ = try read(overlong) { r throws(WireError) in try r.nextTag() }
+        }
         let five: [UInt8] = [0x88, 0x80, 0x80, 0x80, 0x00, 0x01]
         let tag = try read(five) { r throws(WireError) in try r.nextTag() }
         #expect(tag?.fieldNumber == 1)
