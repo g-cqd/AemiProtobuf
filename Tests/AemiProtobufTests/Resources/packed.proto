@@ -1,0 +1,2 @@
+syntax = "proto2";
+message Expanded { repeated int32 numbers = 1; repeated sint64 deltas = 2 [packed = true]; repeated bool flags = 3; }
