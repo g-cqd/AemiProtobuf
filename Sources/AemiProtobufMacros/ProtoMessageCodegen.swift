@@ -38,7 +38,10 @@ enum ProtoMessageCodegen {
         let scalar = ProtoFieldScalar(kind: f.kind, swiftType: f.swiftType)
         switch f.shape {
             case .single:
-                if f.kind == .message { return message(f.number, "self.\(f.name)") }
+                if f.kind == .message {
+                    return
+                        "try w.appendNonEmptyMessage(field: \(f.number)) { w throws(WireError) in try self.\(f.name).__aepbEncode(into: &w) }"
+                }
                 return "if \(scalar.isSet("self.\(f.name)")) {\n\(record(f, scalar, "self.\(f.name)"))\n}"
             case .optional:
                 let inner = f.kind == .message ? message(f.number, "__v") : record(f, scalar, "__v")

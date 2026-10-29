@@ -1,5 +1,5 @@
 ---
-status: not-started
+status: done
 blocked-by: []
 date: 2026-10-29
 ---
@@ -14,3 +14,11 @@ is committed, so no `Equatable` is needed); an `Optional` message keeps explicit
 Red: the bytes of an empty and a non-empty nested message, optional and not; the `kinds` oracle re-recorded only if `protoc` agrees.
 
 Acceptance: green, the comparison's bytes still identical to swift-protobuf's.
+
+## Done
+
+`WireWriter.appendNonEmptyMessage(field:_:)` abandons a message whose body wrote nothing; the macro uses it for non-optional message
+fields. Optional ones keep presence (`12 00`), repeated ones one record per element. The test that pinned the old bytes
+(`MacroOracleTests`, `8a 01 00` for an empty `Kinds`) now expects nothing written. The `kinds` oracle is unchanged: its sample's
+nested message is not empty. Proto3 message fields have presence, so a generated type (0028) maps them to `Optional`; a
+non-optional message field is the hand-written choice of "absent means default".
