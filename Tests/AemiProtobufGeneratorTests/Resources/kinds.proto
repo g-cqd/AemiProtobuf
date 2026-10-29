@@ -1,0 +1,42 @@
+syntax = "proto3";
+package gen.kinds;
+
+enum Color {
+  RED = 0;
+  GREEN = 1;
+  BLUE = 2;
+}
+
+message Leaf {
+  string name = 1;
+}
+
+message Kinds {
+  int32 a_int32 = 1;
+  int64 a_int64 = 2;
+  uint32 a_uint32 = 3;
+  uint64 a_uint64 = 4;
+  sint32 a_sint32 = 5;
+  sint64 a_sint64 = 6;
+  fixed32 a_fixed32 = 7;
+  fixed64 a_fixed64 = 8;
+  sfixed32 a_sfixed32 = 9;
+  sfixed64 a_sfixed64 = 10;
+  bool a_bool = 11;
+  float a_float = 12;
+  double a_double = 13;
+  string a_string = 14;
+  bytes a_bytes = 15;
+  Color color = 16;
+  Leaf leaf = 17;
+  optional int32 maybe = 18;
+  optional Leaf maybe_leaf = 19;
+  repeated sint32 r_sint32 = 20;
+  repeated fixed64 r_fixed64 = 21;
+  repeated double r_double = 22;
+  repeated bool r_bool = 23;
+  repeated Color r_color = 24;
+  repeated string r_string = 25;
+  repeated bytes r_bytes = 26;
+  repeated Leaf r_leaf = 27;
+}
