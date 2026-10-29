@@ -38,13 +38,7 @@ public struct ProtobufEncoder: Sendable {
     ///   exceeded limit; or whatever the value's own `encode(to:)` throws.
     /// - Complexity: O(size of the encoding), plus one shift per nested message of 128 bytes or more.
     public func encodeToBytes<T: Encodable>(_ value: T) throws -> [UInt8] {
-        if let fast = value as? any AemiProtoFastEncodable {
-            var writer = WireWriter(limits: limits, reservingCapacity: 128)
-            do throws(WireError) { try fast.__aepbEncode(into: &writer) } catch {
-                throw ProtobufEncodingError.underlying(error)
-            }
-            return writer.bytes
-        }
+        if let fast = value as? any AemiProtoFastEncodable { return try fastBytes(fast) }
         let state = _ProtobufEncoderState(limits: limits)
         let root = _ProtobufEncoderImpl(state: state, codingPath: [], userInfo: userInfo)
         try value.encode(to: root)
@@ -73,7 +67,11 @@ public struct ProtobufEncoder: Sendable {
         Data(try fastBytes(value))
     }
 
+    /// Refuses a message without one of its proto2 `required` fields, as C++ does, then writes it.
     private func fastBytes<T: AemiProtoFastEncodable>(_ value: T) throws -> [UInt8] {
+        if let path = value.__aepbMissingRequired() {
+            throw ProtobufEncodingError.underlying(WireError.missingRequired(path))
+        }
         var writer = WireWriter(limits: limits, reservingCapacity: 128)
         do throws(WireError) { try value.__aepbEncode(into: &writer) } catch {
             throw ProtobufEncodingError.underlying(error)

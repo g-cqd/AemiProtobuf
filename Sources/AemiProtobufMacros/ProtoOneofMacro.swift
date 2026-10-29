@@ -19,10 +19,11 @@ struct ProtoOneofMacro: ExtensionMacro {
         }
         guard let members = members(of: decl, in: context) else { return [] }
         let access = ProtoExtension.access(decl.modifiers)
+        var generated = [access + encode(members), access + decode(members)]
+        if let check = missingRequired(members) { generated.append(access + check) }
         return [
             try ProtoExtension.make(
-                type, inheritance: decl.inheritanceClause, wanted: ["AemiProtoOneof", "Codable"],
-                members: [access + encode(members), access + decode(members)])
+                type, inheritance: decl.inheritanceClause, wanted: ["AemiProtoOneof", "Codable"], members: generated)
         ]
     }
 
@@ -92,14 +93,28 @@ struct ProtoOneofMacro: ExtensionMacro {
         return ProtoFieldSpec(name: name, number: arguments.number, kind: kind, shape: .single, swiftType: swiftType)
     }
 
+    /// The required fields a message member lacks; nil when no member is a message.
+    private static func missingRequired(_ members: [ProtoFieldSpec]) -> String? {
+        let cases = members.filter(\.kind.isMessage)
+            .map {
+                "case .\($0.name)(let __v): return __v.__aepbMissingRequired()"
+            }
+        guard !cases.isEmpty else { return nil }
+        let rest = cases.count < members.count ? "\ndefault: return nil" : ""
+        return "func __aepbMissingRequired() -> [String]? {\nswitch self {\n" + cases.joined(separator: "\n") + rest
+            + "\n}\n}"
+    }
+
     /// The member that is set, always written: a member has presence.
     private static func encode(_ members: [ProtoFieldSpec]) -> String {
         let cases = members.map { f in
             let write =
-                f.kind == .message
-                ? "try w.appendMessage(field: \(f.number)) { w throws(WireError) in try __v.__aepbEncode(into: &w) }"
-                : "w.appendTag(\(f.number), \(f.kind.wireType))\n"
-                    + ProtoFieldScalar(kind: f.kind, swiftType: f.swiftType).write("__v")
+                f.kind == .group
+                ? "try w.appendGroup(field: \(f.number)) { w throws(WireError) in try __v.__aepbEncode(into: &w) }"
+                : f.kind == .message
+                    ? "try w.appendMessage(field: \(f.number)) { w throws(WireError) in try __v.__aepbEncode(into: &w) }"
+                    : "w.appendTag(\(f.number), \(f.kind.wireType))\n"
+                        + ProtoFieldScalar(kind: f.kind, swiftType: f.swiftType).write("__v")
             return "case .\(f.name)(let __v):\n\(write)"
         }
         return "func __aepbEncode(into w: inout WireWriter) throws(WireError) {\nswitch self {\n"
@@ -110,13 +125,13 @@ struct ProtoOneofMacro: ExtensionMacro {
         let cases = members.map { f -> String in
             let head = "case (\(f.number), \(f.kind.wireType)):"
             switch f.kind {
-                case .message:
+                case .message, .group:
                     return """
                         \(head)
                         var __m = \(f.swiftType)()
                         if case .\(f.name)(let __old)? = value { __m = __old }
                         value = nil
-                        try r.readMessage { r throws(WireError) in try __m.__aepbMerge(from: &r) }
+                        try \(f.kind == .group ? "r.readGroup(tag)" : "r.readMessage") { r throws(WireError) in try __m.__aepbMerge(from: &r) }
                         value = .\(f.name)(__m)
                         return true
                         """

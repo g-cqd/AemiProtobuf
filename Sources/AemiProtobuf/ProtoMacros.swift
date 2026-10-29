@@ -33,7 +33,7 @@
 @attached(member, names: named(unknownFields))
 @attached(
     extension, conformances: AemiProtoFastEncodable, AemiProtoFastDecodable, Codable, names: named(__aepbEncode),
-    named(__aepbDecode), named(__aepbMerge), named(CodingKeys))
+    named(__aepbDecode), named(__aepbMerge), named(__aepbMissingRequired), named(CodingKeys))
 public macro ProtoMessage(unknownFields: ProtoUnknownFields = .preserve) =
     #externalMacro(module: "AemiProtobufMacros", type: "ProtoMessageMacro")
 
@@ -64,7 +64,9 @@ public macro ProtoField(
 ///     @ProtoField(2) case leaf(Leaf)
 /// }
 /// ```
-@attached(extension, conformances: AemiProtoOneof, Codable, names: named(__aepbEncode), named(__aepbDecodeField))
+@attached(
+    extension, conformances: AemiProtoOneof, Codable, names: named(__aepbEncode), named(__aepbDecodeField),
+    named(__aepbMissingRequired))
 public macro ProtoOneof() = #externalMacro(module: "AemiProtobufMacros", type: "ProtoOneofMacro")
 
 /// Marks the property of a ``ProtoMessage(unknownFields:)`` that holds a ``ProtoOneof()`` enumeration:

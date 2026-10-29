@@ -180,4 +180,16 @@ struct ProtoMessageDiagnosticsTests {
             "@ProtoMessage\nstruct M {\n    @ProtoOneofField var k: K = .a(1)\n}",
             "'k': a @ProtoOneofField property is an optional @ProtoOneof enumeration")
     }
+
+    @Test func `a singular group, a required field that is not optional and a map of groups are refused`() {
+        expectError(
+            "@ProtoMessage\nstruct M {\n    @ProtoField(1, .group) var g: G = G()\n}",
+            "'g': a group is optional or repeated, as proto2 declares it")
+        expectError(
+            "@ProtoMessage\nstruct M {\n    @ProtoField(1, required: true) var a: Int32 = 0\n}",
+            "'a': a required field is Optional in Swift, so its absence can be seen")
+        expectError(
+            "@ProtoMessage\nstruct M {\n    @ProtoField(1, value: .group) var m: [Int32: G] = [:]\n}",
+            "'m': a map value cannot be a group, and a map cannot be required")
+    }
 }
