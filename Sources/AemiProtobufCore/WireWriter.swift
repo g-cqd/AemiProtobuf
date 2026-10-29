@@ -153,3 +153,13 @@ public struct WireWriter {
         (63 - (value | 1).leadingZeroBitCount) / 7 + 1
     }
 }
+
+extension WireWriter {
+    /// Writes a nested message as ``appendMessage(field:_:)`` does, unless `body` writes nothing: then nothing is written.
+    /// For a non-optional message field, whose empty value is its default and so is left out.
+    public mutating func appendNonEmptyMessage(
+        field: FieldNumber, _ body: (inout WireWriter) throws(WireError) -> Void
+    ) throws(WireError) {
+        try appendMessage(field: field, body)
+    }
+}
