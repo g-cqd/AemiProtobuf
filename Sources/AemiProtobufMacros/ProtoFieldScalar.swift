@@ -12,7 +12,7 @@ struct ProtoFieldScalar {
             case .bool: value
             case .string, .bytes: "!\(value).isEmpty"
             case .enumeration: "\(value).rawValue != 0"
-            case .message: "true"
+            case .message, .group: "true"
             default: "\(value) != 0"
         }
     }
@@ -35,7 +35,7 @@ struct ProtoFieldScalar {
             case .string: "w.appendString(\(value))"
             case .bytes: swiftType == "Data" ? "w.appendBytes([UInt8](\(value)))" : "w.appendBytes(\(value))"
             case .enumeration: "w.appendInt32(\(value).rawValue)"
-            case .message: "try \(value).__aepbEncode(into: &w)"
+            case .message, .group: "try \(value).__aepbEncode(into: &w)"
         }
     }
 
@@ -60,7 +60,7 @@ struct ProtoFieldScalar {
             case .string: "try r.readString()"
             case .bytes: swiftType == "Data" ? "Data(try r.readBytes())" : "try r.readBytes()"
             case .enumeration: "ProtoEnumeration.value(\(swiftType).self, __raw)"
-            case .message:
+            case .message, .group:
                 "try r.readMessage { r throws(WireError) in try \(swiftType).__aepbDecode(from: &r) }"
         }
     }

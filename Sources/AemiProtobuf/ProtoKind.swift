@@ -7,4 +7,6 @@ public enum ProtoKind: Sendable {
     case bool, float, double, string, bytes, message
     /// A Swift enum with an `Int32` raw value, written as a varint.
     case enumeration
+    /// A proto2 group: a message written between a start-group and an end-group tag, not length-prefixed.
+    case group
 }

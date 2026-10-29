@@ -22,4 +22,6 @@ public enum WireError: Error, Equatable, Sendable {
     case depthExceeded(limit: Int, at: Int)
     /// A buffer or a message larger than ``WireLimits/maxMessageBytes``.
     case messageTooLarge(limit: Int)
+    /// A proto2 `required` field is absent: `path` names it from the outermost message, as `child.many[1].a`.
+    case missingRequired(path: String)
 }

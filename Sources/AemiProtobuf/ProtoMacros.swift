@@ -43,9 +43,11 @@ public macro ProtoMessage(unknownFields: ProtoUnknownFields = .preserve) =
 ///   - kind: `.sint32`, `.fixed64` and the other kinds Swift has no distinct type for; `.automatic` infers it from the type.
 ///   - key: a map's key kind, for a `[Key: Value]` property; `.automatic` infers it from `Key`.
 ///   - value: a map's value kind; `.automatic` infers it from `Value`.
+///   - required: a proto2 `required` field, on an `Optional` property: the coders refuse a message without it.
 @attached(peer)
 public macro ProtoField(
-    _ number: Int, _ kind: ProtoKind = .automatic, key: ProtoKind = .automatic, value: ProtoKind = .automatic
+    _ number: Int, _ kind: ProtoKind = .automatic, key: ProtoKind = .automatic, value: ProtoKind = .automatic,
+    required: Bool = false
 ) =
     #externalMacro(module: "AemiProtobufMacros", type: "ProtoFieldMacro")
 
