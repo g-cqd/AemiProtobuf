@@ -63,17 +63,61 @@ enum ProtoFieldParser {
             error(binding, "'\(name)' needs a default value: the generated decoder starts from Self()", in: context)
             return nil
         }
-        guard let (number, requested) = arguments(of: attribute, in: context) else { return nil }
-        guard let (shape, swiftType) = shapeAndType(of: type, name, binding, in: context) else { return nil }
-        let kind = requested ?? ProtoKind.inferred(for: swiftType)
-        if let allowed = kind.swiftTypes, !allowed.contains(swiftType) {
-            error(
-                binding,
-                "'\(name)' is \(swiftType), which cannot be a protobuf \(kind.rawValue); use \(allowed.sorted().joined(separator: ", "))",
-                in: context)
+        guard let arguments = arguments(of: attribute, in: context) else { return nil }
+        if let dictionary = type.as(DictionaryTypeSyntax.self) {
+            return mapField(dictionary, name, arguments, binding, in: context)
+        }
+        guard arguments.key == nil, arguments.value == nil else {
+            error(binding, "'\(name)': key: and value: are for a map ([Key: Value]) property", in: context)
             return nil
         }
-        return ProtoFieldSpec(name: name, number: number, kind: kind, shape: shape, swiftType: swiftType)
+        guard let (shape, swiftType) = shapeAndType(of: type, name, binding, in: context) else { return nil }
+        let kind = arguments.kind ?? ProtoKind.inferred(for: swiftType)
+        guard fits(kind, swiftType, name, binding, in: context) else { return nil }
+        return ProtoFieldSpec(name: name, number: arguments.number, kind: kind, shape: shape, swiftType: swiftType)
+    }
+
+    /// The kinds a map key may have: every integer, `bool` and `string`.
+    static let mapKeyKinds: Set<ProtoKind> = [
+        .int32, .int64, .uint32, .uint64, .sint32, .sint64, .fixed32, .fixed64, .sfixed32, .sfixed64, .bool, .string
+    ]
+
+    private static func mapField(
+        _ dictionary: DictionaryTypeSyntax, _ name: String, _ arguments: Arguments, _ node: some SyntaxProtocol,
+        in context: some MacroExpansionContext
+    ) -> ProtoFieldSpec? {
+        guard arguments.kind == nil else {
+            error(node, "'\(name)' is a map: give its kinds as key: and value:", in: context)
+            return nil
+        }
+        guard let keyType = scalarName(dictionary.key, name, node, in: context),
+            let valueType = scalarName(dictionary.value, name, node, in: context)
+        else { return nil }
+        let keyKind = arguments.key ?? ProtoKind.inferred(for: keyType)
+        guard mapKeyKinds.contains(keyKind) else {
+            error(node, "'\(name)': a map key cannot be a protobuf \(keyKind.rawValue)", in: context)
+            return nil
+        }
+        let valueKind = arguments.value ?? ProtoKind.inferred(for: valueType)
+        guard fits(keyKind, keyType, name, node, in: context), fits(valueKind, valueType, name, node, in: context)
+        else {
+            return nil
+        }
+        return ProtoFieldSpec(
+            name: name, number: arguments.number, kind: valueKind, shape: .map, swiftType: valueType,
+            key: (keyKind, keyType))
+    }
+
+    private static func fits(
+        _ kind: ProtoKind, _ swiftType: String, _ name: String, _ node: some SyntaxProtocol,
+        in context: some MacroExpansionContext
+    ) -> Bool {
+        guard let allowed = kind.swiftTypes, !allowed.contains(swiftType) else { return true }
+        error(
+            node,
+            "'\(name)' is \(swiftType), which cannot be a protobuf \(kind.rawValue); use \(allowed.sorted().joined(separator: ", "))",
+            in: context)
+        return false
     }
 
     private static func fieldAttribute(of variable: VariableDeclSyntax) -> AttributeSyntax? {
@@ -85,9 +129,14 @@ enum ProtoFieldParser {
         return nil
     }
 
-    private static func arguments(
-        of attribute: AttributeSyntax, in context: some MacroExpansionContext
-    ) -> (Int, ProtoKind?)? {
+    struct Arguments {
+        var number: Int
+        var kind: ProtoKind?
+        var key: ProtoKind?
+        var value: ProtoKind?
+    }
+
+    private static func arguments(of attribute: AttributeSyntax, in context: some MacroExpansionContext) -> Arguments? {
         guard case .argumentList(let list)? = attribute.arguments, let first = list.first,
             let literal = first.expression.as(IntegerLiteralExprSyntax.self), let number = Int(literal.literal.text)
         else {
@@ -100,18 +149,27 @@ enum ProtoFieldParser {
                 in: context)
             return nil
         }
-        guard list.count > 1 else { return (number, nil) }
-        let second = list[list.index(after: list.startIndex)].expression
-        guard let name = second.as(MemberAccessExprSyntax.self)?.declName.baseName.text else {
-            error(attribute, "the kind of @ProtoField must be a case such as .sint32", in: context)
-            return nil
+        var result = Arguments(number: number)
+        for argument in list.dropFirst() {
+            guard let name = argument.expression.as(MemberAccessExprSyntax.self)?.declName.baseName.text else {
+                error(attribute, "the kind of @ProtoField must be a case such as .sint32", in: context)
+                return nil
+            }
+            var kind: ProtoKind?
+            if name != "automatic" {
+                guard let named = ProtoKind(rawValue: name) else {
+                    error(attribute, "unknown protobuf kind '.\(name)'", in: context)
+                    return nil
+                }
+                kind = named
+            }
+            switch argument.label?.text {
+                case "key": result.key = kind
+                case "value": result.value = kind
+                default: result.kind = kind
+            }
         }
-        if name == "automatic" { return (number, nil) }
-        guard let kind = ProtoKind(rawValue: name) else {
-            error(attribute, "unknown protobuf kind '.\(name)'", in: context)
-            return nil
-        }
-        return (number, kind)
+        return result
     }
 
     private static func isArray(_ type: TypeSyntax) -> Bool {
@@ -148,7 +206,7 @@ enum ProtoFieldParser {
         _ type: TypeSyntax, _ name: String, _ node: some SyntaxProtocol, in context: some MacroExpansionContext
     ) -> String? {
         if type.is(DictionaryTypeSyntax.self) || type.trimmedDescription.hasPrefix("Dictionary<") {
-            error(node, "'\(name)': maps are not supported by @ProtoMessage yet", in: context)
+            error(node, "'\(name)': a map must be written [Key: Value], at the top of the property's type", in: context)
             return nil
         }
         guard type.is(IdentifierTypeSyntax.self) || type.is(MemberTypeSyntax.self) else {
