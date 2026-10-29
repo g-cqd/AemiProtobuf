@@ -23,10 +23,21 @@ fail() { printf '[FAIL] %s\n' "$1" >&2; exit "${2:-1}"; }
 CORPUS="Sources Tests"
 SWIFT_FILES="Sources Tests Benchmarks Package.swift"
 
+# The toolchain's own swift-format: on PATH from a toolchain install, otherwise Xcode's, otherwise the `swift format` subcommand.
+swift_format() {
+    if command -v swift-format >/dev/null 2>&1; then
+        swift-format "$@"
+    elif found=$(xcrun --find swift-format 2>/dev/null); then
+        "$found" "$@"
+    else
+        swift format "$@"
+    fi
+}
+
 gate_format() {
     printf '==> swift-format lint --strict\n'
     # shellcheck disable=SC2086
-    swift-format lint --strict -r $SWIFT_FILES || fail "formatting: run  swift-format format -i -r $SWIFT_FILES"
+    swift_format lint --strict -r $SWIFT_FILES || fail "formatting: run  swift-format format -i -r $SWIFT_FILES"
 }
 
 gate_lint() {

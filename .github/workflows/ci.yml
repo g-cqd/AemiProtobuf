@@ -1,8 +1,8 @@
 # Standalone: every job calls Scripts/quality.sh, the same entry point the git hooks use, so a gate cannot differ between a developer
 # machine and CI. No reusable workflow from another repository.
 #
-# NOT YET RUN: written locally, and the repository has not been pushed. The first push will show what the runners lack; read a red
-# first run before changing anything. Known gaps are listed in docs/roadmap/0013.
+# Every job installs the toolchain .swift-version names: the runner image's Swift lags the tools version (its first runs failed on
+# 6.3.3 against 6.4). setup-swift is pinned by SHA to the commit aemi's shared workflow uses.
 name: CI
 
 on:
@@ -28,6 +28,13 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
+      - name: Toolchain version
+        id: toolchain
+        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
+      - name: Install Swift ${{ steps.toolchain.outputs.version }}
+        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
+        with:
+          swift-version: ${{ steps.toolchain.outputs.version }}
       - run: brew install swiftlint
       - name: Cache tools
         uses: actions/cache@v4
@@ -41,6 +48,13 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
+      - name: Toolchain version
+        id: toolchain
+        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
+      - name: Install Swift ${{ steps.toolchain.outputs.version }}
+        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
+        with:
+          swift-version: ${{ steps.toolchain.outputs.version }}
       - run: Scripts/quality.sh test
 
   models:
@@ -48,6 +62,13 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
+      - name: Toolchain version
+        id: toolchain
+        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
+      - name: Install Swift ${{ steps.toolchain.outputs.version }}
+        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
+        with:
+          swift-version: ${{ steps.toolchain.outputs.version }}
       - name: Install Lean
         run: |
           curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
@@ -65,6 +86,13 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
+      - name: Toolchain version
+        id: toolchain
+        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
+      - name: Install Swift ${{ steps.toolchain.outputs.version }}
+        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
+        with:
+          swift-version: ${{ steps.toolchain.outputs.version }}
       - run: Scripts/quality.sh bench
 
   mutation:
@@ -74,4 +102,11 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v5
+      - name: Toolchain version
+        id: toolchain
+        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
+      - name: Install Swift ${{ steps.toolchain.outputs.version }}
+        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
+        with:
+          swift-version: ${{ steps.toolchain.outputs.version }}
       - run: Scripts/quality.sh mutation
