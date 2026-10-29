@@ -1,3 +1,5 @@
+public import AemiProtobufCore
+
 public struct FieldDescriptor: Sendable, Equatable {
     public var name: String
     public var number: Int32
@@ -9,6 +11,14 @@ public struct FieldDescriptor: Sendable, Equatable {
     public var oneofIndex: Int32?
     /// Whether a proto3 field was declared `optional` (explicit presence, held in a synthetic oneof).
     public var proto3Optional: Bool
+    /// The message an extension extends; empty for a field.
+    public var extendee: String = ""
+    /// The `[default = …]` as protoc spells it: a number, `true`/`false`, a string with C escapes resolved, an enumeration
+    /// value's name.
+    public var defaultValue: String?
+    /// `FieldOptions`, as protoc wrote them.
+    public var options: [UInt8]?
+    public var unknownFields = UnknownFields()
 
     public init(
         name: String = "", number: Int32 = 0, label: FieldLabel = .optional,
