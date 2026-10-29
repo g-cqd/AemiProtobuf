@@ -19,11 +19,10 @@ enum ProtoFieldParser {
                     failed = true
                     continue
                 }
-                if spec.shape != .oneof, let first = seen[spec.number] {
+                if spec.shape != .oneof, let first = ProtoExtension.isTaken(spec.number, by: spec.name, in: &seen) {
                     error(binding, "field number \(spec.number) is used by '\(first)' and '\(spec.name)'", in: context)
                     failed = true
                 }
-                seen[spec.number] = spec.name
                 specs.append(spec)
             }
         }
@@ -109,7 +108,7 @@ enum ProtoFieldParser {
             key: (keyKind, keyType))
     }
 
-    private static func fits(
+    static func fits(
         _ kind: ProtoKind, _ swiftType: String, _ name: String, _ node: some SyntaxProtocol,
         in context: some MacroExpansionContext
     ) -> Bool {
@@ -158,7 +157,7 @@ enum ProtoFieldParser {
         var value: ProtoKind?
     }
 
-    private static func arguments(of attribute: AttributeSyntax, in context: some MacroExpansionContext) -> Arguments? {
+    static func arguments(of attribute: AttributeSyntax, in context: some MacroExpansionContext) -> Arguments? {
         guard case .argumentList(let list)? = attribute.arguments, let first = list.first,
             let literal = first.expression.as(IntegerLiteralExprSyntax.self), let number = Int(literal.literal.text)
         else {
@@ -219,7 +218,7 @@ enum ProtoFieldParser {
         return (inner.shape, text)
     }
 
-    private static func scalarName(
+    static func scalarName(
         _ type: TypeSyntax, _ name: String, _ node: some SyntaxProtocol, in context: some MacroExpansionContext
     ) -> String? {
         if type.is(DictionaryTypeSyntax.self) || type.trimmedDescription.hasPrefix("Dictionary<") {

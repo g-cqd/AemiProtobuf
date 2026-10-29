@@ -4,18 +4,13 @@ import Testing
 
 /// Roadmap 0025: maps as repeated entry messages, against `protoc --encode --deterministic_output`.
 @Suite struct MapTests {
-    private func resource() throws -> [UInt8] {
-        let url = try #require(Bundle.module.url(forResource: "maps", withExtension: "bin", subdirectory: "Resources"))
-        return [UInt8](try Data(contentsOf: url))
-    }
-
     @Test func `protoc's bytes decode to the sample`() throws {
-        #expect(try ProtobufDecoder().decode(Maps.self, fromBytes: resource()) == Maps.sample)
+        #expect(try ProtobufDecoder().decode(Maps.self, fromBytes: TestResource.bytes("maps")) == Maps.sample)
     }
 
     @Test func `the sample encodes to protoc's deterministic bytes: keys sorted, key and value always written`() throws
     {
-        #expect(try ProtobufEncoder().encodeToBytes(Maps.sample) == resource())
+        #expect(try ProtobufEncoder().encodeToBytes(Maps.sample) == TestResource.bytes("maps"))
     }
 
     @Test func `a missing key or value is its default, and a repeated key keeps the last`() throws {

@@ -5,27 +5,22 @@ import Testing
 
 /// `Resources/kinds.bin` is what `protoc --encode=Kinds` wrote for `Resources/kinds.txt`.
 struct MacroOracleTests {
-    private func oracle() throws -> [UInt8] {
-        let url = try #require(Bundle.module.url(forResource: "kinds", withExtension: "bin", subdirectory: "Resources"))
-        return [UInt8](try Data(contentsOf: url))
-    }
-
     @Test func `the generated fast path writes the bytes protoc wrote`() throws {
         var writer = WireWriter()
         try Kinds.sample.__aepbEncode(into: &writer)
-        #expect(writer.bytes == (try oracle()))
+        #expect(writer.bytes == (try TestResource.bytes("kinds")))
     }
 
     @Test func `the generated fast path reads what protoc wrote`() throws {
-        let decoded = try WireReader.withReader(over: try oracle()) { r throws(WireError) in
+        let decoded = try WireReader.withReader(over: try TestResource.bytes("kinds")) { r throws(WireError) in
             try Kinds.__aepbDecode(from: &r)
         }
         #expect(decoded == Kinds.sample)
     }
 
     @Test func `the encoder and decoder take the generated fast path`() throws {
-        #expect(try ProtobufEncoder().encodeToBytes(Kinds.sample) == (try oracle()))
-        #expect(try ProtobufDecoder().decode(Kinds.self, fromBytes: try oracle()) == Kinds.sample)
+        #expect(try ProtobufEncoder().encodeToBytes(Kinds.sample) == (try TestResource.bytes("kinds")))
+        #expect(try ProtobufDecoder().decode(Kinds.self, fromBytes: try TestResource.bytes("kinds")) == Kinds.sample)
     }
 
     @Test func `the generated Codable conformance uses the field numbers as integer keys`() throws {

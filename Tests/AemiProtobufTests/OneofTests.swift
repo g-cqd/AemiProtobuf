@@ -4,11 +4,6 @@ import Testing
 
 /// Roadmap 0026: `oneof` as an enumeration with one associated value per member, against protoc.
 @Suite struct OneofTests {
-    private func resource(_ name: String) throws -> [UInt8] {
-        let url = try #require(Bundle.module.url(forResource: name, withExtension: "bin", subdirectory: "Resources"))
-        return [UInt8](try Data(contentsOf: url))
-    }
-
     private func decode(_ bytes: [UInt8]) throws -> Shape { try ProtobufDecoder().decode(Shape.self, fromBytes: bytes) }
 
     @Test(arguments: [
@@ -16,7 +11,7 @@ import Testing
         ("oneof-zero", Shape(kind: .circle(0)))
     ])
     func `protoc's bytes decode, and the value encodes to them`(name: String, value: Shape) throws {
-        let bytes = try resource(name)
+        let bytes = try TestResource.bytes(name)
         #expect(try decode(bytes) == value)
         #expect(try ProtobufEncoder().encodeToBytes(value) == bytes)
     }

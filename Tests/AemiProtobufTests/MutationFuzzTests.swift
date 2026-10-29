@@ -5,21 +5,11 @@ import Testing
 /// Deterministic fuzzing: every one-byte change and every prefix of valid messages. A decoder may accept or refuse each, and
 /// must never trap; a trap ends the test run, so passing is the check.
 struct MutationFuzzTests {
-    private func kindsBytes() throws -> [UInt8] {
-        let url = try #require(Bundle.module.url(forResource: "kinds", withExtension: "bin", subdirectory: "Resources"))
-        return [UInt8](try Data(contentsOf: url))
-    }
-
-    private func outerBytes() throws -> [UInt8] {
-        let url = try #require(Bundle.module.url(forResource: "outer", withExtension: "bin", subdirectory: "Resources"))
-        return [UInt8](try Data(contentsOf: url))
-    }
-
     @Test func `every one-byte change of a valid message decodes or throws on the macro path and the generic path`()
         throws
     {
-        let kinds = try kindsBytes()
-        let outer = try outerBytes()
+        let kinds = try TestResource.bytes("kinds")
+        let outer = try TestResource.bytes("outer")
         var accepted = 0
         var refused = 0
         for index in kinds.indices {
@@ -48,8 +38,8 @@ struct MutationFuzzTests {
     }
 
     @Test func `every prefix of a valid message decodes or throws`() throws {
-        let kinds = try kindsBytes()
-        let outer = try outerBytes()
+        let kinds = try TestResource.bytes("kinds")
+        let outer = try TestResource.bytes("outer")
         for length in 0 ... kinds.count {
             _ = try? ProtobufDecoder().decode(Kinds.self, fromBytes: Array(kinds[..<length]))
         }
