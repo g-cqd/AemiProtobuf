@@ -13,7 +13,7 @@ struct ProtoMessageMacro: ExtensionMacro, MemberMacro {
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         guard declaration.is(StructDeclSyntax.self), !discardsUnknownFields(node) else { return [] }
-        let access = declaration.as(StructDeclSyntax.self).map(accessModifier) ?? ""
+        let access = declaration.as(StructDeclSyntax.self).map { ProtoExtension.access($0.modifiers) } ?? ""
         return ["\(raw: access)var unknownFields = UnknownFields()"]
     }
 
@@ -46,34 +46,18 @@ struct ProtoMessageMacro: ExtensionMacro, MemberMacro {
             return []
         }
         guard let fields = ProtoFieldParser.fields(of: decl, in: context) else { return [] }
-        let access = accessModifier(of: decl)
+        let access = ProtoExtension.access(decl.modifiers)
         var members = [
             ProtoMessageCodegen.encode(fields, keepsUnknown: keepsUnknown), ProtoMessageCodegen.decode,
             ProtoMessageCodegen.merge(fields, keepsUnknown: keepsUnknown)
         ]
         .map { "\(access)\($0)" }
         if !declaresCodingKeys(decl) { members.append(ProtoMessageCodegen.codingKeys(fields)) }
-        // The declared list is read from syntax, because `protocols` omits `Codable` (a typealias for two protocols).
-        let declared = Set(decl.inheritanceClause?.inheritedTypes.map(\.type.trimmedDescription) ?? [])
-        var wanted = ["AemiProtoFastEncodable", "AemiProtoFastDecodable"].filter { !declared.contains($0) }
-        if !declared.contains("Codable"), !(declared.contains("Encodable") && declared.contains("Decodable")) {
-            wanted.append("Codable")
-        }
-        let conformance = wanted.isEmpty ? "" : ": " + wanted.joined(separator: ", ")
         return [
-            try ExtensionDeclSyntax(
-                "extension \(raw: type.trimmedDescription)\(raw: conformance) {\n\(raw: members.joined(separator: "\n\n"))\n}"
-            )
+            try ProtoExtension.make(
+                type, inheritance: decl.inheritanceClause,
+                wanted: ["AemiProtoFastEncodable", "AemiProtoFastDecodable", "Codable"], members: members)
         ]
-    }
-
-    /// `public ` or `package ` for a type that has that access, else nothing: a witness for a public protocol must be as
-    /// visible as its type.
-    private static func accessModifier(of decl: StructDeclSyntax) -> String {
-        for modifier in decl.modifiers where ["public", "open", "package"].contains(modifier.name.text) {
-            return modifier.name.text == "package" ? "package " : "public "
-        }
-        return ""
     }
 
     private static func declaresMember(named name: String, in decl: StructDeclSyntax) -> Bool {

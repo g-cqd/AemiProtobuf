@@ -4,17 +4,12 @@ import Testing
 
 /// `Resources/outer.bin` is what `protoc --encode=Outer` wrote for `Resources/outer.txt`.
 struct CodableOracleTests {
-    private func oracle() throws -> [UInt8] {
-        let url = try #require(Bundle.module.url(forResource: "outer", withExtension: "bin", subdirectory: "Resources"))
-        return [UInt8](try Data(contentsOf: url))
-    }
-
     @Test func `the encoder writes the bytes protoc wrote`() throws {
-        #expect(try ProtobufEncoder().encodeToBytes(Outer.sample) == oracle())
+        #expect(try ProtobufEncoder().encodeToBytes(Outer.sample) == TestResource.bytes("outer"))
     }
 
     @Test func `the decoder reads what protoc wrote`() throws {
-        #expect(try ProtobufDecoder().decode(Outer.self, fromBytes: oracle()) == Outer.sample)
+        #expect(try ProtobufDecoder().decode(Outer.self, fromBytes: TestResource.bytes("outer")) == Outer.sample)
     }
 
     @Test func `an optional scalar set to zero keeps its presence`() throws {

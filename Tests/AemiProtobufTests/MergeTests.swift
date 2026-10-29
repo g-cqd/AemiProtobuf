@@ -4,13 +4,8 @@ import Testing
 
 /// Roadmap 0020: a message field given more than once merges, as the encoding guide says and `protoc` does.
 @Suite struct MergeTests {
-    private func resource(_ name: String) throws -> [UInt8] {
-        let url = try #require(Bundle.module.url(forResource: name, withExtension: "bin", subdirectory: "Resources"))
-        return [UInt8](try Data(contentsOf: url))
-    }
-
     @Test func `two encodings one after the other decode as protoc merges them`() throws {
-        let bytes = try resource("merge")
+        let bytes = try TestResource.bytes("merge")
         #expect(try ProtobufDecoder().decode(MergeHolder.self, fromBytes: bytes) == MergeHolder.merged)
     }
 

@@ -174,4 +174,10 @@ struct ProtoMessageDiagnosticsTests {
                     line: 1, column: 1)
             ], macros: macros)
     }
+
+    @Test func `a oneof property that is not optional is refused`() {
+        expectError(
+            "@ProtoMessage\nstruct M {\n    @ProtoOneofField var k: K = .a(1)\n}",
+            "'k': a @ProtoOneofField property is an optional @ProtoOneof enumeration")
+    }
 }

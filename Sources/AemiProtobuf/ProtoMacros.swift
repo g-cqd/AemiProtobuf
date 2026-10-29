@@ -28,7 +28,8 @@
 /// enumeration is closed, and a number with no case goes to the unknown fields (``ProtoEnumeration``). `Int8`, `Int16`, `UInt8`, `UInt16`
 /// truncate on decode. A `[Key: Value]` is a map: repeated entry messages, key 1 and value 2, both always written, entries in
 /// ``ProtoMap`` order so equal maps give equal bytes; `@ProtoField(n, key: .sint64, value: .enumeration)` gives kinds Swift cannot
-/// tell. `oneof` and classes are not supported and are diagnosed.
+/// tell. A `oneof` is a ``ProtoOneof()`` enumeration in a ``ProtoOneofField()`` property. Classes are not supported and are
+/// diagnosed; a message that holds itself does so through ``Indirect``.
 @attached(member, names: named(unknownFields))
 @attached(
     extension, conformances: AemiProtoFastEncodable, AemiProtoFastDecodable, Codable, names: named(__aepbEncode),
