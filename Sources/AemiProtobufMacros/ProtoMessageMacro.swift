@@ -4,7 +4,28 @@ import SwiftSyntaxMacros
 
 /// `@ProtoMessage`: makes a struct a protobuf message. It adds the fast path (`AemiProtoFastEncodable`,
 /// `AemiProtoFastDecodable`) and, for the generic coders, `Codable` with integer `CodingKeys` taken from the field numbers.
-struct ProtoMessageMacro: ExtensionMacro {
+struct ProtoMessageMacro: ExtensionMacro, MemberMacro {
+    /// The `unknownFields` member, unless the attribute says `unknownFields: .discard` (ADR-0012).
+    static func expansion(
+        of node: AttributeSyntax,
+        providingMembersOf declaration: some DeclGroupSyntax,
+        conformingTo protocols: [TypeSyntax],
+        in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
+        guard declaration.is(StructDeclSyntax.self), !discardsUnknownFields(node) else { return [] }
+        let access = declaration.as(StructDeclSyntax.self).map(accessModifier) ?? ""
+        return ["\(raw: access)var unknownFields = UnknownFields()"]
+    }
+
+    /// Whether the attribute is `@ProtoMessage(unknownFields: .discard)`.
+    static func discardsUnknownFields(_ node: AttributeSyntax) -> Bool {
+        guard case .argumentList(let list)? = node.arguments else { return false }
+        return list.contains {
+            $0.label?.text == "unknownFields"
+                && $0.expression.as(MemberAccessExprSyntax.self)?.declName.baseName.text == "discard"
+        }
+    }
+
     static func expansion(
         of node: AttributeSyntax,
         attachedTo declaration: some DeclGroupSyntax,
