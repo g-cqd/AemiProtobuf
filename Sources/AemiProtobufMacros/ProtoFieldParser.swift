@@ -135,6 +135,7 @@ enum ProtoFieldParser {
         var key: ProtoKind?
         var value: ProtoKind?
         var required = false
+        var packed = true
     }
 
     static func arguments(of attribute: AttributeSyntax, in context: some MacroExpansionContext) -> Arguments? {
@@ -152,12 +153,13 @@ enum ProtoFieldParser {
         }
         var result = Arguments(number: number)
         for argument in list.dropFirst() {
-            if argument.label?.text == "required" {
+            if let label = argument.label?.text, ["required", "packed"].contains(label) {
                 guard let flag = argument.expression.as(BooleanLiteralExprSyntax.self) else {
-                    error(attribute, "required: must be true or false", in: context)
+                    error(attribute, "\(label): must be true or false", in: context)
                     return nil
                 }
-                result.required = flag.literal.tokenKind == .keyword(.true)
+                let value = flag.literal.tokenKind == .keyword(.true)
+                if label == "required" { result.required = value } else { result.packed = value }
                 continue
             }
             guard let name = argument.expression.as(MemberAccessExprSyntax.self)?.declName.baseName.text else {

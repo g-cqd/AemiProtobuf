@@ -44,10 +44,12 @@ public macro ProtoMessage(unknownFields: ProtoUnknownFields = .preserve) =
 ///   - key: a map's key kind, for a `[Key: Value]` property; `.automatic` infers it from `Key`.
 ///   - value: a map's value kind; `.automatic` infers it from `Value`.
 ///   - required: a proto2 `required` field, on an `Optional` property: the coders refuse a message without it.
+///   - packed: `false` writes a repeated number one record per element, as proto2 does unless it declares `[packed = true]`;
+///     both forms are read either way.
 @attached(peer)
 public macro ProtoField(
     _ number: Int, _ kind: ProtoKind = .automatic, key: ProtoKind = .automatic, value: ProtoKind = .automatic,
-    required: Bool = false
+    required: Bool = false, packed: Bool = true
 ) =
     #externalMacro(module: "AemiProtobufMacros", type: "ProtoFieldMacro")
 
