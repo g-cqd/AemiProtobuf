@@ -21,8 +21,8 @@ Scope: `@ProtoMessage`, `@ProtoField(n, encoding)`, `@ProtoOneof` over a struct;
 
 ## Open
 
-- `@ProtoOneof` and maps. The descriptor and `protoDefinition` text the original scope names.
-- Unknown-field preservation, and merging a repeated nested message given twice (the last occurrence wins today).
+- `@ProtoOneof` (0026) and maps (0025). The descriptor and `protoDefinition` text the original scope names.
+- Unknown-field preservation (0022), and merging a message field given twice (0020; the last occurrence wins today).
 - A fallback to `Codable` with a note, where AemiJSON's macro degrades instead of refusing: this macro refuses, because a
   silently slower message is a worse failure than a compile error.
 - Mutation coverage of the macro target.

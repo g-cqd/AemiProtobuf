@@ -20,7 +20,7 @@ allocation thresholds are green on the first run with the fix.
 
 ## Still open
 
-- **Linux is unverified.** CI is green on macOS (run 40959879484, `a53a089`, every job on `macos-26`); no job runs on Linux
+- **Linux is unverified** (roadmap 0029). CI is green on macOS (run 40959879484, `a53a089`, every job on `macos-26`); no job runs on Linux
   (swift-format there, `-Xswiftc -enable-testing`, the Lean install).
 - **No gate bans force unwrap or force try.** The Aemi `Lint` plugin did; this repository does not use it. Add a source scan to
   `AemiProtobufRepositoryTests` in the style of `NoRecursionTests`, broken on purpose first.
