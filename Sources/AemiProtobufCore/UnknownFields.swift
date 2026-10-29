@@ -37,3 +37,10 @@ extension UnknownFields {
         bytes.append(contentsOf: writer.bytes)
     }
 }
+
+extension UnknownFields {
+    /// Keeps fields already encoded, tag included: a map entry whose closed enumeration value has no case is kept whole.
+    public mutating func appendEncoded(_ fields: [UInt8]) {
+        bytes.append(contentsOf: fields)
+    }
+}
