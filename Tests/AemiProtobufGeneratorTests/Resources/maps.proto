@@ -1,0 +1,12 @@
+syntax = "proto3";
+package gen.maps;
+enum Shade { DARK = 0; LIGHT = 1; }
+message Entry { string label = 1; int32 count = 2; }
+message Maps {
+  map<int32, string> names = 1;
+  map<string, Entry> entries = 2;
+  map<sint64, Shade> shades = 3;
+  map<bool, double> flags = 4;
+  map<fixed32, bytes> blobs = 5;
+  map<string, int64> counts = 6;
+}

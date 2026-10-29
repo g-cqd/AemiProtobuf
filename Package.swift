@@ -31,7 +31,10 @@ let package = Package(
         // Schema definition, descriptor parsing, wire validation, and breaking changes.
         .library(name: "AemiProtobufSchema", targets: ["AemiProtobufSchema"]),
         // The Foundation-free, swift-syntax-free wire engine: tags, varints, zig-zag, bounded reader and writer.
-        .library(name: "AemiProtobufCore", targets: ["AemiProtobufCore"])
+        .library(name: "AemiProtobufCore", targets: ["AemiProtobufCore"]),
+        // `@ProtoMessage` source from a descriptor set, and the protoc plugin that runs it (roadmaps 0014, 0028).
+        .library(name: "AemiProtobufGenerator", targets: ["AemiProtobufGenerator"]),
+        .executable(name: "protoc-gen-aemi", targets: ["ProtocGenAemi"])
     ],
     dependencies: [
         // Shared byte kernels (`Varint`, `UTF8Validation` via `AemiKernels`). Pinned to the revision AemiJSON pins:
@@ -72,6 +75,25 @@ let package = Package(
                 "AemiProtobufCore",
                 .product(name: "AemiKernel", package: "aemi")
             ],
+            swiftSettings: strictSettings),
+        .target(
+            name: "AemiProtobufGenerator",
+            dependencies: ["AemiProtobufSchema", "AemiProtobufCore"],
+            swiftSettings: strictSettings),
+        .executableTarget(
+            name: "ProtocGenAemi",
+            dependencies: ["AemiProtobufGenerator"],
+            swiftSettings: strictSettings),
+        .testTarget(
+            name: "AemiProtobufGeneratorTests",
+            dependencies: ["AemiProtobufGenerator", "AemiProtobufSchema"],
+            resources: [.copy("Resources")],
+            swiftSettings: strictSettings),
+        // What the generator writes for the test protos, compiled and checked against protoc's bytes.
+        .testTarget(
+            name: "AemiProtobufGeneratedTests",
+            dependencies: ["AemiProtobuf"],
+            resources: [.copy("Resources")],
             swiftSettings: strictSettings),
         // The wire core's behaviour. `swift-mutation-testing` runs this target only (.swift-mutation-testing.yml).
         .testTarget(

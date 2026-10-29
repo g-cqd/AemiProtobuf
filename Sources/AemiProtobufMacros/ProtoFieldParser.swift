@@ -198,6 +198,11 @@ enum ProtoFieldParser {
         of type: TypeSyntax, _ name: String, _ node: some SyntaxProtocol, in context: some MacroExpansionContext
     ) -> (ProtoFieldShape, String)? {
         let inner: (type: TypeSyntax, shape: ProtoFieldShape, refusal: String)
+        // `[UInt8]` is bytes, a scalar: as an optional, as a repeated field's element, as a map value.
+        if let optional = type.as(OptionalTypeSyntax.self), isBytes(optional.wrappedType) {
+            return (.optional, "[UInt8]")
+        }
+        if let array = type.as(ArrayTypeSyntax.self), isBytes(array.element) { return (.repeated, "[UInt8]") }
         if let optional = type.as(OptionalTypeSyntax.self) {
             inner = (optional.wrappedType, .optional, "an optional array or optional optional has no protobuf form")
         } else if let array = type.as(ArrayTypeSyntax.self) {
@@ -215,6 +220,8 @@ enum ProtoFieldParser {
         return (inner.shape, text)
     }
 
+    static func isBytes(_ type: TypeSyntax) -> Bool { type.trimmedDescription == "[UInt8]" }
+
     static func scalarName(
         _ type: TypeSyntax, _ name: String, _ node: some SyntaxProtocol, in context: some MacroExpansionContext
     ) -> String? {
@@ -222,6 +229,7 @@ enum ProtoFieldParser {
             error(node, "'\(name)': a map must be written [Key: Value], at the top of the property's type", in: context)
             return nil
         }
+        if isBytes(type) { return "[UInt8]" }
         guard type.is(IdentifierTypeSyntax.self) || type.is(MemberTypeSyntax.self) else {
             error(node, "'\(name)': unsupported type '\(type.trimmedDescription)'", in: context)
             return nil

@@ -1,0 +1,8 @@
+syntax = "proto2";
+package gen.proto2;
+message GroupHolder {
+  optional int32 after = 1;
+  optional group Data = 201 { optional int32 group_int32 = 202; optional uint32 group_uint32 = 203; }
+  repeated group Item = 204 { optional int32 value = 205; }
+}
+message Required { required int32 a = 1; optional Required child = 2; repeated Required many = 3; }
