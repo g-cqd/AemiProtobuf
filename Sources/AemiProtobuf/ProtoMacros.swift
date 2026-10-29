@@ -26,7 +26,9 @@
 /// `unknownFields` member and written back after the declared fields; `@ProtoMessage(unknownFields: .discard)` skips them and adds
 /// no member (ADR-0012). An enumeration whose `init(rawValue:)` cannot fail is open and keeps every number; a raw-value
 /// enumeration is closed, and a number with no case goes to the unknown fields (``ProtoEnumeration``). `Int8`, `Int16`, `UInt8`, `UInt16`
-/// truncate on decode. Maps, `oneof` and classes are not supported and are diagnosed.
+/// truncate on decode. A `[Key: Value]` is a map: repeated entry messages, key 1 and value 2, both always written, entries in
+/// ``ProtoMap`` order so equal maps give equal bytes; `@ProtoField(n, key: .sint64, value: .enumeration)` gives kinds Swift cannot
+/// tell. `oneof` and classes are not supported and are diagnosed.
 @attached(member, names: named(unknownFields))
 @attached(
     extension, conformances: AemiProtoFastEncodable, AemiProtoFastDecodable, Codable, names: named(__aepbEncode),

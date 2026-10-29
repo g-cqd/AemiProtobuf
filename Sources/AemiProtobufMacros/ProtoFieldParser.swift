@@ -179,27 +179,22 @@ enum ProtoFieldParser {
     private static func shapeAndType(
         of type: TypeSyntax, _ name: String, _ node: some SyntaxProtocol, in context: some MacroExpansionContext
     ) -> (ProtoFieldShape, String)? {
+        let inner: (type: TypeSyntax, shape: ProtoFieldShape, refusal: String)
         if let optional = type.as(OptionalTypeSyntax.self) {
-            let wrapped = optional.wrappedType
-            guard !wrapped.is(ArrayTypeSyntax.self), !wrapped.is(OptionalTypeSyntax.self) else {
-                error(node, "'\(name)': an optional array or optional optional has no protobuf form", in: context)
-                return nil
-            }
-            guard let text = scalarName(wrapped, name, node, in: context) else { return nil }
-            return (.optional, text)
+            inner = (optional.wrappedType, .optional, "an optional array or optional optional has no protobuf form")
+        } else if let array = type.as(ArrayTypeSyntax.self) {
+            if array.element.trimmedDescription == "UInt8" { return (.single, "[UInt8]") }
+            inner = (array.element, .repeated, "nested arrays and arrays of optionals have no protobuf form")
+        } else {
+            guard let text = scalarName(type, name, node, in: context) else { return nil }
+            return (.single, text)
         }
-        if let array = type.as(ArrayTypeSyntax.self) {
-            let element = array.element
-            if element.trimmedDescription == "UInt8" { return (.single, "[UInt8]") }
-            guard !element.is(ArrayTypeSyntax.self), !element.is(OptionalTypeSyntax.self) else {
-                error(node, "'\(name)': nested arrays and arrays of optionals have no protobuf form", in: context)
-                return nil
-            }
-            guard let text = scalarName(element, name, node, in: context) else { return nil }
-            return (.repeated, text)
+        guard !inner.type.is(ArrayTypeSyntax.self), !inner.type.is(OptionalTypeSyntax.self) else {
+            error(node, "'\(name)': \(inner.refusal)", in: context)
+            return nil
         }
-        guard let text = scalarName(type, name, node, in: context) else { return nil }
-        return (.single, text)
+        guard let text = scalarName(inner.type, name, node, in: context) else { return nil }
+        return (inner.shape, text)
     }
 
     private static func scalarName(
