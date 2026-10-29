@@ -20,10 +20,12 @@
 ///
 /// Mapping: a non-optional field holding its default is left out (proto3); an `Optional` field has explicit presence; an
 /// array of numbers, `Bool` or enumerations is one packed record; an array of `String`, `Data` or messages is one record per
-/// element; any other type is a nested message that also uses `@ProtoMessage`. Decoding keeps the last occurrence of a
-/// singular field (a repeated message given twice is not merged) and skips unknown fields and fields with another wire type.
-/// An enumeration number with no case leaves the field as it was. `Int8`, `Int16`, `UInt8`, `UInt16` truncate on decode.
-/// Maps, `oneof` and classes are not supported and are diagnosed.
+/// element; any other type is a nested message that also uses `@ProtoMessage`. A non-optional message field whose encoding is empty
+/// is left out. Decoding keeps the last occurrence of a scalar field, appends to a repeated one and merges a message field given
+/// more than once. Fields the type does not declare, and declared fields with another wire type, are kept in the added
+/// `unknownFields` member and written back after the declared fields; `@ProtoMessage(unknownFields: .discard)` skips them and adds
+/// no member (ADR-0012). An enumeration number with no case leaves the field as it was. `Int8`, `Int16`, `UInt8`, `UInt16`
+/// truncate on decode. Maps, `oneof` and classes are not supported and are diagnosed.
 @attached(member, names: named(unknownFields))
 @attached(
     extension, conformances: AemiProtoFastEncodable, AemiProtoFastDecodable, Codable, names: named(__aepbEncode),

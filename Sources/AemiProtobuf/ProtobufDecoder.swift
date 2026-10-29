@@ -25,6 +25,8 @@ public struct ProtobufDecoder: Sendable {
         try decode(type, fromBytes: bytes)
     }
 
+    /// A type that is only `Codable` keeps no unknown fields: it has nowhere to put them (ADR-0012). A `@ProtoMessage` takes the
+    /// fast path and keeps them.
     /// - Throws: ``ProtobufDecodingError`` for malformed bytes, an exceeded limit or an unsupported construct,
     ///   `DecodingError` for a value that does not match the requested type, or whatever the type's `init(from:)` throws.
     /// - Complexity: O(bytes) per message level, so O(bytes × depth) for deeply nested input, with `depth` bounded by

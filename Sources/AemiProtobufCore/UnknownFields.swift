@@ -13,12 +13,17 @@ public struct UnknownFields: Sendable, Hashable {
 
 extension WireReader {
     /// Reads the field whose `tag` was just read, as ``skipField(_:)`` does, and keeps its bytes, tag included, in `unknown`.
+    /// - Complexity: O(the field's bytes).
     public mutating func readUnknownField(_ tag: FieldTag, into unknown: inout UnknownFields) throws(WireError) {
+        let start = tagOffset
         try skipField(tag)
+        unsafe unknown.bytes.append(contentsOf: UnsafeRawBufferPointer(rebasing: buffer[start ..< offset]))
     }
 }
 
 extension WireWriter {
     /// Writes fields kept by ``WireReader/readUnknownField(_:into:)`` as they were read.
-    public mutating func appendUnknownFields(_ unknown: UnknownFields) {}
+    public mutating func appendUnknownFields(_ unknown: UnknownFields) {
+        bytes.append(contentsOf: unknown.bytes)
+    }
 }

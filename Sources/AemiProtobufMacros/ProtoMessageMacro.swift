@@ -37,10 +37,19 @@ struct ProtoMessageMacro: ExtensionMacro, MemberMacro {
             ProtoFieldParser.error(node, "@ProtoMessage only applies to a struct", in: context)
             return []
         }
+        let keepsUnknown = !discardsUnknownFields(node)
+        if keepsUnknown, declaresMember(named: "unknownFields", in: decl) {
+            ProtoFieldParser.error(
+                node,
+                "'unknownFields' is the member @ProtoMessage adds; rename the property or use @ProtoMessage(unknownFields: .discard)",
+                in: context)
+            return []
+        }
         guard let fields = ProtoFieldParser.fields(of: decl, in: context) else { return [] }
         let access = accessModifier(of: decl)
         var members = [
-            ProtoMessageCodegen.encode(fields), ProtoMessageCodegen.decode, ProtoMessageCodegen.merge(fields)
+            ProtoMessageCodegen.encode(fields, keepsUnknown: keepsUnknown), ProtoMessageCodegen.decode,
+            ProtoMessageCodegen.merge(fields, keepsUnknown: keepsUnknown)
         ]
         .map { "\(access)\($0)" }
         if !declaresCodingKeys(decl) { members.append(ProtoMessageCodegen.codingKeys(fields)) }
@@ -65,6 +74,15 @@ struct ProtoMessageMacro: ExtensionMacro, MemberMacro {
             return modifier.name.text == "package" ? "package " : "public "
         }
         return ""
+    }
+
+    private static func declaresMember(named name: String, in decl: StructDeclSyntax) -> Bool {
+        decl.memberBlock.members.contains { member in
+            member.decl.as(VariableDeclSyntax.self)?.bindings
+                .contains {
+                    $0.pattern.as(IdentifierPatternSyntax.self)?.identifier.text == name
+                } ?? false
+        }
     }
 
     private static func declaresCodingKeys(_ decl: StructDeclSyntax) -> Bool {
