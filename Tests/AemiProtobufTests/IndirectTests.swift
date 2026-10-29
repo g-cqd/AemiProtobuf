@@ -40,10 +40,3 @@ import Testing
         #expect(try ProtobufEncoder().encode(GenericOnly(tree)).elementsEqual(fast))
     }
 }
-
-/// Hides the fast path, so the generic `Codable` path encodes ``TreeNode``.
-private struct GenericOnly: Encodable {
-    let tree: TreeNode
-    init(_ tree: TreeNode) { self.tree = tree }
-    func encode(to encoder: any Encoder) throws { try tree.encode(to: encoder) }
-}
