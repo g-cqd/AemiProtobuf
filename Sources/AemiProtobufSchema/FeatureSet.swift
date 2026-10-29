@@ -19,5 +19,31 @@ public struct FeatureSet: Sendable, Equatable {
     public init() {}
 
     /// The features in `bytes`, an encoded `FeatureSet`.
-    public init(bytes: [UInt8]) throws(WireError) {}
+    public init(bytes: [UInt8]) throws(WireError) {
+        try merge(bytes: bytes)
+    }
+
+    /// Sets what `bytes` sets; the rest stays.
+    mutating func merge(bytes: [UInt8]) throws(WireError) {
+        self = try WireReader.withReader(over: bytes) { r throws(WireError) -> FeatureSet in
+            var features = self
+            while let tag = try r.nextTag() {
+                guard tag.wireType == .varint else {
+                    try r.skipField(tag)
+                    continue
+                }
+                let value = try r.readInt32()
+                switch tag.fieldNumber.rawValue {
+                    case 1: features.fieldPresence = value
+                    case 2: features.enumType = value
+                    case 3: features.repeatedFieldEncoding = value
+                    case 4: features.utf8Validation = value
+                    case 5: features.messageEncoding = value
+                    case 6: features.jsonFormat = value
+                    default: continue
+                }
+            }
+            return features
+        }
+    }
 }

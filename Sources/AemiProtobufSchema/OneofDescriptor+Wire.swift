@@ -1,21 +1,20 @@
 public import AemiProtobufCore
 
 extension OneofDescriptor: WireDecodableDescriptor {
-    /// Decodes a `OneofDescriptorProto`; unknown fields are skipped.
     public static func decode(from reader: inout WireReader) throws(WireError) -> OneofDescriptor {
-        var oneof = OneofDescriptor()
-        while let tag = try reader.nextTag() {
+        try reader.readDescriptor(OneofDescriptor()) { (d: inout OneofDescriptor, tag, r) throws(WireError) -> Bool in
             switch (tag.fieldNumber.rawValue, tag.wireType) {
-                case (1, .lengthDelimited): oneof.name = try reader.readString()
-                default: try reader.skipField(tag)
+                case (1, .lengthDelimited): d.name = try r.readString()
+                case (2, .lengthDelimited): d.options = try r.readBytes()
+                default: return false
             }
+            return true
         }
-        return oneof
     }
 
-    /// Encodes as a `OneofDescriptorProto`.
     public func encode(into writer: inout WireWriter) {
-        writer.appendTag(1, .lengthDelimited)
-        writer.appendString(name)
+        writer.appendField(1, nonEmpty: name)
+        writer.appendField(2, raw: options)
+        writer.appendUnknownFields(unknownFields)
     }
 }

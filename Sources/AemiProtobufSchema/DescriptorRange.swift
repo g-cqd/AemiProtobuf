@@ -1,3 +1,5 @@
+import AemiProtobufCore
+
 /// A range of field numbers, `start` included and `end` excluded, as `DescriptorProto.ExtensionRange` and `ReservedRange` hold
 /// them (an enumeration's reserved range includes its `end`; ``EnumDescriptor/reservedRanges`` says so).
 public struct DescriptorRange: Sendable, Equatable {
@@ -10,5 +12,13 @@ public struct DescriptorRange: Sendable, Equatable {
         self.start = start
         self.end = end
         self.options = options
+    }
+}
+
+extension DescriptorRange {
+    func encode(into writer: inout WireWriter) {
+        writer.appendField(1, start)
+        writer.appendField(2, end)
+        writer.appendField(3, raw: options)
     }
 }
