@@ -34,4 +34,11 @@ import Testing
         }
         #expect(writer.bytes == [0x0A, 0x02, 0x08, 0x02])
     }
+
+    @Test func `a message with no fields compiles, reads and keeps what it is sent`() throws {
+        let decoded = try ProtobufDecoder().decode(EmptyMessage.self, fromBytes: [0x08, 0x01])
+        #expect(decoded.unknownFields.bytes == [0x08, 0x01])
+        #expect(try ProtobufEncoder().encodeToBytes(decoded) == [0x08, 0x01])
+        #expect(try ProtobufEncoder().encodeToBytes(EmptyMessage()).isEmpty)
+    }
 }
