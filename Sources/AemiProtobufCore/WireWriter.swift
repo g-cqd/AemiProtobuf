@@ -89,6 +89,13 @@ public struct WireWriter {
     public mutating func appendMessage(
         field: FieldNumber, _ body: (inout WireWriter) throws(WireError) -> Void
     ) throws(WireError) {
+        try appendMessage(field: field, keepingEmpty: true, body)
+    }
+
+    /// The tag, the body, then the length; an empty body is removed with its tag unless `keepingEmpty`.
+    private mutating func appendMessage(
+        field: FieldNumber, keepingEmpty: Bool, _ body: (inout WireWriter) throws(WireError) -> Void
+    ) throws(WireError) {
         let mark = try beginMessage(field: field)
         do {
             try body(&self)
@@ -96,7 +103,11 @@ public struct WireWriter {
             abandonMessage(mark)
             throw error
         }
-        try endMessage(mark)
+        if !keepingEmpty, bytes.count == mark.slot + 1 {
+            abandonMessage(mark)
+        } else {
+            try endMessage(mark)
+        }
     }
 
     /// Opens a nested message: writes the tag and a one-byte length slot. Everything appended until the matching
@@ -160,17 +171,6 @@ extension WireWriter {
     public mutating func appendNonEmptyMessage(
         field: FieldNumber, _ body: (inout WireWriter) throws(WireError) -> Void
     ) throws(WireError) {
-        let mark = try beginMessage(field: field)
-        do {
-            try body(&self)
-        } catch {
-            abandonMessage(mark)
-            throw error
-        }
-        if bytes.count == mark.slot + 1 {
-            abandonMessage(mark)
-        } else {
-            try endMessage(mark)
-        }
+        try appendMessage(field: field, keepingEmpty: false, body)
     }
 }

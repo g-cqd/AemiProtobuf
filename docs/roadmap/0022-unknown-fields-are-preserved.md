@@ -1,5 +1,5 @@
 ---
-status: not-started
+status: done
 blocked-by: []
 date: 2026-10-29
 ---
@@ -18,3 +18,12 @@ Red: unknown varint, fixed, length-delimited and group fields kept in order and 
 field with another wire type kept; `.discard` drops them; equality includes them.
 
 Acceptance: green; decode time and allocations of the comparison corpus (no unknown fields) within the thresholds.
+
+## Done
+
+ADR-0012. `UnknownFields` (core) keeps the raw bytes; `WireReader.readUnknownField(_:into:)` skips a field and copies it, groups
+included; `WireWriter.appendUnknownFields(_:)` writes them back. `@ProtoMessage` has a member role adding `unknownFields`, and
+`@ProtoMessage(unknownFields: .discard)` adds nothing and skips. A declared field with another wire type goes to the unknown fields.
+A user property named `unknownFields` is diagnosed. Red `6342c51` (four failing, discard and an unclosed group passing as guards).
+Measured: an empty `UnknownFields` is an empty array, so no allocation; the allocation thresholds are unchanged (the comparison
+corpus has no unknown fields).

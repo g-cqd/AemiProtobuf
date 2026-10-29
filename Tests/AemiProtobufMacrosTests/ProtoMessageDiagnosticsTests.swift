@@ -21,12 +21,17 @@ struct ProtoMessageDiagnosticsTests {
 
     private let macros: [String: any Macro.Type] = ["ProtoMessage": ProtoMessageMacro.self]
 
+    /// The expansion of a struct whose fields are refused still has the `unknownFields` member (ADR-0012).
+    private func withMember(_ source: String) -> String {
+        String(source.dropLast(2)) + "\n\n    var unknownFields = UnknownFields()\n}"
+    }
+
     /// The diagnostic is at the property's name: the column after `var ` on line 3.
     private func expectError(_ source: String, _ message: String, line: Int = 3) {
         let text = source.split(separator: "\n", omittingEmptySubsequences: false)[line - 1]
         let column = (text.range(of: "var ")?.upperBound).map { text.distance(from: text.startIndex, to: $0) + 1 } ?? 5
         assertMacroExpansion(
-            source, expandedSource: source.replacingOccurrences(of: "@ProtoMessage\n", with: ""),
+            source, expandedSource: withMember(source.replacingOccurrences(of: "@ProtoMessage\n", with: "")),
             diagnostics: [DiagnosticSpec(message: message, line: line, column: column)], macros: macros)
     }
 
@@ -56,7 +61,8 @@ struct ProtoMessageDiagnosticsTests {
     @Test func `a repeated field number is refused`() {
         assertMacroExpansion(
             "@ProtoMessage\nstruct M {\n    @ProtoField(1) var a: Int64 = 0\n    @ProtoField(1) var b: Int64 = 0\n}",
-            expandedSource: "struct M {\n    @ProtoField(1) var a: Int64 = 0\n    @ProtoField(1) var b: Int64 = 0\n}",
+            expandedSource: withMember(
+                "struct M {\n    @ProtoField(1) var a: Int64 = 0\n    @ProtoField(1) var b: Int64 = 0\n}"),
             diagnostics: [
                 DiagnosticSpec(message: "field number 1 is used by 'a' and 'b'", line: 4, column: 24)
             ], macros: macros)
@@ -66,7 +72,7 @@ struct ProtoMessageDiagnosticsTests {
     func `a field number outside the legal range is refused`(number: String) {
         assertMacroExpansion(
             "@ProtoMessage\nstruct M {\n    @ProtoField(\(number)) var a: Int64 = 0\n}",
-            expandedSource: "struct M {\n    @ProtoField(\(number)) var a: Int64 = 0\n}",
+            expandedSource: withMember("struct M {\n    @ProtoField(\(number)) var a: Int64 = 0\n}"),
             diagnostics: [
                 DiagnosticSpec(
                     message: "field number \(number) is outside 1...536870911 or in the reserved 19000...19999",
@@ -77,7 +83,7 @@ struct ProtoMessageDiagnosticsTests {
     @Test func `a negative or computed field number is not an integer literal`() {
         assertMacroExpansion(
             "@ProtoMessage\nstruct M {\n    @ProtoField(-1) var a: Int64 = 0\n}",
-            expandedSource: "struct M {\n    @ProtoField(-1) var a: Int64 = 0\n}",
+            expandedSource: withMember("struct M {\n    @ProtoField(-1) var a: Int64 = 0\n}"),
             diagnostics: [
                 DiagnosticSpec(message: "@ProtoField needs an integer literal field number", line: 3, column: 5)
             ], macros: macros)
@@ -108,6 +114,8 @@ struct ProtoMessageDiagnosticsTests {
                     static var x = 1
                     var y: Int { 2 }
                     @ProtoField(1) var a: Int64 = 0
+
+                    var unknownFields = UnknownFields()
                 }
 
                 extension M: AemiProtoFastEncodable, AemiProtoFastDecodable, Codable {
@@ -116,6 +124,7 @@ struct ProtoMessageDiagnosticsTests {
                             w.appendTag(1, .varint)
                             w.appendVarint(UInt64(bitPattern: Int64(truncatingIfNeeded: self.a)))
                         }
+                        w.appendUnknownFields(self.unknownFields)
                     }
 
                     static func __aepbDecode(from r: inout WireReader) throws(WireError) -> Self {
@@ -130,7 +139,7 @@ struct ProtoMessageDiagnosticsTests {
                             case (1, .varint):
                                 self.a = Int64(truncatingIfNeeded: Int64(bitPattern: try r.readVarint()))
                             default:
-                                try r.skipField(tag)
+                                try r.readUnknownField(tag, into: &self.unknownFields)
                             }
                         }
                     }
@@ -140,5 +149,17 @@ struct ProtoMessageDiagnosticsTests {
                     }
                 }
                 """, macros: macros)
+    }
+
+    @Test func `a property named unknownFields collides with the member, unless unknown fields are discarded`() {
+        assertMacroExpansion(
+            "@ProtoMessage\nstruct M {\n    @ProtoField(1) var unknownFields: Int64 = 0\n}",
+            expandedSource: withMember("struct M {\n    @ProtoField(1) var unknownFields: Int64 = 0\n}"),
+            diagnostics: [
+                DiagnosticSpec(
+                    message:
+                        "'unknownFields' is the member @ProtoMessage adds; rename the property or use @ProtoMessage(unknownFields: .discard)",
+                    line: 1, column: 1)
+            ], macros: macros)
     }
 }

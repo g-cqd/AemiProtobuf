@@ -1,7 +1,8 @@
 /// The Swift source of the generated members, from the fields.
 enum ProtoMessageCodegen {
-    static func encode(_ fields: [ProtoFieldSpec]) -> String {
-        let body = fields.map(encodeField).joined(separator: "\n")
+    static func encode(_ fields: [ProtoFieldSpec], keepsUnknown: Bool) -> String {
+        var body = fields.map(encodeField).joined(separator: "\n")
+        if keepsUnknown { body += "\nw.appendUnknownFields(self.unknownFields)" }
         return "func __aepbEncode(into w: inout WireWriter) throws(WireError) {\n\(body)\n}"
     }
 
@@ -13,14 +14,15 @@ enum ProtoMessageCodegen {
         }
         """
 
-    static func merge(_ fields: [ProtoFieldSpec]) -> String {
+    static func merge(_ fields: [ProtoFieldSpec], keepsUnknown: Bool) -> String {
         let cases = fields.flatMap(decodeCases).joined(separator: "\n")
+        let other = keepsUnknown ? "try r.readUnknownField(tag, into: &self.unknownFields)" : "try r.skipField(tag)"
         return """
             mutating func __aepbMerge(from r: inout WireReader) throws(WireError) {
             while let tag = try r.nextTag() {
             switch (tag.fieldNumber.rawValue, tag.wireType) {
             \(cases)
-            default: try r.skipField(tag)
+            default: \(other)
             }
             }
             }
@@ -127,11 +129,15 @@ enum ProtoMessageCodegen {
     }
 
     private static func assign(_ target: String, _ scalar: ProtoFieldScalar) -> String {
-        scalar.readsOptionalValue ? "if let __v = \(scalar.read) { \(target) = __v }" : "\(target) = \(scalar.read)"
+        store(scalar) { "\(target) = \($0)" }
     }
 
     private static func append(_ target: String, _ scalar: ProtoFieldScalar) -> String {
-        scalar.readsOptionalValue
-            ? "if let __v = \(scalar.read) { \(target).append(__v) }" : "\(target).append(\(scalar.read))"
+        store(scalar) { "\(target).append(\($0))" }
+    }
+
+    /// `body` applied to the value read, behind an `if let` when the read can find no value.
+    private static func store(_ scalar: ProtoFieldScalar, _ body: (String) -> String) -> String {
+        scalar.readsOptionalValue ? "if let __v = \(scalar.read) { \(body("__v")) }" : body(scalar.read)
     }
 }
