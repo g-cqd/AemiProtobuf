@@ -24,10 +24,12 @@
 /// singular field (a repeated message given twice is not merged) and skips unknown fields and fields with another wire type.
 /// An enumeration number with no case leaves the field as it was. `Int8`, `Int16`, `UInt8`, `UInt16` truncate on decode.
 /// Maps, `oneof` and classes are not supported and are diagnosed.
+@attached(member, names: named(unknownFields))
 @attached(
     extension, conformances: AemiProtoFastEncodable, AemiProtoFastDecodable, Codable, names: named(__aepbEncode),
     named(__aepbDecode), named(__aepbMerge), named(CodingKeys))
-public macro ProtoMessage() = #externalMacro(module: "AemiProtobufMacros", type: "ProtoMessageMacro")
+public macro ProtoMessage(unknownFields: ProtoUnknownFields = .preserve) =
+    #externalMacro(module: "AemiProtobufMacros", type: "ProtoMessageMacro")
 
 /// Gives a property of a ``ProtoMessage()`` struct its protobuf field number, and its kind where the Swift type is ambiguous.
 /// - Parameters:
