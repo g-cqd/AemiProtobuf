@@ -46,10 +46,22 @@ struct ProtoMessageDiagnosticsTests {
             "'a' needs a default value: the generated decoder starts from Self()")
     }
 
-    @Test func `a dictionary is refused`() {
+    @Test func `a map with a key protobuf cannot key on, or a kind given positionally, is refused`() {
         expectError(
-            "@ProtoMessage\nstruct M {\n    @ProtoField(1) var a: [String: Int32] = [:]\n}",
-            "'a': maps are not supported by @ProtoMessage yet")
+            "@ProtoMessage\nstruct M {\n    @ProtoField(1) var a: [Double: Int32] = [:]\n}",
+            "'a': a map key cannot be a protobuf double")
+        expectError(
+            "@ProtoMessage\nstruct M {\n    @ProtoField(1, .sint32) var a: [Int32: Int32] = [:]\n}",
+            "'a' is a map: give its kinds as key: and value:")
+        expectError(
+            "@ProtoMessage\nstruct M {\n    @ProtoField(1, key: .sint32) var a: Int32 = 0\n}",
+            "'a': key: and value: are for a map ([Key: Value]) property")
+        expectError(
+            "@ProtoMessage\nstruct M {\n    @ProtoField(1) var a: [String: [Int32]] = [:]\n}",
+            "'a': unsupported type '[Int32]'")
+        expectError(
+            "@ProtoMessage\nstruct M {\n    @ProtoField(1) var a: Dictionary<String, Int32> = [:]\n}",
+            "'a': a map must be written [Key: Value], at the top of the property's type")
     }
 
     @Test func `a kind that does not fit the Swift type is refused`() {

@@ -5,6 +5,9 @@ struct ProtoFieldSpec {
     let number: Int
     let kind: ProtoKind
     let shape: ProtoFieldShape
-    /// The element type for a repeated field, the wrapped type for an optional one, else the property type.
+    /// The element type for a repeated field, the wrapped type for an optional one, the value type for a map, else the property
+    /// type.
     let swiftType: String
+    /// A map's key kind and Swift type.
+    var key: (kind: ProtoKind, swiftType: String)? = nil
 }
