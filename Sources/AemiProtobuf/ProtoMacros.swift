@@ -26,7 +26,7 @@
 /// Maps, `oneof` and classes are not supported and are diagnosed.
 @attached(
     extension, conformances: AemiProtoFastEncodable, AemiProtoFastDecodable, Codable, names: named(__aepbEncode),
-    named(__aepbDecode), named(CodingKeys))
+    named(__aepbDecode), named(__aepbMerge), named(CodingKeys))
 public macro ProtoMessage() = #externalMacro(module: "AemiProtobufMacros", type: "ProtoMessageMacro")
 
 /// Gives a property of a ``ProtoMessage()`` struct its protobuf field number, and its kind where the Swift type is ambiguous.

@@ -1,5 +1,5 @@
 ---
-status: not-started
+status: done
 blocked-by: []
 date: 2026-10-29
 ---
@@ -16,3 +16,11 @@ protoc oracle (`protoc --decode` of concatenated encodings) agrees.
 
 Acceptance: green, the existing oracles unchanged, decode allocation thresholds unchanged (a merge costs nothing when a field
 occurs once).
+
+## Done
+
+`AemiProtoFastDecodable` has `__aepbMerge(from:)` (a default that replaces, for hand-written types); the macro generates it, and
+`__aepbDecode` is `Self()` then a merge. A singular message merges in place; an optional one merges into its current value or a new
+one. Red `f91008c` (protoc oracle `merge.bin`, four failing, the repeated-append guard passing). The generic path already merged
+(`CodableAdversarialTests`). Allocation thresholds unchanged. Also fixed on the way: the generated members are now each given the
+type's access modifier (a merge function joined to the decoder in one string would not have been).
