@@ -19,7 +19,7 @@ enum ProtoFieldParser {
                     failed = true
                     continue
                 }
-                if let first = seen[spec.number] {
+                if spec.shape != .oneof, let first = seen[spec.number] {
                     error(binding, "field number \(spec.number) is used by '\(first)' and '\(spec.name)'", in: context)
                     failed = true
                 }
@@ -51,6 +51,7 @@ enum ProtoFieldParser {
             error(binding, "a protobuf field needs a plain property name", in: context)
             return nil
         }
+        if hasAttribute("ProtoOneofField", variable) { return oneofField(binding, name, in: context) }
         guard let attribute = fieldAttribute(of: variable) else {
             error(binding, "'\(name)' needs @ProtoField(number)", in: context)
             return nil
@@ -118,6 +119,27 @@ enum ProtoFieldParser {
             "'\(name)' is \(swiftType), which cannot be a protobuf \(kind.rawValue); use \(allowed.sorted().joined(separator: ", "))",
             in: context)
         return false
+    }
+
+    private static func hasAttribute(_ name: String, _ variable: VariableDeclSyntax) -> Bool {
+        variable.attributes.contains {
+            if case .attribute(let attribute) = $0 { return attribute.attributeName.trimmedDescription == name }
+            return false
+        }
+    }
+
+    /// `@ProtoOneofField var kind: Kind? = nil`: optional, with no field number of its own.
+    private static func oneofField(
+        _ binding: PatternBindingSyntax, _ name: String, in context: some MacroExpansionContext
+    ) -> ProtoFieldSpec? {
+        guard let optional = binding.typeAnnotation?.type.as(OptionalTypeSyntax.self),
+            optional.wrappedType.is(IdentifierTypeSyntax.self) || optional.wrappedType.is(MemberTypeSyntax.self)
+        else {
+            error(binding, "'\(name)': a @ProtoOneofField property is an optional @ProtoOneof enumeration", in: context)
+            return nil
+        }
+        return ProtoFieldSpec(
+            name: name, number: 0, kind: .message, shape: .oneof, swiftType: optional.wrappedType.trimmedDescription)
     }
 
     private static func fieldAttribute(of variable: VariableDeclSyntax) -> AttributeSyntax? {

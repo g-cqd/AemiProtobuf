@@ -47,3 +47,24 @@ public macro ProtoField(
     _ number: Int, _ kind: ProtoKind = .automatic, key: ProtoKind = .automatic, value: ProtoKind = .automatic
 ) =
     #externalMacro(module: "AemiProtobufMacros", type: "ProtoFieldMacro")
+
+/// Makes an enumeration a protobuf `oneof`.
+///
+/// Every case has one associated value and `@ProtoField(number)` (with a kind where the Swift type is ambiguous), as a message
+/// field would; the macro adds ``AemiProtoOneof`` and `Codable`. The message holds it in an optional property marked
+/// ``ProtoOneofField()``, with no number of its own.
+///
+/// ```swift
+/// @ProtoOneof
+/// enum Kind {
+///     @ProtoField(1) case circle(Int32)
+///     @ProtoField(2) case leaf(Leaf)
+/// }
+/// ```
+@attached(extension, conformances: AemiProtoOneof, Codable, names: named(__aepbEncode), named(__aepbDecodeField))
+public macro ProtoOneof() = #externalMacro(module: "AemiProtobufMacros", type: "ProtoOneofMacro")
+
+/// Marks the property of a ``ProtoMessage(unknownFields:)`` that holds a ``ProtoOneof()`` enumeration:
+/// `@ProtoOneofField var kind: Kind? = nil`. A marker: `@ProtoMessage` reads it.
+@attached(peer)
+public macro ProtoOneofField() = #externalMacro(module: "AemiProtobufMacros", type: "ProtoFieldMacro")

@@ -3,5 +3,5 @@ import SwiftSyntaxMacros
 
 @main
 struct ProtoMacrosPlugin: CompilerPlugin {
-    let providingMacros: [any Macro.Type] = [ProtoMessageMacro.self, ProtoFieldMacro.self]
+    let providingMacros: [any Macro.Type] = [ProtoMessageMacro.self, ProtoFieldMacro.self, ProtoOneofMacro.self]
 }
