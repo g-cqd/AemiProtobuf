@@ -58,6 +58,8 @@ enum ProtoMessageCodegen {
                 return "if \(scalar.isSet("self.\(f.name)")) {\n\(record(f, scalar, "self.\(f.name)"))\n}"
             case .optional:
                 return "if let __v = self.\(f.name) {\n\(whole(f, scalar, "__v"))\n}"
+            case .repeated where !f.packed:
+                return "for __e in self.\(f.name) {\n\(whole(f, scalar, "__e"))\n}"
             case .repeated:
                 if scalar.isBulkCopyable {
                     return "w.appendPackedLittleEndian(field: \(f.number), self.\(f.name))"

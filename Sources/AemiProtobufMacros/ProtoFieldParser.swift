@@ -84,6 +84,13 @@ enum ProtoFieldParser {
         }
         var spec = ProtoFieldSpec(name: name, number: arguments.number, kind: kind, shape: shape, swiftType: swiftType)
         spec.required = arguments.required
+        if !arguments.packed {
+            guard shape == .repeated, kind.isPackable else {
+                error(binding, "'\(name)': packed: false is for a repeated number, bool or enumeration", in: context)
+                return nil
+            }
+            spec.packed = false
+        }
         return spec
     }
 

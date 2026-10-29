@@ -192,4 +192,10 @@ struct ProtoMessageDiagnosticsTests {
             "@ProtoMessage\nstruct M {\n    @ProtoField(1, value: .group) var m: [Int32: G] = [:]\n}",
             "'m': a map value cannot be a group, and a map cannot be required")
     }
+
+    @Test func `packed: false on a field that is not a repeated number is refused`() {
+        expectError(
+            "@ProtoMessage\nstruct M {\n    @ProtoField(1, packed: false) var a: [String] = []\n}",
+            "'a': packed: false is for a repeated number, bool or enumeration")
+    }
 }
