@@ -2,7 +2,7 @@
 /// attribute is spelled with; the macro reads them from syntax, so the two lists must match.
 enum ProtoKind: String, CaseIterable {
     case int32, int64, uint32, uint64, sint32, sint64, fixed32, fixed64, sfixed32, sfixed64
-    case bool, float, double, string, bytes, message, enumeration
+    case bool, float, double, string, bytes, message, enumeration, group
 
     /// The Swift spellings a field of this kind may have.
     var swiftTypes: Set<String>? {
@@ -18,7 +18,7 @@ enum ProtoKind: String, CaseIterable {
             case .double: ["Double"]
             case .string: ["String"]
             case .bytes: ["Data", "[UInt8]"]
-            case .message, .enumeration: nil
+            case .message, .enumeration, .group: nil
         }
     }
 
@@ -41,7 +41,7 @@ enum ProtoKind: String, CaseIterable {
     /// Whether a repeated field of this kind is one packed record (proto3) rather than one record per element.
     var isPackable: Bool {
         switch self {
-            case .string, .bytes, .message: false
+            case .string, .bytes, .message, .group: false
             default: true
         }
     }
@@ -50,7 +50,7 @@ enum ProtoKind: String, CaseIterable {
         switch self {
             case .fixed32, .sfixed32, .float: ".fixed32"
             case .fixed64, .sfixed64, .double: ".fixed64"
-            case .string, .bytes, .message: ".lengthDelimited"
+            case .string, .bytes, .message, .group: ".lengthDelimited"
             default: ".varint"
         }
     }

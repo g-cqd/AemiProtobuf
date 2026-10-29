@@ -72,7 +72,8 @@ enum ProtoFieldParser {
             return nil
         }
         guard let (shape, swiftType) = shapeAndType(of: type, name, binding, in: context) else { return nil }
-        let kind = arguments.kind ?? ProtoKind.inferred(for: swiftType)
+        var kind = arguments.kind ?? ProtoKind.inferred(for: swiftType)
+        if kind == .group { kind = .message }
         guard fits(kind, swiftType, name, binding, in: context) else { return nil }
         return ProtoFieldSpec(name: name, number: arguments.number, kind: kind, shape: shape, swiftType: swiftType)
     }
@@ -155,6 +156,7 @@ enum ProtoFieldParser {
         var kind: ProtoKind?
         var key: ProtoKind?
         var value: ProtoKind?
+        var required = false
     }
 
     static func arguments(of attribute: AttributeSyntax, in context: some MacroExpansionContext) -> Arguments? {
@@ -172,6 +174,14 @@ enum ProtoFieldParser {
         }
         var result = Arguments(number: number)
         for argument in list.dropFirst() {
+            if argument.label?.text == "required" {
+                guard let flag = argument.expression.as(BooleanLiteralExprSyntax.self) else {
+                    error(attribute, "required: must be true or false", in: context)
+                    return nil
+                }
+                result.required = flag.literal.tokenKind == .keyword(.true)
+                continue
+            }
             guard let name = argument.expression.as(MemberAccessExprSyntax.self)?.declName.baseName.text else {
                 error(attribute, "the kind of @ProtoField must be a case such as .sint32", in: context)
                 return nil
