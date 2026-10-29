@@ -8,4 +8,7 @@ enum ProtoFieldShape {
     case repeated
     /// A `[Key: Value]`, written as repeated entry messages (key 1, value 2); the spec's `kind` and `swiftType` are the value's.
     case map
+    /// A `@ProtoOneof` property: an optional enumeration whose cases are fields; the spec's number is 0 and `swiftType` the
+    /// enumeration.
+    case oneof
 }

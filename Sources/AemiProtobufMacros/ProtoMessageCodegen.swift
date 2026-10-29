@@ -39,6 +39,7 @@ enum ProtoMessageCodegen {
     private static func encodeField(_ f: ProtoFieldSpec) -> String {
         let scalar = ProtoFieldScalar(kind: f.kind, swiftType: f.swiftType)
         switch f.shape {
+            case .oneof: return ""
             case .map: return mapEncode(f)
             case .single:
                 if f.kind == .message {
@@ -90,6 +91,7 @@ enum ProtoMessageCodegen {
                 ? "self.unknownFields.appendVarint(field: \(f.number), UInt64(bitPattern: Int64(__raw)))" : nil)
         let wire = f.kind.wireType
         switch f.shape {
+            case .oneof: return []
             case .map: return [mapDecode(f, keepsUnknown: keepsUnknown)]
             // A message given again merges into the one already read (the encoding guide's merge); a scalar's last wins.
             case .single where f.kind == .message:
