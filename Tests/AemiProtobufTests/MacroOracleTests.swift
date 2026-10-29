@@ -36,10 +36,11 @@ struct MacroOracleTests {
         #expect(Kinds.CodingKeys.rLeaf.intValue == 27)
     }
 
-    @Test func `an empty message is all defaults and writes nothing but the always-present message`() throws {
+    @Test func `an empty message is all defaults and writes nothing`() throws {
         var writer = WireWriter()
         try Kinds().__aepbEncode(into: &writer)
-        #expect(writer.bytes == [0x8A, 0x01, 0x00])  // field 17, the non-optional nested message
+        // Field 17, the non-optional nested message, is at its default too (roadmap 0021).
+        #expect(writer.bytes.isEmpty)
     }
 
     @Test func `a field with another wire type, an unknown field and an unknown enum number are skipped`() throws {

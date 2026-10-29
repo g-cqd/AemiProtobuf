@@ -160,6 +160,17 @@ extension WireWriter {
     public mutating func appendNonEmptyMessage(
         field: FieldNumber, _ body: (inout WireWriter) throws(WireError) -> Void
     ) throws(WireError) {
-        try appendMessage(field: field, body)
+        let mark = try beginMessage(field: field)
+        do {
+            try body(&self)
+        } catch {
+            abandonMessage(mark)
+            throw error
+        }
+        if bytes.count == mark.slot + 1 {
+            abandonMessage(mark)
+        } else {
+            try endMessage(mark)
+        }
     }
 }
