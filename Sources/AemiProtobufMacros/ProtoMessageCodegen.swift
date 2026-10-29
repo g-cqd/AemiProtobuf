@@ -15,7 +15,7 @@ enum ProtoMessageCodegen {
         """
 
     static func merge(_ fields: [ProtoFieldSpec], keepsUnknown: Bool) -> String {
-        let cases = fields.flatMap(decodeCases).joined(separator: "\n")
+        let cases = fields.flatMap { decodeCases($0, keepsUnknown: keepsUnknown) }.joined(separator: "\n")
         let other = keepsUnknown ? "try r.readUnknownField(tag, into: &self.unknownFields)" : "try r.skipField(tag)"
         return """
             mutating func __aepbMerge(from r: inout WireReader) throws(WireError) {
@@ -81,8 +81,12 @@ enum ProtoMessageCodegen {
 
     // MARK: Decode
 
-    private static func decodeCases(_ f: ProtoFieldSpec) -> [String] {
-        let scalar = ProtoFieldScalar(kind: f.kind, swiftType: f.swiftType)
+    private static func decodeCases(_ f: ProtoFieldSpec, keepsUnknown: Bool) -> [String] {
+        // A closed enumeration's number with no case is kept as an unknown varint field, as C++ keeps it (roadmap 0023).
+        let scalar = ProtoFieldScalar(
+            kind: f.kind, swiftType: f.swiftType,
+            unknown: keepsUnknown
+                ? "self.unknownFields.appendVarint(field: \(f.number), UInt64(bitPattern: Int64(__raw)))" : nil)
         let wire = f.kind.wireType
         switch f.shape {
             // A message given again merges into the one already read (the encoding guide's merge); a scalar's last wins.
@@ -136,8 +140,11 @@ enum ProtoMessageCodegen {
         store(scalar) { "\(target).append(\($0))" }
     }
 
-    /// `body` applied to the value read, behind an `if let` when the read can find no value.
+    /// `body` applied to the value read. An enumeration's number is read first; with no case for it, it goes where the scalar's
+    /// `unknown` says, or nowhere.
     private static func store(_ scalar: ProtoFieldScalar, _ body: (String) -> String) -> String {
-        scalar.readsOptionalValue ? "if let __v = \(scalar.read) { \(body("__v")) }" : body(scalar.read)
+        guard scalar.readsOptionalValue else { return body(scalar.read) }
+        let otherwise = scalar.unknown.map { " else { \($0) }" } ?? ""
+        return "do { let __raw = try r.readInt32(); if let __v = \(scalar.read) { \(body("__v")) }\(otherwise) }"
     }
 }

@@ -43,12 +43,15 @@ struct MacroOracleTests {
         #expect(writer.bytes.isEmpty)
     }
 
-    @Test func `a field with another wire type, an unknown field and an unknown enum number are skipped`() throws {
+    @Test func `a field with another wire type, an unknown field and an unknown enum number are kept as unknown`()
+        throws
+    {
         // a_int32 as fixed32, unknown field 100, color = 9 (no case), then a_int32 = 3
         let bytes: [UInt8] = [0x0D, 1, 0, 0, 0, 0xA0, 0x06, 0x01, 0x80, 0x01, 0x09, 0x08, 0x03]
         let decoded = try ProtobufDecoder().decode(Kinds.self, fromBytes: bytes)
         #expect(decoded.aInt32 == 3)
         #expect(decoded.color == .red)
+        #expect(decoded.unknownFields.bytes == Array(bytes[0 ..< 11]))
     }
 
     @Test func `packed and unpacked repeated numbers mix`() throws {

@@ -3,6 +3,8 @@
 struct ProtoFieldScalar {
     let kind: ProtoKind
     let swiftType: String
+    /// The statement that keeps an enumeration number with no case (`__raw`), or nil to drop it.
+    var unknown: String? = nil
 
     /// `true` when `value` is not the proto3 default and so must be written.
     func isSet(_ value: String) -> String {
@@ -57,7 +59,7 @@ struct ProtoFieldScalar {
             case .double: "try r.readDouble()"
             case .string: "try r.readString()"
             case .bytes: swiftType == "Data" ? "Data(try r.readBytes())" : "try r.readBytes()"
-            case .enumeration: "ProtoEnumeration.value(\(swiftType).self, try r.readInt32())"
+            case .enumeration: "ProtoEnumeration.value(\(swiftType).self, __raw)"
             case .message:
                 "try r.readMessage { r throws(WireError) in try \(swiftType).__aepbDecode(from: &r) }"
         }
