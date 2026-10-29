@@ -22,10 +22,17 @@ Probe first: how much of editions do consumers need (open question 6).
 6. `oneof` and proto3 `optional` (synthetic `_name` oneofs after the declared ones), `OneofDescriptor`, `oneof_index` and `proto3_optional` on the wire, protoc's camel-case `json_name`. Oracle: `oneof.proto` parses to exactly the descriptor `protoc` wrote, and re-encodes to the same bytes. An out-of-range `oneof_index` is refused (`DescriptorError`).
 7. Lexer rejects unsupported characters, unterminated comments/strings, and overflowing integers. Parser bounds source bytes and nesting, and rejects invalid field numbers.
 
+8. The descriptor model holds everything protoc writes (2026-10-29): dependencies (public and weak), services and methods,
+   top-level and nested extensions (`extendee`), extension and reserved ranges and names, default values, raw options messages,
+   `SourceCodeInfo`, `edition`, and unknown fields on every descriptor. Options the generator needs read back on demand (`packed`,
+   `map_entry`, `message_set_wire_format`, `allow_alias`, `FeatureSet` at file, message, field and enumeration level). An absent
+   `syntax` stays empty (protoc writes none for proto2; `resolvedSyntax` says proto2), so the round trip is exact. Oracle:
+   `conformance-set.pb` (protoc `--include_imports` over the conformance, proto2, proto3 and editions test messages and
+   `descriptor.proto`, 14 files) decodes and re-encodes byte for byte.
+
 ## Remaining acceptance criteria
 
 - Maps, imports, options, reserved declarations, proto2 and editions semantics, and a printer.
 - Name resolution and schema validity checks, including duplicate declarations.
-- Complete descriptor-set representation and preservation of unsupported fields/options.
 - Differential corpus covering well-known types and `descriptor.proto`.
 - Schema parser/descriptor benchmarks and mutation coverage.

@@ -27,7 +27,8 @@ import Testing
     @Test func `files keep their dependencies, extensions, syntax and edition`() throws {
         let (decoded, _) = try set()
         let proto2 = try #require(decoded.files.first { $0.name == "google/protobuf/test_messages_proto2.proto" })
-        #expect(proto2.syntax == "proto2")
+        #expect(proto2.syntax.isEmpty, "protoc writes no syntax for a proto2 file")
+        #expect(proto2.resolvedSyntax == "proto2")
         #expect(proto2.extensions.map(\.name).contains("extension_int32"))
         #expect(proto2.extensions.first?.extendee == ".protobuf_test_messages.proto2.TestAllTypesProto2")
         let proto3 = try #require(decoded.files.first { $0.name == "google/protobuf/test_messages_proto3.proto" })

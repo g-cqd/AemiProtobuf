@@ -2,25 +2,23 @@ public import AemiProtobufCore
 
 extension EnumValueDescriptor: WireDecodableDescriptor {
     public static func decode(from reader: inout WireReader) throws(WireError) -> EnumValueDescriptor {
-        var val = EnumValueDescriptor()
-        while let tag = try reader.nextTag() {
+        try reader.readDescriptor(EnumValueDescriptor()) {
+            (d: inout EnumValueDescriptor, tag, r) throws(WireError) -> Bool in
             switch (tag.fieldNumber.rawValue, tag.wireType) {
-                case (1, .lengthDelimited): val.name = try reader.readString()
-                case (2, .varint): val.number = try reader.readInt32()
-                default: try reader.skipField(tag)
+                case (1, .lengthDelimited): d.name = try r.readString()
+                case (2, .varint): d.number = try r.readInt32()
+                case (3, .lengthDelimited): d.options = try r.readBytes()
+                default: return false
             }
+            return true
         }
-        return val
     }
 
-    public func encode(into writer: inout WireWriter) throws(WireError) {
-        if !name.isEmpty {
-            writer.appendTag(1, .lengthDelimited)
-            writer.appendString(name)
-        }
-        if number != 0 {
-            writer.appendTag(2, .varint)
-            writer.appendInt32(number)
-        }
+    /// The number is written even when it is 0: protoc sets it on every value.
+    public func encode(into writer: inout WireWriter) {
+        writer.appendField(1, nonEmpty: name)
+        writer.appendField(2, number)
+        writer.appendField(3, raw: options)
+        writer.appendUnknownFields(unknownFields)
     }
 }
