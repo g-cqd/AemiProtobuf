@@ -30,5 +30,10 @@ extension WireWriter {
 
 extension UnknownFields {
     /// Keeps a varint field, as a closed enumeration's number with no case is kept.
-    public mutating func appendVarint(field: FieldNumber, _ value: UInt64) {}
+    public mutating func appendVarint(field: FieldNumber, _ value: UInt64) {
+        var writer = WireWriter()
+        writer.appendTag(field, .varint)
+        writer.appendVarint(value)
+        bytes.append(contentsOf: writer.bytes)
+    }
 }

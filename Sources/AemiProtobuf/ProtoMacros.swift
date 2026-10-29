@@ -24,7 +24,8 @@
 /// is left out. Decoding keeps the last occurrence of a scalar field, appends to a repeated one and merges a message field given
 /// more than once. Fields the type does not declare, and declared fields with another wire type, are kept in the added
 /// `unknownFields` member and written back after the declared fields; `@ProtoMessage(unknownFields: .discard)` skips them and adds
-/// no member (ADR-0012). An enumeration number with no case leaves the field as it was. `Int8`, `Int16`, `UInt8`, `UInt16`
+/// no member (ADR-0012). An enumeration whose `init(rawValue:)` cannot fail is open and keeps every number; a raw-value
+/// enumeration is closed, and a number with no case goes to the unknown fields (``ProtoEnumeration``). `Int8`, `Int16`, `UInt8`, `UInt16`
 /// truncate on decode. Maps, `oneof` and classes are not supported and are diagnosed.
 @attached(member, names: named(unknownFields))
 @attached(
