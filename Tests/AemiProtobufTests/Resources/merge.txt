@@ -1,0 +1,21 @@
+pair {
+  a: 1
+  b: 2
+  list: 1
+  list: 2
+  inner {
+    a: 5
+    b: 6
+  }
+}
+maybe {
+  a: 3
+  b: 4
+}
+many {
+  a: 1
+}
+many {
+  b: 2
+}
+last: 2

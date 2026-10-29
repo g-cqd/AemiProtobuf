@@ -1,0 +1,4 @@
+syntax = "proto3";
+message Inner { int32 a = 1; int32 b = 2; }
+message Pair { int32 a = 1; int32 b = 2; repeated int32 list = 3; Inner inner = 4; }
+message Holder { Pair pair = 1; optional Pair maybe = 2; repeated Pair many = 3; int32 last = 4; }
