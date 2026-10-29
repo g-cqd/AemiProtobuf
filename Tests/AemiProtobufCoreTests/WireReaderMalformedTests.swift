@@ -28,6 +28,16 @@ struct WireReaderMalformedTests {
         #expect(value == UInt64.max)
     }
 
+    /// A tag is a 32-bit value: C++ reads it in at most five bytes, so a longer encoding of a small tag is refused too, not only
+    /// a value above 32 bits (the conformance suite's `BadTag_OverlongVarint`).
+    @Test func `a tag written in more than five bytes is refused, and five is accepted`() throws {
+        let overlong: [UInt8] = [0x88, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00, 0x01]
+        #expect(throws: WireError.invalidTag(8, at: 0)) { _ = try read(overlong) { r throws(WireError) in try r.nextTag() } }
+        let five: [UInt8] = [0x88, 0x80, 0x80, 0x80, 0x00, 0x01]
+        let tag = try read(five) { r throws(WireError) in try r.nextTag() }
+        #expect(tag?.fieldNumber == 1)
+    }
+
     @Test func `field zero is not a field`() {
         #expect(throws: WireError.invalidTag(0, at: 0)) {
             _ = try read([0x00, 0x01]) { r throws(WireError) in try r.nextTag() }
