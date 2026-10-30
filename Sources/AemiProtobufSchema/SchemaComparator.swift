@@ -35,12 +35,14 @@ public struct SchemaComparator: Sendable {
     private func compareFields(_ message: String, _ old: MessageDescriptor, _ new: MessageDescriptor)
         -> [BreakingChange]
     {
-        let byNumber = Dictionary(new.fields.map { ($0.number, $0) }, uniquingKeysWith: { first, _ in first })
-        let byName = Dictionary(new.fields.map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
+        // A linear search, as the validator's lookup for small messages: no dictionary per message (the allocation gate).
+        let fields = new.fields
         var changes: [BreakingChange] = []
-        for field in old.fields.sorted(by: { $0.number < $1.number }) {
-            guard let current = byNumber[field.number] else {
-                if let moved = byName[field.name] {
+        let ordered = old.fields.indices.sorted { old.fields[$0].number < old.fields[$1].number }
+        for position in ordered {
+            let field = old.fields[position]
+            guard let current = fields.first(where: { $0.number == field.number }) else {
+                if let moved = fields.first(where: { $0.name == field.name }) {
                     changes.append(
                         BreakingChange(
                             kind: .fieldRenumbered(
