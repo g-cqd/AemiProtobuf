@@ -14,14 +14,14 @@ import Testing
         return try FileDescriptorSet.decode(from: [UInt8](try Data(contentsOf: url)))
     }
 
-    private static func expected() throws -> [String: [String]] {
+    private static func oracle() throws -> [String: [String]] {
         let url = try #require(
             Bundle.module.url(forResource: "expected", withExtension: "json", subdirectory: directory))
         return try JSONDecoder().decode([String: [String]].self, from: try Data(contentsOf: url))
     }
 
     @Test func `every pair reports the rules buf reports`() throws {
-        let expected = try Self.expected()
+        let expected = try Self.oracle()
         #expect(expected.count == 14)
         for (name, rules) in expected.sorted(by: { $0.key < $1.key }) {
             let changes = SchemaComparator().compare(old: try load("\(name)-old"), new: try load("\(name)-new"))
