@@ -8,6 +8,13 @@ public import AemiProtobufSchema
 /// as strings, `bytes` in base64, enumerations by name, maps as objects; Timestamp, Duration, FieldMask, the wrappers, Struct,
 /// Value, ListValue, Empty and Any in their own forms. Reading accepts JSON or declared names, integers as numbers or strings,
 /// and base64 in either alphabet. Both directions are iterative, nesting bounded by ``Options/maxDepth``.
+///
+/// A `@ProtoMessage` or generated type goes through its binary form, so this module needs neither the macros nor Foundation:
+///
+/// ```swift
+/// let json = try coder.json(fromBinary: try ProtobufEncoder().encodeToBytes(value), as: "pkg.Message")
+/// let value = try ProtobufDecoder().decode(Message.self, fromBytes: try coder.binary(fromJSON: json, as: "pkg.Message"))
+/// ```
 public struct ProtoJSONCoder: Sendable {
     public struct Options: Sendable {
         /// Skip members the message type does not declare, and enumeration names it lacks, instead of refusing them.
