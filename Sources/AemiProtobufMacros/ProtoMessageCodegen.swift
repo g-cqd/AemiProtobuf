@@ -61,6 +61,10 @@ enum ProtoMessageCodegen {
                 return "if \(scalar.isSet("self.\(f.name)")) {\n\(record(f, scalar, "self.\(f.name)"))\n}"
             case .optional:
                 return "if let __v = self.\(f.name) {\n\(whole(f, scalar, "__v"))\n}"
+            case .repeated where f.kind == .string && f.swiftType == "String":
+                return "w.appendRepeatedStrings(field: \(f.number), self.\(f.name))"
+            case .repeated where f.kind == .bytes && f.swiftType == "[UInt8]":
+                return "w.appendRepeatedBytes(field: \(f.number), self.\(f.name))"
             case .repeated where !f.packed:
                 return "for __e in self.\(f.name) {\n\(whole(f, scalar, "__e"))\n}"
             case .repeated:

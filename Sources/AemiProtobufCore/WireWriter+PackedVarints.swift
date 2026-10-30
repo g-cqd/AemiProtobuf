@@ -37,16 +37,22 @@ extension WireWriter {
         reserve(additional: size + 11)
         appendTag(field, .lengthDelimited)
         appendVarint(UInt64(size))
-        for index in 0 ..< count { appendVarintBytes(element(index)) }
-    }
-
-    @inline(__always)
-    private mutating func appendVarintBytes(_ value: UInt64) {
-        var rest = value
-        while rest >= 0x80 {
-            bytes.append(UInt8(truncatingIfNeeded: rest) | 0x80)
-            rest >>= 7
+        // The body is grown once and written through one buffer: an `append` per byte paid the array's uniqueness and capacity
+        // checks for every byte (roadmap 0019). Every index stays below `start + size`, the width summed above.
+        let start = bytes.count
+        bytes.append(contentsOf: repeatElement(0, count: size))
+        bytes.withUnsafeMutableBufferPointer { buffer in
+            var position = start
+            for index in 0 ..< count {
+                var rest = element(index)
+                while rest >= 0x80 {
+                    unsafe buffer[position] = UInt8(truncatingIfNeeded: rest) | 0x80
+                    position += 1
+                    rest >>= 7
+                }
+                unsafe buffer[position] = UInt8(truncatingIfNeeded: rest)
+                position += 1
+            }
         }
-        bytes.append(UInt8(truncatingIfNeeded: rest))
     }
 }
