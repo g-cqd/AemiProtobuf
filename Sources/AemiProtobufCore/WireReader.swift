@@ -57,7 +57,7 @@ public struct WireReader {
         return try result.get()
     }
 
-    /// Runs `body` with a reader over `span`. Same contract as ``withReader(over:limits:_:)-(Array<UInt8>,_,_)``.
+    /// Runs `body` with a reader over `span`. Same contract as the `[UInt8]` overload.
     public static func withReader<R>(
         over span: RawSpan, limits: WireLimits = .default, _ body: (inout WireReader) throws(WireError) -> R
     ) throws(WireError) -> R {
