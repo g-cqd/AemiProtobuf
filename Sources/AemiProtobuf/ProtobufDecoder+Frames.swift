@@ -4,7 +4,13 @@ extension ProtobufDecoder {
     /// The message in `frame`, decompressed first when the frame says it is compressed.
     public func decode<T: Decodable & AemiProtoFastDecodable>(
         _ type: T.Type, frame: Frame, compression: (any FrameCompression)? = nil
-    ) throws -> T { throw ProtobufDecodingError.unsupported("frames") }
+    ) throws -> T {
+        guard frame.isCompressed else { return try decode(type, fromBytes: frame.payload) }
+        guard let compression else {
+            throw ProtobufDecodingError.unsupported("the frame is compressed and no compression was given")
+        }
+        return try decode(type, fromBytes: try compression.decompress(frame.payload))
+    }
 
     /// The messages in a stream of byte chunks, one a frame: the shape of a gRPC server stream.
     public func messages<T: Decodable & AemiProtoFastDecodable & Sendable, Base: AsyncSequence>(
