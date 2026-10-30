@@ -6,16 +6,20 @@ struct FlatSchema {
     var closedEnumValues: [String: Set<Int32>] = [:]
     /// Extensions by the fully qualified name (no leading dot) of the message they extend.
     var extensions: [String: [FieldDescriptor]] = [:]
-    /// The features in force in each message: its file's, every enclosing message's, then its own.
+    /// The features in force in each message: its file's, every enclosing message's, then its own. Only with `resolvingFeatures`.
     var messageFeatures: [String: ResolvedFeatures] = [:]
 
     /// Walks the set with an explicit work list (no recursion).
     /// - Complexity: O(messages + enums).
-    init(_ set: FileDescriptorSet) {
+    /// - Parameters:
+    ///   - set: the descriptor set.
+    ///   - resolvingFeatures: whether to fill ``messageFeatures``, which reads every file's and message's options; the
+    ///     validator and the comparator do without.
+    init(_ set: FileDescriptorSet, resolvingFeatures: Bool = false) {
         var pending: [Pending] = []
         for file in set.files {
             let scope = file.package.isEmpty ? "" : file.package + "."
-            let features = ResolvedFeatures.of(file)
+            let features = resolvingFeatures ? ResolvedFeatures.of(file) : .proto2
             pending.append(
                 contentsOf: file.messages.map {
                     Pending(name: scope + $0.name, message: $0, file: file, features: features)
@@ -28,8 +32,8 @@ struct FlatSchema {
         while let next = pending.popLast() {
             let (name, message, file) = (next.name, next.message, next.file)
             messages[name] = message
-            let features = next.features.merged(message.features)
-            messageFeatures[name] = features
+            let features = resolvingFeatures ? next.features.merged(message.features) : next.features
+            if resolvingFeatures { messageFeatures[name] = features }
             pending.append(
                 contentsOf: message.nestedMessages.map {
                     Pending(name: name + "." + $0.name, message: $0, file: file, features: features)

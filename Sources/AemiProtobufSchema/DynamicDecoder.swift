@@ -101,14 +101,15 @@ struct DynamicDecoder {
 
     /// The node's message, its storage handed over.
     private mutating func finish(_ index: Int) -> DynamicMessage {
+        // Taken out of the node first, so the dictionary is unique and grows in place.
         var fields = nodes[index].values
-        for (number, items) in nodes[index].lists { fields[number] = .list(items) }
-        for (number, entries) in nodes[index].maps { fields[number] = .map(entries) }
-        let message = DynamicMessage(
-            typeName: nodes[index].type.name, fields: fields, unknownFields: nodes[index].unknown)
         nodes[index].values = [:]
+        let lists = nodes[index].lists
         nodes[index].lists = [:]
+        let maps = nodes[index].maps
         nodes[index].maps = [:]
-        return message
+        for (number, items) in lists { fields[number] = .list(items) }
+        for (number, entries) in maps { fields[number] = .map(entries) }
+        return DynamicMessage(typeName: nodes[index].type.name, fields: fields, unknownFields: nodes[index].unknown)
     }
 }

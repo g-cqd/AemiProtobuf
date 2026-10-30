@@ -11,7 +11,7 @@ public struct DynamicSchema: Sendable {
 
     /// - Complexity: O(messages + fields + enums).
     public init(_ set: FileDescriptorSet) {
-        let flat = FlatSchema(set)
+        let flat = FlatSchema(set, resolvingFeatures: true)
         let index = SchemaIndex(flat: flat)
         var types: [String: DynamicMessageType] = [:]
         for (name, message) in flat.messages {
