@@ -30,6 +30,8 @@ let package = Package(
         .library(name: "AemiProtobuf", targets: ["AemiProtobuf"]),
         // Schema definition, descriptor parsing, wire validation, and breaking changes.
         .library(name: "AemiProtobufSchema", targets: ["AemiProtobufSchema"]),
+        // The proto3 JSON mapping over dynamic messages, on AemiJSON's parser (roadmap 0010).
+        .library(name: "AemiProtobufJSON", targets: ["AemiProtobufJSON"]),
         // The Foundation-free, swift-syntax-free wire engine: tags, varints, zig-zag, bounded reader and writer.
         .library(name: "AemiProtobufCore", targets: ["AemiProtobufCore"]),
         // `@ProtoMessage` source from a descriptor set, and the protoc plugin that runs it (roadmaps 0014, 0028).
@@ -44,6 +46,8 @@ let package = Package(
         // SwiftPM rejects one package identity at two revisions in a graph, so the siblings move together.
         .package(
             url: "https://github.com/Aemi-Studio/aemi.git", revision: "04e49d108e43a94fac449f344bfca9eabc5be0e9"),
+        // The JSON parser under AemiProtobufJSON. This revision pins the same aemi as above.
+        .package(url: "https://github.com/g-cqd/AemiJSON.git", revision: "fdc0143c1e5eca955e56b599eda12c9f9b33c519"),
         // For `@ProtoMessage` only. The same wide range as AemiJSON, so a consumer of both resolves one swift-syntax.
         .package(url: "https://github.com/swiftlang/swift-syntax.git", "603.0.0" ..< "605.0.0")
     ],
@@ -77,6 +81,14 @@ let package = Package(
             dependencies: [
                 "AemiProtobufCore",
                 .product(name: "AemiKernel", package: "aemi")
+            ],
+            swiftSettings: strictSettings),
+        .target(
+            name: "AemiProtobufJSON",
+            dependencies: [
+                "AemiProtobufCore",
+                "AemiProtobufSchema",
+                .product(name: "AemiJSONCore", package: "AemiJSON")
             ],
             swiftSettings: strictSettings),
         .target(
@@ -127,6 +139,11 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax")
             ],
+            swiftSettings: strictSettings),
+        .testTarget(
+            name: "AemiProtobufJSONTests",
+            dependencies: ["AemiProtobufJSON", "AemiProtobufSchema", "AemiProtobufCore"],
+            resources: [.copy("Resources")],
             swiftSettings: strictSettings),
         .testTarget(
             name: "AemiProtobufSchemaTests",
