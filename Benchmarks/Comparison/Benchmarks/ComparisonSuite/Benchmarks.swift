@@ -15,4 +15,5 @@ nonisolated(unsafe) let benchmarks: () -> Void = {
     registerNestingBenchmarks()
     registerConcurrencyBenchmarks()
     registerWideBenchmarks()
+    registerFramingBenchmarks()
 }

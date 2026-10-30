@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 blocked-by: []
 date: 2026-10-25
 ---
@@ -21,3 +21,16 @@ end. Mutation: 50 of 50 on `FrameDecoder`.
 
 - Integration with the coders (encode and decode a message straight to or from a frame), and a `Data` convenience.
 - Server-streaming helpers, a compressed-frame hook, and a benchmark (against `grpc-swift` and AemiJSON's `parseLines`).
+
+## Done (2026-10-30)
+
+- Coders and frames: `ProtobufEncoder.encodeFrameToBytes(_:format:compression:)` and `encodeFrame` (the `Data` convenience),
+  `ProtobufDecoder.decode(_:frame:compression:)`.
+- Streaming: `ProtobufDecoder.messages(of:from:format:compression:maxFrameBytes:)`, a `ProtobufMessageSequence` over any async
+  source of byte chunks (a gRPC server stream's shape); a frame that does not decode ends it with the error. Tested split at 1, 2, 7
+  bytes and whole.
+- Compression hook: `FrameCompression` (no codec shipped). A compressed gRPC frame without one is refused; compression with
+  varint-delimited framing, which has no flag, is refused.
+- Benchmark (`Benchmarks/Comparison`, `framing/varintDelimited/*`), 2,000 users as varint-delimited messages, against
+  swift-protobuf's `BinaryDelimited` (grpc-swift is not a dependency here; its framing is the same length prefix): read 1.47 ms
+  against 1.96 ms, write 773 µs against 1.04 ms.

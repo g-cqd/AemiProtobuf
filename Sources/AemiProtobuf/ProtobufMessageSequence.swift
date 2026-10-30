@@ -20,6 +20,9 @@ where Base.Element: Sequence<UInt8> {
         let decoder: ProtobufDecoder
         let compression: (any FrameCompression)?
 
-        public mutating func next() async throws -> T? { nil }
+        public mutating func next() async throws -> T? {
+            guard let frame = try await frames.next() else { return nil }
+            return try decoder.decode(T.self, frame: frame, compression: compression)
+        }
     }
 }
