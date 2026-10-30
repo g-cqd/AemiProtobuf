@@ -45,8 +45,9 @@ extension Indirect: AemiProtoRequiredFields where Value: AemiProtoRequiredFields
 }
 
 extension WireError {
-    /// The error for a message whose `__aepbMissingRequired()` found `path`.
-    static func missingRequired(_ path: [String]) -> WireError {
+    /// The error for a message whose `__aepbMissingRequired()` found `path`: its components joined with `.` (an extension's
+    /// bracketed name without one), as the coders report it.
+    public static func missingRequired(_ path: [String]) -> WireError {
         var text = ""
         for component in path {
             if !text.isEmpty, !component.hasPrefix("[") { text += "." }
