@@ -23,7 +23,10 @@ struct _ProtobufDecoderImpl: Decoder {
         switch source {
             case .message(let ranges):
                 messageDepth = depth
-                index = try buildIndex(ranges: ranges, depth: messageDepth)
+                index = try indexed { () throws(WireError) in
+                    try _ProtobufMessageIndex(
+                        bytes: context.bytes, ranges: ranges, depth: messageDepth, limits: context.limits)
+                }
             case .field(let occurrences):
                 // A field read as a message is one level deeper than the message that holds it.
                 messageDepth = depth + 1
@@ -36,7 +39,11 @@ struct _ProtobufDecoderImpl: Decoder {
                             codingPath: codingPath, debugDescription: "a message is length-delimited, found \(mismatch)"
                         ))
                 }
-                index = try buildIndex(occurrences, depth: messageDepth)
+                // A field's occurrences read as one message: their payloads, merged in order.
+                index = try indexed { () throws(WireError) in
+                    try _ProtobufMessageIndex(
+                        bytes: context.bytes, occurrences: occurrences, depth: messageDepth, limits: context.limits)
+                }
         }
         let nested = _ProtobufDecoderImpl(
             context: context, source: source, depth: messageDepth, codingPath: codingPath)
@@ -57,22 +64,10 @@ struct _ProtobufDecoderImpl: Decoder {
         return _ProtobufSingleValueDecodingContainer(decoder: self, entry: occurrences.last)
     }
 
-    private func buildIndex(ranges: [Range<Int>], depth: Int) throws -> _ProtobufMessageIndex {
-        do throws(WireError) {
-            return try _ProtobufMessageIndex(bytes: context.bytes, ranges: ranges, depth: depth, limits: context.limits)
-        } catch {
-            throw ProtobufDecodingError.underlying(error)
-        }
-    }
-
-    /// The index of a field's occurrences read as one message: their payloads, merged in order.
-    private func buildIndex(_ occurrences: _FieldOccurrences, depth: Int) throws -> _ProtobufMessageIndex {
-        do throws(WireError) {
-            return try _ProtobufMessageIndex(
-                bytes: context.bytes, occurrences: occurrences, depth: depth, limits: context.limits)
-        } catch {
-            throw ProtobufDecodingError.underlying(error)
-        }
+    private func indexed(
+        _ build: () throws(WireError) -> _ProtobufMessageIndex
+    ) throws -> _ProtobufMessageIndex {
+        do throws(WireError) { return try build() } catch { throw ProtobufDecodingError.underlying(error) }
     }
 
     /// A decoder for the occurrences of `key`'s field, one message level below this one.
