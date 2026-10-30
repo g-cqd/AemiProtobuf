@@ -1,6 +1,7 @@
 import AemiProtobufCore
 import AemiProtobufSchema
 import Benchmark
+import Foundation
 
 /// Baselines for the supported schema subset; failures invalidate a run rather than timing an empty fallback.
 struct SchemaBenchmarks {
@@ -22,6 +23,22 @@ struct SchemaBenchmarks {
                     return
                 }
                 blackHole(descriptor)
+            }
+        }
+        // Roadmap 0002: descriptor.proto (1,300 lines: options, extensions, defaults, reservations), compiled as protoc does.
+        let descriptorProto = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appending(
+                path: "../../Tests/AemiProtobufSchemaTests/Resources/parser/src/google/protobuf/descriptor.proto")
+        let descriptorSource = (try? String(contentsOf: descriptorProto, encoding: .utf8)) ?? ""
+        let compiler = ProtoCompiler { $0 == "google/protobuf/descriptor.proto" ? descriptorSource : nil }
+        Benchmark("Schema.compileDescriptorProto") { benchmark in
+            for _ in benchmark.scaledIterations {
+                let set = try compiler.compile(["google/protobuf/descriptor.proto"])
+                guard set.files.first?.messages.count == 23 else {
+                    benchmark.error("descriptor.proto compiled to \(set.files.first?.messages.count ?? 0) messages")
+                    return
+                }
+                blackHole(set)
             }
         }
         let descriptor = MessageDescriptor(

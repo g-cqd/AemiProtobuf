@@ -12,4 +12,17 @@ extension DynamicValue {
             default: false
         }
     }
+
+    /// A map key, or an integer or boolean, as text: decimal, `true` / `false`, a string as it is; empty for anything else.
+    public var keyText: String {
+        switch self {
+            case .int32(let v): String(v)
+            case .int64(let v): String(v)
+            case .uint32(let v): String(v)
+            case .uint64(let v): String(v)
+            case .bool(let v): v ? "true" : "false"
+            case .string(let v): v
+            default: ""
+        }
+    }
 }

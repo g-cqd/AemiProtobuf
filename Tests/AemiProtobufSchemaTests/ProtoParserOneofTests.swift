@@ -21,7 +21,8 @@ struct ProtoParserOneofTests {
         ("trail_", "trail")
     ])
     func `json names follow protoc camel casing`(name: String, json: String) throws {
-        let file = try ProtoParser().parse("message M { int32 \(name) = 1; }")
+        // Without `syntax`, a file is proto2 (as protoc reads it), where a field needs a label.
+        let file = try ProtoParser().parse("syntax = \"proto3\"; message M { int32 \(name) = 1; }")
         #expect(file.messages.first?.fields.first?.jsonName == json)
     }
 

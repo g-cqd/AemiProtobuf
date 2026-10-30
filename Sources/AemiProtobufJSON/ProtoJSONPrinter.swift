@@ -99,19 +99,7 @@ struct ProtoJSONPrinter {
         stack.append(.text("}"))
         for (key, value) in map.sorted(by: { DynamicValue.keyPrecedes($0.key, $1.key) }).reversed() {
             stack.append(.value(value, entry.value.type, typeName: entry.valueTypeName))
-            stack.append(.key(Self.keyText(key)))
-        }
-    }
-
-    private static func keyText(_ key: DynamicValue) -> String {
-        switch key {
-            case .int32(let v): String(v)
-            case .int64(let v): String(v)
-            case .uint32(let v): String(v)
-            case .uint64(let v): String(v)
-            case .bool(let v): v ? "true" : "false"
-            case .string(let v): v
-            default: ""
+            stack.append(.key(key.keyText))
         }
     }
 }
