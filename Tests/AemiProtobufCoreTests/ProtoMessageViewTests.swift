@@ -61,7 +61,8 @@ import Testing
         #expect(try inner.string(1) == "inner")
         #expect(inner.fixed32(2) == 7)
         #expect(try view.message(9) == nil)
-        #expect(try view.message(3)?.message(1) != nil)  // "inner" parses as a message: field 13, length… or throws
+        // "inner" is not a message: 0x69 is field 13 as fixed64, and four bytes remain.
+        #expect(throws: WireError.self) { try view.message(3)?.message(1) }
     }
 
     @Test func `repeated scalars come packed or not, in order`() throws {

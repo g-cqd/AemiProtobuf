@@ -18,8 +18,18 @@ extension DynamicDecoder {
             case (.group, .startGroup):
                 try attach(field, range: try reader.readGroupRange(tag), to: node)
             case (let type, .lengthDelimited) where field.isRepeated && DynamicField.isPackable(type):
+                // Read into an array sized for the run, then stored once: no growth, no dictionary access per element.
+                var values: [DynamicValue] = []
                 try reader.readPayload { (run) throws(WireError) in
-                    while !run.isAtEnd { try self.readScalar(field, tag, from: &run, into: node) }
+                    values.reserveCapacity(Self.packedCount(of: type, in: run))
+                    while !run.isAtEnd {
+                        if let value = try self.scalar(field, tag, from: &run, into: node) { values.append(value) }
+                    }
+                }
+                if nodes[node].lists[field.number] == nil {
+                    nodes[node].lists[field.number] = values
+                } else {
+                    nodes[node].lists[field.number, default: []].append(contentsOf: values)
                 }
             case (let type, let wire) where field.mapEntry == nil && wire == Self.wireType(of: type):
                 try readScalar(field, tag, from: &reader, into: node)
@@ -31,16 +41,33 @@ extension DynamicDecoder {
     private mutating func readScalar(
         _ field: DynamicField, _ tag: FieldTag, from reader: inout WireReader, into node: Int
     ) throws(WireError) {
-        let value = try Self.scalar(field.type, from: &reader, validatingUTF8: field.validatesUTF8, bytes: bytes)
-        if case .enumeration(let number) = value, let closed = field.closedEnumValues, !closed.contains(number) {
-            nodes[node].unknown.appendVarint(field: tag.fieldNumber, UInt64(bitPattern: Int64(number)))
-            return
-        }
+        guard let value = try scalar(field, tag, from: &reader, into: node) else { return }
         if field.isRepeated {
             nodes[node].lists[field.number, default: []].append(value)
         } else {
             clearOneof(of: field, in: node)
             nodes[node].values[field.number] = value
+        }
+    }
+
+    /// Reads one value of `field`; `nil` when it is a closed enumeration's unknown number, which is kept as an unknown field.
+    private mutating func scalar(
+        _ field: DynamicField, _ tag: FieldTag, from reader: inout WireReader, into node: Int
+    ) throws(WireError) -> DynamicValue? {
+        let value = try Self.scalar(field.type, from: &reader, validatingUTF8: field.validatesUTF8, bytes: bytes)
+        if case .enumeration(let number) = value, let closed = field.closedEnumValues, !closed.contains(number) {
+            nodes[node].unknown.appendVarint(field: tag.fieldNumber, UInt64(bitPattern: Int64(number)))
+            return nil
+        }
+        return value
+    }
+
+    /// The number of elements in a packed run of `type`: exact for well-formed input.
+    private static func packedCount(of type: FieldType, in run: WireReader) -> Int {
+        switch wireType(of: type) {
+            case .fixed32: run.remaining / 4
+            case .fixed64: run.remaining / 8
+            default: run.remainingVarintCount
         }
     }
 

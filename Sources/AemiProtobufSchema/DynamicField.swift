@@ -1,5 +1,6 @@
 /// A field of a ``DynamicMessageType`` with the semantics its descriptor and the edition features in force give it, resolved once.
-public struct DynamicField: Sendable {
+/// A class, so a lookup hands out a reference rather than copying the descriptor's strings and sets on every field read.
+public final class DynamicField: Sendable {
     public let descriptor: FieldDescriptor
     /// The field's type; `.group` for every field written delimited (a proto2 group, or `message_encoding = DELIMITED`).
     public let type: FieldType
