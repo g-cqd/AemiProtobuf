@@ -159,7 +159,7 @@
   "name": "merge-proto3-maps-last-key-wins",
   "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
   "input": "c2030408011001ba04070a016b12020801c2030408011002ba04070a016b12021200",
-  "expected": "c2030408011001c2030408011002ba04070a016b12020801ba04070a016b12021200"
+  "expected": "c2030408011002ba04070a016b12021200"
  },
  {
   "name": "merge-proto3-oneof-last-wins",

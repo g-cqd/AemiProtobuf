@@ -68,10 +68,15 @@ out = []
 for name, type_name, text in CASES:
     data = encode(type_name, text)
     out.append({'name': name, 'type': type_name, 'input': data.hex(), 'expected': data.hex()})
+# protoc --decode prints every entry of a map, duplicate keys included, so for maps the merged message is stated: the last entry
+# of a key wins (the protobuf encoding guide), replacing the whole value.
+STATED = {
+    'merge-proto3-maps-last-key-wins': 'map_int32_int32 {key: 1 value: 2} map_string_nested_message {key: "k" value {corecursive {}}}',
+}
 for name, type_name, *parts in MERGES:
     joined = b''.join(encode(type_name, part) for part in parts)
-    decoded = protoc([f'--decode={type_name}', FILES[type_name]], joined)
-    out.append({'name': name, 'type': type_name, 'input': joined.hex(), 'expected': encode(type_name, decoded.decode()).hex()})
+    merged = STATED.get(name) or protoc([f'--decode={type_name}', FILES[type_name]], joined).decode()
+    out.append({'name': name, 'type': type_name, 'input': joined.hex(), 'expected': encode(type_name, merged).hex()})
 path = 'Tests/AemiProtobufSchemaTests/Resources/dynamic/cases.json'
 os.makedirs(os.path.dirname(path), exist_ok=True)
 json.dump(out, open(path, 'w'), indent=1)
