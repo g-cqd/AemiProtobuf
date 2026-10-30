@@ -24,13 +24,13 @@ struct ProtoLexer {
         "repeated": .repeated, "optional": .optional, "required": .required, "oneof": .oneof
     ]
 
-    mutating func requireIdentifier(_ context: String) throws(ProtoParseError) -> String {
-        guard case .identifier(let name) = nextToken() else { throw ProtoParseError("Expected \(context)") }
+    mutating func requireIdentifier(_ context: @autoclosure () -> String) throws(ProtoParseError) -> String {
+        guard case .identifier(let name) = nextToken() else { throw ProtoParseError("Expected \(context())") }
         return name
     }
 
-    mutating func expect(_ token: Token, _ context: String) throws(ProtoParseError) {
-        guard nextToken() == token else { throw ProtoParseError("Expected \(context)") }
+    mutating func expect(_ token: Token, _ context: @autoclosure () -> String) throws(ProtoParseError) {
+        guard nextToken() == token else { throw ProtoParseError("Expected \(context())") }
     }
 
     mutating func declarationName(_ kind: String) throws(ProtoParseError) -> String {
