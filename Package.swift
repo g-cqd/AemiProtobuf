@@ -129,7 +129,7 @@ let package = Package(
             swiftSettings: strictSettings),
         .testTarget(
             name: "AemiProtobufTests",
-            dependencies: ["AemiProtobuf", "AemiProtobufCore"],
+            dependencies: ["AemiProtobuf", "AemiProtobufCore", "AemiProtobufSchema"],
             resources: [.copy("Resources")],
             swiftSettings: strictSettings),
         .testTarget(
