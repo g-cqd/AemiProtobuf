@@ -22,6 +22,16 @@ extension BreakingChange {
                 description = "Enum value '\(value)' in '\(name)' renumbered from \(old) to \(new)"
             case .enumValueRemoved(let name, let value, let number):
                 description = "Enum value '\(value)' (\(number)) in '\(name)' was removed"
+            case .fieldOneofChanged(let message, let field, let old, let new):
+                description = "Field '\(field)' in '\(message)' moved from oneof \(old ?? "none") to \(new ?? "none")"
+            case .requiredFieldsChanged(let message, let old, let new):
+                description = "Required fields of '\(message)' changed from \(old) to \(new)"
+            case .reservedRangeRemoved(let scope, let start, let end, _):
+                description = "Reserved numbers \(start)...\(end) of '\(scope)' are no longer all reserved"
+            case .reservedNameRemoved(let scope, let name, _):
+                description = "Reserved name '\(name)' of '\(scope)' is no longer reserved"
+            case .fieldJSONNameChanged(let message, let field, let old, let new):
+                description = "Field '\(field)' in '\(message)' changed JSON name from '\(old)' to '\(new)'"
         }
         self.init(kind: kind, description: description)
     }

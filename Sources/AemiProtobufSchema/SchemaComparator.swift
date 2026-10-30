@@ -2,8 +2,9 @@
 /// rules: fields are matched by number, as the wire matches them.
 ///
 /// Messages and enums are matched by fully qualified name, nested ones included. The result is in a fixed order: names sorted,
-/// then field and value numbers ascending. Reserved ranges are not in the descriptor model yet, so a removed field is reported
-/// whether or not it was reserved.
+/// then field and value numbers ascending. A field or value whose number the new version reserves is not reported as removed;
+/// reserved numbers and names the new version no longer reserves are. `bufRule` names the buf rule of each change, and
+/// `breaksTheWire` is whether that rule is one of buf's WIRE rules (`BufBreakingOracleTests` checks fourteen kinds against buf).
 public struct SchemaComparator: Sendable {
     public init() {}
 
@@ -44,11 +45,24 @@ public struct SchemaComparator: Sendable {
                         BreakingChange(
                             kind: .fieldRenumbered(
                                 message: message, field: field.name, oldNumber: field.number, newNumber: moved.number)))
-                } else {
+                } else if !Self.isReserved(field.number, new.reservedRanges, endIncluded: false) {
                     changes.append(
                         BreakingChange(kind: .fieldRemoved(message: message, field: field.name, number: field.number)))
                 }
                 continue
+            }
+            let (oldOneof, newOneof) = (Self.oneof(of: field, in: old), Self.oneof(of: current, in: new))
+            if oldOneof != newOneof {
+                changes.append(
+                    BreakingChange(
+                        kind: .fieldOneofChanged(
+                            message: message, field: current.name, oldOneof: oldOneof, newOneof: newOneof)))
+            }
+            if !field.jsonName.isEmpty, !current.jsonName.isEmpty, field.jsonName != current.jsonName {
+                changes.append(
+                    BreakingChange(
+                        kind: .fieldJSONNameChanged(
+                            message: message, field: current.name, oldName: field.jsonName, newName: current.jsonName)))
             }
             if field.name != current.name {
                 changes.append(
@@ -77,6 +91,62 @@ public struct SchemaComparator: Sendable {
                             message: message, field: current.name, oldLabel: field.label, newLabel: current.label)))
             }
         }
+        let required = { (m: MessageDescriptor) in m.fields.filter { $0.label == .required }.map(\.name).sorted() }
+        if required(old) != required(new) {
+            changes.append(
+                BreakingChange(
+                    kind: .requiredFieldsChanged(
+                        message: message, oldRequired: required(old), newRequired: required(new))))
+        }
+        changes += Self.reservedRemoved(
+            message, old.reservedRanges, new.reservedRanges, old.reservedNames, new.reservedNames, isEnum: false)
+        return changes
+    }
+
+    /// The declared oneof a field is in; a proto3 `optional`'s synthetic oneof is none.
+    private static func oneof(of field: FieldDescriptor, in message: MessageDescriptor) -> String? {
+        guard let index = field.oneofIndex, !field.proto3Optional, message.oneofs.indices.contains(Int(index)) else {
+            return nil
+        }
+        return message.oneofs[Int(index)].name
+    }
+
+    /// Whether `number` is in one of `ranges`; a message's range excludes its end, an enumeration's includes it.
+    static func isReserved(_ number: Int32, _ ranges: [DescriptorRange], endIncluded: Bool) -> Bool {
+        ranges.contains { range in
+            guard let start = range.start, let end = range.end else { return false }
+            return number >= start && (endIncluded ? number <= end : number < end)
+        }
+    }
+
+    /// Every old reserved range not covered by the new ones (a shrink counts), and every old reserved name the new version drops.
+    private static func reservedRemoved(
+        _ scope: String, _ old: [DescriptorRange], _ new: [DescriptorRange], _ oldNames: [String], _ newNames: [String],
+        isEnum: Bool
+    ) -> [BreakingChange] {
+        // As closed intervals, so a message's and an enumeration's ranges compare the same way.
+        func closed(_ ranges: [DescriptorRange]) -> [(Int64, Int64)] {
+            ranges.compactMap { range in
+                guard let start = range.start, let end = range.end else { return nil }
+                return (Int64(start), Int64(end) - (isEnum ? 0 : 1))
+            }
+            .sorted { $0.0 < $1.0 }
+        }
+        let covering = closed(new)
+        var changes: [BreakingChange] = []
+        for (start, end) in closed(old) {
+            var next = start
+            for (low, high) in covering where low <= next && high >= next { next = max(next, high + 1) }
+            if next <= end {
+                changes.append(
+                    BreakingChange(
+                        kind: .reservedRangeRemoved(scope: scope, start: Int32(start), end: Int32(end), isEnum: isEnum))
+                )
+            }
+        }
+        for name in oldNames where !newNames.contains(name) {
+            changes.append(BreakingChange(kind: .reservedNameRemoved(scope: scope, name: name, isEnum: isEnum)))
+        }
         return changes
     }
 
@@ -90,11 +160,13 @@ public struct SchemaComparator: Sendable {
                     BreakingChange(
                         kind: .enumValueRenumbered(
                             enumName: name, value: value.name, oldNumber: value.number, newNumber: moved.number)))
-            } else {
+            } else if !Self.isReserved(value.number, new.reservedRanges, endIncluded: true) {
                 changes.append(
                     BreakingChange(kind: .enumValueRemoved(enumName: name, value: value.name, number: value.number)))
             }
         }
+        changes += Self.reservedRemoved(
+            name, old.reservedRanges, new.reservedRanges, old.reservedNames, new.reservedNames, isEnum: true)
         return changes
     }
 
