@@ -30,6 +30,15 @@ public final class DynamicField: Sendable {
     public let isExtension: Bool
 
     public var name: String { descriptor.name }
+
+    /// Whether text format names the field by its type: a group, or a delimited field named for its type (lower-cased) whose
+    /// type is nested in `message`.
+    public func isGroupLike(in message: String) -> Bool {
+        guard type == .group, !isExtension, let typeName, let last = typeName.split(separator: ".").last else {
+            return false
+        }
+        return name == last.lowercased() && typeName == message + "." + last
+    }
     public var number: Int32 { descriptor.number }
 
     /// The two fields of a map entry.

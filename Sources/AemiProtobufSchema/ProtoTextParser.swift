@@ -9,6 +9,9 @@ struct ProtoTextParser {
         let field: DynamicField?
         let inList: Bool
         var seen: Set<Int32> = []
+        var oneofs: Set<Int> = []
+        /// An expanded `Any`: the type URL, the message read under it written into the enclosing `Any`.
+        var anyURL: String?
     }
 
     let schema: DynamicSchema
@@ -29,7 +32,16 @@ struct ProtoTextParser {
                 stream.take()
                 let frame = frames.removeLast()
                 var fields = frame.fields
-                place(fields.take(typeName: frame.type.name), in: &frames[frames.count - 1], field: frame.field)
+                let message = fields.take(typeName: frame.type.name)
+                if let url = frame.anyURL {
+                    guard let bytes = try? schema.encode(message) else {
+                        throw stream.error("cannot encode the Any's message")
+                    }
+                    frames[frames.count - 1].fields.values[1] = .string(url)
+                    frames[frames.count - 1].fields.values[2] = .bytes(bytes)
+                } else {
+                    place(message, in: &frames[frames.count - 1], field: frame.field)
+                }
                 if frame.inList, let field = frame.field {
                     if stream.accept(",") {
                         try open(field, &frames, inList: true)
@@ -47,9 +59,13 @@ struct ProtoTextParser {
     /// One `name: value`, `name: [values]`, or `name { … }` in the innermost message.
     private mutating func entry(_ frames: inout [Frame]) throws(ProtoCompileError) {
         let top = frames.count - 1
-        let field = try fieldName(frames[top].type)
+        if try expandedAny(&frames) { return }
+        guard let field = try fieldName(frames[top].type) else { return }
         guard frames[top].seen.insert(field.number).inserted || field.isRepeated else {
             throw stream.error("non-repeated field \"\(field.name)\" is specified multiple times")
+        }
+        if let oneof = field.oneofIndex, !frames[top].oneofs.insert(oneof).inserted {
+            throw stream.error("field \"\(field.name)\" is specified along with another member of its oneof")
         }
         if field.type == .message || field.type == .group {
             _ = stream.accept(":")
@@ -72,6 +88,68 @@ struct ProtoTextParser {
         if !stream.accept(",") { _ = stream.accept(";") }
     }
 
+    /// `[type.googleapis.com/pkg.Type] { … }` in an `Any`: opens a message of that type, which is encoded into the `Any` when
+    /// it closes. `false` when the next entry is not one.
+    private mutating func expandedAny(_ frames: inout [Frame]) throws(ProtoCompileError) -> Bool {
+        let top = frames.count - 1
+        guard stream.current.isSymbol("[") else { return false }
+        var lookahead = 1
+        while !stream.peek(lookahead).isSymbol("]"), !stream.peek(lookahead).isSymbol("/"),
+            stream.peek(lookahead).kind != .end
+        {
+            lookahead += 1
+        }
+        guard stream.peek(lookahead).isSymbol("/") else { return false }
+        guard frames[top].type.name == "google.protobuf.Any" else { throw stream.error("a type URL outside an Any") }
+        let url = try bracketed()
+        guard Self.validPercentEscapes(url) else { throw stream.error("invalid percent escape in the type URL \(url)") }
+        let name = String(url[url.index(after: url.lastIndex(of: "/") ?? url.startIndex)...])
+        guard let type = schema.messageType(named: name) else { throw stream.error("unknown type \(name) in an Any") }
+        _ = stream.accept(":")
+        let close: String
+        if stream.accept("{") {
+            close = "}"
+        } else {
+            try stream.expect("<")
+            close = ">"
+        }
+        guard frames.count <= maxDepth else { throw stream.error("message nested too deeply") }
+        var frame = Frame(type: type, close: close, field: nil, inList: false)
+        frame.anyURL = url
+        frames.append(frame)
+        return true
+    }
+
+    /// The name between `[` and `]`: every token's text joined, so white space and comments inside it do not count.
+    private mutating func bracketed() throws(ProtoCompileError) -> String {
+        try stream.expect("[")
+        var name = ""
+        while !stream.current.isSymbol("]") {
+            guard !stream.atEnd else { throw stream.error("expected \"]\"") }
+            name += stream.take().text
+        }
+        stream.take()
+        return name
+    }
+
+    /// Skips the value of a reserved field name, as C++ skips it: `: value`, `: [ … ]`, or a message.
+    private mutating func skipValue() throws(ProtoCompileError) {
+        _ = stream.accept(":")
+        guard stream.current.isSymbol("{") || stream.current.isSymbol("<") || stream.current.isSymbol("[") else {
+            _ = try stream.value()
+            if !stream.accept(",") { _ = stream.accept(";") }
+            return
+        }
+        var depth = 0
+        repeat {
+            let token = stream.take()
+            if token.kind == .end { throw stream.error("unterminated value") }
+            if token.isSymbol("{") || token.isSymbol("<") || token.isSymbol("[") { depth += 1 }
+            if token.isSymbol("}") || token.isSymbol(">") || token.isSymbol("]") { depth -= 1 }
+        } while depth > 0
+        if !stream.accept(",") { _ = stream.accept(";") }
+    }
+
     private mutating func open(_ field: DynamicField, _ frames: inout [Frame], inList: Bool) throws(ProtoCompileError) {
         let close: String
         if stream.accept("{") {
@@ -88,11 +166,12 @@ struct ProtoTextParser {
         frames.append(Frame(type: type, close: close, field: field, inList: inList))
     }
 
-    private mutating func fieldName(_ type: DynamicMessageType) throws(ProtoCompileError) -> DynamicField {
+    /// The field an entry names: `[extension.name]`, a field name, or a group's type name; `nil` for a reserved name, whose
+    /// value is skipped.
+    private mutating func fieldName(_ type: DynamicMessageType) throws(ProtoCompileError) -> DynamicField? {
         let token = stream.current
-        if stream.accept("[") {
-            let written = try stream.fullIdentifier("an extension name")
-            try stream.expect("]")
+        if stream.current.isSymbol("[") {
+            let written = try bracketed()
             let full = resolveExtension(written) ?? written
             guard let field = type.field(named: "[" + full + "]") else {
                 throw stream.error("\"\(written)\" is not an extension of \(type.name)", at: token)
@@ -100,9 +179,15 @@ struct ProtoTextParser {
             return field
         }
         let name = try stream.identifier("a field name")
-        if let field = type.field(named: name), !field.isExtension { return field }
-        if let group = type.fields.first(where: { $0.type == .group && $0.typeName?.hasSuffix("." + name) == true }) {
+        if let field = type.field(named: name), !field.isExtension, field.name == name { return field }
+        if let group = type.fields.first(where: {
+            $0.isGroupLike(in: type.name) && $0.typeName == type.name + "." + name
+        }) {
             return group
+        }
+        if type.descriptor.reservedNames.contains(name) {
+            try skipValue()
+            return nil
         }
         throw stream.error("message type \"\(type.name)\" has no field named \"\(name)\"", at: token)
     }
@@ -117,6 +202,9 @@ struct ProtoTextParser {
                 textFormat: true)
         } catch {
             throw stream.error("\(error.message) for field \"\(field.name)\"", at: token)
+        }
+        if case .enumeration(let number) = value, let closed = field.closedEnumValues, !closed.contains(number) {
+            throw stream.error("unknown enumeration value \(number) for field \"\(field.name)\"", at: token)
         }
         if field.isRepeated {
             frame.fields.lists[field.number, default: []].append(value)
@@ -137,5 +225,22 @@ struct ProtoTextParser {
         } else {
             frame.fields.values[field.number] = .message(message)
         }
+    }
+
+    /// Whether every `%` in `url` is followed by two hexadecimal digits.
+    static func validPercentEscapes(_ url: String) -> Bool {
+        let bytes = Array(url.utf8)
+        var index = 0
+        while index < bytes.count {
+            if bytes[index] == UInt8(ascii: "%") {
+                guard index + 2 < bytes.count, ProtoTokenizer.isHexDigit(bytes[index + 1]),
+                    ProtoTokenizer.isHexDigit(bytes[index + 2])
+                else { return false }
+                index += 3
+            } else {
+                index += 1
+            }
+        }
+        return true
     }
 }

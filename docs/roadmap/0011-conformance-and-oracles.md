@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 blocked-by: []
 date: 2026-10-25
 ---
@@ -30,3 +30,26 @@ tests). CI job `conformance` builds the runner and protoc from the same tag (cac
 
 - JSON and text format (2,816 and 909 tests): roadmap 0010 and a text-format item.
 - The generated differential (a seeded message generator with `protoc --encode` as the oracle).
+
+## Done (2026-10-30): text format, and the whole suite
+
+- `ProtoTextFormat` (AemiProtobufSchema) reads and writes protobuf's text format over dynamic messages. Reading accepts:
+  - `#` comments, `{ }` or `< >`, an optional `:` before a message, lists, and `,` or `;` between fields;
+  - integers in every base, `inf` / `nan` in any case, an `f` suffix, adjacent strings with C escapes;
+  - groups (and editions' group-like delimited fields) by type name, `[extension.name]`;
+  - an `Any` written as `[type.url/pkg.Type] { … }`. Whitespace, comments and percent escapes in bracketed names are
+    accepted; an invalid escape is refused.
+
+  It refuses what C++ refuses: a field given twice, two oneof members, a closed enumeration's unknown number, a missing
+  required field, hex or octal for a float. Reserved names are skipped. Writing puts one field per line, and unknown fields
+  print by number on request (a payload that reads as fields as `n { … }`, as C++ prints it). Parsing and printing are
+  iterative.
+- Conformance, the testee answering everything but JSPB through dynamic messages:
+  - **binary and JSON: 5,647 passed, 0 failed** (2 skipped, JSPB);
+  - **text format: 909 passed, 0 failed**.
+
+  The failure list is empty.
+- Generated differential: `Scripts/generated-differential.py` writes 120 seeded random messages of the proto3 and proto2
+  test types (every scalar kind, repeated, packed and unpacked, maps, oneofs, enumerations, nesting to depth 3, groups), and
+  protoc encodes them. Each reads as text and as binary to protoc's bytes (`GeneratedDifferentialTests`). The generator writes
+  each map key once, because protoc's text path keeps duplicate keys where a reader keeps the last.

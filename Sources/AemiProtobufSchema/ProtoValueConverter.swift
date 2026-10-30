@@ -80,10 +80,12 @@ enum ProtoValueConverter {
     private static func floating(_ value: ProtoOptionValue, textFormat: Bool) throws(ProtoValueError) -> Double {
         switch value {
             case .integer(let text, let negative):
-                guard let magnitude = ProtoTokenStream.magnitude(text) else {
+                // A float takes decimal digits only, of any length; hexadecimal and octal are integers' forms.
+                guard !text.lowercased().hasPrefix("0x"), text == "0" || !text.hasPrefix("0"), let parsed = Double(text)
+                else {
                     throw ProtoValueError("Value must be number")
                 }
-                return negative ? -Double(magnitude) : Double(magnitude)
+                return negative ? -parsed : parsed
             case .float(let text, let negative):
                 guard let parsed = Double(trimSuffix(text)) else { throw ProtoValueError("Value must be number") }
                 return negative ? -parsed : parsed
