@@ -7,7 +7,7 @@ import Foundation
 struct _ProtobufDecoderImpl: Decoder {
     enum Source {
         case message(ranges: [Range<Int>])
-        case field(entries: [_ProtobufFieldEntry])
+        case field(_FieldOccurrences)
     }
 
     let context: _ProtobufDecodeContext
@@ -24,22 +24,19 @@ struct _ProtobufDecoderImpl: Decoder {
             case .message(let ranges):
                 messageDepth = depth
                 index = try buildIndex(ranges: ranges, depth: messageDepth)
-            case .field(let entries):
+            case .field(let occurrences):
                 // A field read as a message is one level deeper than the message that holds it.
                 messageDepth = depth + 1
-                var ranges: [Range<Int>] = []
-                ranges.reserveCapacity(entries.count)
-                for entry in entries {
-                    guard entry.wireType == .lengthDelimited else {
-                        throw DecodingError.typeMismatch(
-                            Key.self,
-                            .init(
-                                codingPath: codingPath,
-                                debugDescription: "a message is length-delimited, found \(entry.wireType)"))
-                    }
-                    ranges.append(entry.range)
+                var mismatch: WireType?
+                occurrences.forEach { if $0.wireType != .lengthDelimited { mismatch = $0.wireType } }
+                if let mismatch {
+                    throw DecodingError.typeMismatch(
+                        Key.self,
+                        .init(
+                            codingPath: codingPath, debugDescription: "a message is length-delimited, found \(mismatch)"
+                        ))
                 }
-                index = try buildIndex(ranges: ranges, depth: messageDepth)
+                index = try buildIndex(occurrences, depth: messageDepth)
         }
         let nested = _ProtobufDecoderImpl(
             context: context, source: source, depth: messageDepth, codingPath: codingPath)
@@ -47,17 +44,17 @@ struct _ProtobufDecoderImpl: Decoder {
     }
 
     func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
-        guard case .field(let entries) = source else {
+        guard case .field(let occurrences) = source else {
             throw ProtobufDecodingError.unsupported("a top-level value must be a message, not an array")
         }
-        return _ProtobufUnkeyedDecodingContainer(decoder: self, entries: entries)
+        return _ProtobufUnkeyedDecodingContainer(decoder: self, occurrences: occurrences)
     }
 
     func singleValueContainer() throws -> any SingleValueDecodingContainer {
-        guard case .field(let entries) = source else {
+        guard case .field(let occurrences) = source else {
             throw ProtobufDecodingError.unsupported("a top-level value must be a message, not a scalar")
         }
-        return _ProtobufSingleValueDecodingContainer(decoder: self, entry: entries.last)
+        return _ProtobufSingleValueDecodingContainer(decoder: self, entry: occurrences.last)
     }
 
     private func buildIndex(ranges: [Range<Int>], depth: Int) throws -> _ProtobufMessageIndex {
@@ -68,9 +65,19 @@ struct _ProtobufDecoderImpl: Decoder {
         }
     }
 
+    /// The index of a field's occurrences read as one message: their payloads, merged in order.
+    private func buildIndex(_ occurrences: _FieldOccurrences, depth: Int) throws -> _ProtobufMessageIndex {
+        do throws(WireError) {
+            return try _ProtobufMessageIndex(
+                bytes: context.bytes, occurrences: occurrences, depth: depth, limits: context.limits)
+        } catch {
+            throw ProtobufDecodingError.underlying(error)
+        }
+    }
+
     /// A decoder for the occurrences of `key`'s field, one message level below this one.
-    func field(_ key: any CodingKey, entries: [_ProtobufFieldEntry]) -> _ProtobufDecoderImpl {
+    func field(_ key: any CodingKey, occurrences: _FieldOccurrences) -> _ProtobufDecoderImpl {
         _ProtobufDecoderImpl(
-            context: context, source: .field(entries: entries), depth: depth, codingPath: codingPath + [key])
+            context: context, source: .field(occurrences), depth: depth, codingPath: codingPath + [key])
     }
 }
