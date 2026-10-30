@@ -1,6 +1,6 @@
 ---
 status: done
-blocked-by: [0002]
+blocked-by: []
 date: 2026-10-25
 ---
 
