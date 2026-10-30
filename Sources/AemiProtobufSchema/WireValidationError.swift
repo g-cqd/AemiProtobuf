@@ -14,5 +14,7 @@ public enum WireValidationError: Error, Sendable, Equatable {
     case unexpectedWireType(field: Int32, expected: WireType, actual: WireType, at: Int)
     case invalidUTF8(field: Int32, at: Int)
     case requiredFieldMissing(field: Int32, name: String)
+    /// A closed enumeration's field holds a number the enumeration has no value for (strict mode; C++ keeps it as an unknown field).
+    case unknownEnumValue(field: Int32, value: Int32, at: Int)
     case wireCorrupted(WireError)
 }

@@ -1,0 +1,11 @@
+syntax = "proto2";
+package val;
+enum Shade { DARK = 0; LIGHT = 1; }
+message Holder {
+  optional int32 a = 1;
+  optional group G = 2 { optional string s = 3; }
+  optional Shade shade = 4;
+  repeated Shade shades = 5 [packed = true];
+  extensions 100 to 200;
+}
+extend Holder { optional string ext = 100; }
