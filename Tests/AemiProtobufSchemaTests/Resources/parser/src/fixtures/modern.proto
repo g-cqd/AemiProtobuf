@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package fixtures.modern;
+
+import public "fixtures/shared.proto";
+import "google/protobuf/timestamp.proto";
+
+message Event {
+  optional int32 maybe = 1;
+  int64 id = 2;
+  string title = 3 [json_name = "headline"];
+  repeated double scores = 4 [packed = false];
+  map<string, fixtures.shared.Tag> tags = 5;
+  google.protobuf.Timestamp at = 6;
+  fixtures.shared.Tag primary = 7;
+  oneof payload {
+    string text = 8;
+    bytes data = 9;
+  }
+  optional string note = 10;
+  reserved 20 to 25;
+  reserved "legacy";
+  enum Level {
+    LEVEL_UNSPECIFIED = 0;
+    LEVEL_HIGH = 1;
+  }
+  Level level = 11;
+}

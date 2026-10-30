@@ -1,0 +1,24 @@
+edition = "2023";
+
+package fixtures.edition;
+
+option features.field_presence = IMPLICIT;
+option features.enum_type = CLOSED;
+
+message Record {
+
+  int32 id = 1;
+  string name = 2 [features.field_presence = IMPLICIT];
+  int32 must = 3 [features.field_presence = LEGACY_REQUIRED];
+  repeated int32 values = 4 [features.repeated_field_encoding = EXPANDED];
+  Record child = 5 [features.message_encoding = DELIMITED];
+  Color color = 6;
+  string raw = 7 [features.utf8_validation = NONE];
+  map<string, int32> counts = 8;
+}
+
+enum Color {
+  option features.enum_type = OPEN;
+  COLOR_UNSPECIFIED = 0;
+  COLOR_RED = 1;
+}

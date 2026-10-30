@@ -1,0 +1,122 @@
+// A proto2 file with each declaration the parser must read the way protoc does.
+syntax = "proto2";
+
+package fixtures.kitchen;
+
+import "google/protobuf/descriptor.proto";
+
+option java_package = "com.example.kitchen";
+option optimize_for = SPEED;
+option go_package = "example.com/kitchen";
+option (file_tag) = "kitchen";
+
+extend google.protobuf.FileOptions {
+  optional string file_tag = 50000;
+}
+
+extend google.protobuf.FieldOptions {
+  optional int32 weight = 50001;
+  optional Limits limits = 50002;
+  repeated string labels = 50003;
+}
+
+extend google.protobuf.MessageOptions {
+  optional bool audited = 50004;
+}
+
+message Limits {
+  optional int32 low = 1;
+  optional int32 high = 2;
+  optional string note = 3;
+  repeated int32 steps = 4;
+}
+
+enum Shade {
+  option allow_alias = true;
+  SHADE_UNKNOWN = 0;
+  SHADE_DARK = 1 [deprecated = true];
+  SHADE_NOIR = 1;
+  SHADE_LIGHT = -2;
+  reserved 10 to 20, 30;
+  reserved "SHADE_OLD";
+}
+
+message Pantry {
+  option (audited) = true;
+  option deprecated = true;
+
+  required int32 id = 1;
+  optional string name = 2 [default = "tab\there \"quoted\" é"];
+  optional bytes blob = 3 [default = "\001\377abc\n"];
+  optional int64 big = 4 [default = -0x7fffffffffffffff];
+  optional uint32 octal = 5 [default = 017];
+  optional double ratio = 6 [default = inf];
+  optional float tiny = 7 [default = -1.5e-7];
+  optional double missing = 8 [default = nan];
+  optional bool on = 9 [default = true];
+  optional Shade shade = 10 [default = SHADE_LIGHT];
+  repeated int32 counts = 11 [packed = true, (weight) = -3];
+  repeated string tags = 12 [(labels) = "a", (labels) = "b"];
+  optional int32 bounded = 13 [(limits) = { low: 1 high: 10 note: "n" steps: [1, 2] }];
+  optional int32 partial = 14 [(limits).low = 5, (limits).note = "x"];
+  optional int32 renamed = 15 [json_name = "otherName", deprecated = true];
+
+  map<string, Pantry> children = 16;
+  map<int64, Shade> shades = 17;
+
+  optional group Shelf = 18 {
+    optional int32 slot = 1;
+    repeated group Item = 2 {
+      optional string label = 1;
+    }
+  }
+
+  oneof choice {
+    string text = 19;
+    Limits limit = 20;
+    group Crate = 21 {
+      optional int32 size = 1;
+    }
+  }
+
+  message Nested {
+    enum Kind {
+      KIND_A = 1;
+      KIND_B = 2;
+    }
+    optional Kind kind = 1 [default = KIND_B];
+    optional .fixtures.kitchen.Pantry parent = 2;
+    optional Pantry.Nested sibling = 3;
+  }
+
+  extensions 100 to 199, 300;
+  extensions 1000 to max;
+  reserved 50 to 60, 70;
+  reserved "old_field", "older_field";
+
+  extend Pantry {
+    optional int32 nested_extension = 150;
+  }
+}
+
+extend Pantry {
+  optional Pantry.Nested top_extension = 300;
+  repeated group Bundle = 1000 {
+    optional int32 count = 1;
+  }
+}
+
+message Wire {
+  option message_set_wire_format = true;
+  extensions 4 to max;
+}
+
+service Kitchen {
+  option deprecated = true;
+  rpc Cook(Pantry) returns (Pantry.Nested);
+  rpc Stream(stream Pantry) returns (stream Limits) {
+    option deprecated = true;
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+  rpc Serve(.fixtures.kitchen.Limits) returns (Limits) {}
+}
