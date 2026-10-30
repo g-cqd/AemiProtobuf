@@ -17,40 +17,51 @@ struct _ProtobufMessageIndex {
     /// - Complexity: O(total bytes).
     init(bytes: [UInt8], ranges: [Range<Int>], depth: Int, limits: WireLimits) throws(WireError) {
         var entries: [_ProtobufFieldEntry] = []
-        for range in ranges {
-            try WireReader.withReader(over: bytes, in: range, depth: depth, limits: limits) { r throws(WireError) in
-                while let tag = try r.nextTag() {
-                    let number = tag.fieldNumber.rawValue
-                    switch tag.wireType {
-                        case .varint:
-                            entries.append(
-                                .init(number: number, wireType: .varint, payload: try r.readVarint(), length: 0))
-                        case .fixed32:
-                            entries.append(
-                                .init(
-                                    number: number, wireType: .fixed32, payload: UInt64(try r.readFixed32()), length: 0)
-                            )
-                        case .fixed64:
-                            entries.append(
-                                .init(number: number, wireType: .fixed64, payload: try r.readFixed64(), length: 0))
-                        case .lengthDelimited:
-                            let payload = try r.readPayloadRange()
-                            entries.append(
-                                .init(
-                                    number: number, wireType: .lengthDelimited, payload: UInt64(payload.lowerBound),
-                                    length: payload.count))
-                        case .startGroup, .endGroup:
-                            try r.skipField(tag)
-                    }
-                }
-            }
+        for range in ranges { try Self.index(bytes, range, depth, limits, into: &entries) }
+        self.entries = entries
+    }
+
+    /// The payloads of a field's occurrences, merged as one message.
+    init(bytes: [UInt8], occurrences: _FieldOccurrences, depth: Int, limits: WireLimits) throws(WireError) {
+        var entries: [_ProtobufFieldEntry] = []
+        var position = occurrences.next(from: occurrences.lower)
+        while position < occurrences.upper {
+            try Self.index(bytes, occurrences.storage[position].range, depth, limits, into: &entries)
+            position = occurrences.next(from: position + 1)
         }
         self.entries = entries
     }
 
-    /// The occurrences of field `number`, in wire order.
-    func entries(for number: UInt32) -> [_ProtobufFieldEntry] {
-        entries.filter { $0.number == number }
+    private static func index(
+        _ bytes: [UInt8], _ range: Range<Int>, _ depth: Int, _ limits: WireLimits,
+        into entries: inout [_ProtobufFieldEntry]
+    ) throws(WireError) {
+        try WireReader.withReader(over: bytes, in: range, depth: depth, limits: limits) { r throws(WireError) in
+            while let tag = try r.nextTag() {
+                let number = tag.fieldNumber.rawValue
+                switch tag.wireType {
+                    case .varint:
+                        entries.append(
+                            .init(number: number, wireType: .varint, payload: try r.readVarint(), length: 0))
+                    case .fixed32:
+                        entries.append(
+                            .init(
+                                number: number, wireType: .fixed32, payload: UInt64(try r.readFixed32()), length: 0)
+                        )
+                    case .fixed64:
+                        entries.append(
+                            .init(number: number, wireType: .fixed64, payload: try r.readFixed64(), length: 0))
+                    case .lengthDelimited:
+                        let payload = try r.readPayloadRange()
+                        entries.append(
+                            .init(
+                                number: number, wireType: .lengthDelimited, payload: UInt64(payload.lowerBound),
+                                length: payload.count))
+                    case .startGroup, .endGroup:
+                        try r.skipField(tag)
+                }
+            }
+        }
     }
 
     /// The last occurrence of field `number`: for a singular field the last one wins.

@@ -73,8 +73,7 @@ struct _ProtobufKeyedDecodingContainer<K: CodingKey>: KeyedDecodingContainerProt
         {
             return bytes
         }
-        let entries = index.entries(for: try number(key))
-        return try T(from: decoder.field(key, entries: entries))
+        return try T(from: decoder.field(key, occurrences: _FieldOccurrences(index, number: try number(key))))
     }
 
     // MARK: Optional: absent is nil
@@ -130,11 +129,11 @@ struct _ProtobufKeyedDecodingContainer<K: CodingKey>: KeyedDecodingContainerProt
     func nestedContainer<NestedKey: CodingKey>(
         keyedBy type: NestedKey.Type, forKey key: K
     ) throws -> KeyedDecodingContainer<NestedKey> {
-        try decoder.field(key, entries: index.entries(for: number(key))).container(keyedBy: type)
+        try decoder.field(key, occurrences: _FieldOccurrences(index, number: number(key))).container(keyedBy: type)
     }
 
     func nestedUnkeyedContainer(forKey key: K) throws -> any UnkeyedDecodingContainer {
-        try decoder.field(key, entries: index.entries(for: number(key))).unkeyedContainer()
+        try decoder.field(key, occurrences: _FieldOccurrences(index, number: number(key))).unkeyedContainer()
     }
 
     func superDecoder() throws -> any Decoder {

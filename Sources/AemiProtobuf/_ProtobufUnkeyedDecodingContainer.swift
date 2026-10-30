@@ -6,32 +6,39 @@ import Foundation
 /// way, or both, reads in wire order. An empty length-delimited record is skipped when a number is wanted.
 struct _ProtobufUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     let decoder: _ProtobufDecoderImpl
-    let entries: [_ProtobufFieldEntry]
+    let occurrences: _FieldOccurrences
     private(set) var currentIndex = 0
-    private var cursor = 0
+    /// The position in the index of the next occurrence, or `occurrences.upper`.
+    private var cursor: Int
     /// Values of the packed record being read, as entries with the wire type the caller asked for.
     private var buffered: [_ProtobufFieldEntry] = []
     private var bufferedIndex = 0
 
-    init(decoder: _ProtobufDecoderImpl, entries: [_ProtobufFieldEntry]) {
+    init(decoder: _ProtobufDecoderImpl, occurrences: _FieldOccurrences) {
         self.decoder = decoder
-        self.entries = entries
+        self.occurrences = occurrences
+        cursor = occurrences.next(from: occurrences.lower)
     }
 
     var codingPath: [any CodingKey] { decoder.codingPath }
     var count: Int? { nil }
-    var isAtEnd: Bool { bufferedIndex >= buffered.count && cursor >= entries.count }
+    var isAtEnd: Bool { bufferedIndex >= buffered.count && cursor >= occurrences.upper }
 
     private mutating func nextRecord() throws -> _ProtobufFieldEntry {
-        guard cursor < entries.count else {
+        try occurrences.storage[nextPosition()]
+    }
+
+    /// The index position of the next record, which the caller consumes.
+    private mutating func nextPosition() throws -> Int {
+        guard cursor < occurrences.upper else {
             throw DecodingError.valueNotFound(
                 Any.self, .init(codingPath: codingPath, debugDescription: "no more elements in the repeated field"))
         }
         defer {
-            cursor += 1
+            cursor = occurrences.next(from: cursor + 1)
             currentIndex += 1
         }
-        return entries[cursor]
+        return cursor
     }
 
     /// The next numeric element, expanding a packed record into `wire`-typed values.
@@ -143,7 +150,8 @@ struct _ProtobufUnkeyedDecodingContainer: UnkeyedDecodingContainer {
 
     mutating func decode<T: Decodable>(_ type: T.Type) throws -> T {
         if let scalar = try decodeScalar(type) { return scalar }
-        let record = try nextRecord()
+        let position = try nextPosition()
+        let record = occurrences.storage[position]
         if type == Data.self,
             let data = Data(try _ScalarDecoding.bytes(record, decoder.context.bytes, codingPath)) as? T
         {
@@ -155,16 +163,17 @@ struct _ProtobufUnkeyedDecodingContainer: UnkeyedDecodingContainer {
         }
         return try T(
             from: _ProtobufDecoderImpl(
-                context: decoder.context, source: .field(entries: [record]), depth: decoder.depth,
-                codingPath: codingPath))
+                context: decoder.context, source: .field(_FieldOccurrences(occurrences.storage, at: position)),
+                depth: decoder.depth, codingPath: codingPath))
     }
 
     mutating func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<
         NestedKey
     > {
-        let record = try nextRecord()
+        let position = try nextPosition()
         return try _ProtobufDecoderImpl(
-            context: decoder.context, source: .field(entries: [record]), depth: decoder.depth, codingPath: codingPath
+            context: decoder.context, source: .field(_FieldOccurrences(occurrences.storage, at: position)),
+            depth: decoder.depth, codingPath: codingPath
         )
         .container(keyedBy: type)
     }

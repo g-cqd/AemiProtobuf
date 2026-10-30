@@ -1,5 +1,5 @@
 ---
-status: not-started
+status: done
 blocked-by: []
 date: 2026-10-25
 ---
@@ -24,3 +24,17 @@ One improvement is already in: the repeated-element dispatch compares metatype i
 
 Acceptance: a re-run of `Scripts/compare.sh bench`, with the numbers before and after, no change to the bytes the oracle test
 pins (`CodableOracleTests`), and the allocation thresholds updated with the change.
+
+## Done (2026-10-30)
+
+Profiled by allocation count first (the gate's 1,000-user corpus: 47,039 allocations per decode), then two changes:
+
+1. Every scalar decode built its error path, `codingPath + [key]`, before knowing whether there was an error: an array per
+   field. `_ScalarDecoding` now takes the path as an autoclosure, built only when it throws. 47,039 to about 37,000.
+2. Every repeated or nested field filtered the message's entries into an array of its own, a nested message gathered its ranges
+   into another, and every element of a repeated message was wrapped in a one-element array. `_FieldOccurrences` reads them in
+   place from the index's entries (a window and a field number). To 29,028.
+
+Wall clock, 2,000 records, release: decode 8.35 to 5.76 ms (AemiJSON's generic path: 4.64 ms); encode 4.10 to 3.25 ms. What
+is left is mostly what `Codable` imposes (a box per keyed and unkeyed container), one index per message, and the strings
+themselves. The thresholds are updated with the change; the oracle tests (`CodableOracleTests`) pass unchanged.
