@@ -5,8 +5,8 @@ import Foundation
 
 // The protobuf conformance testee: the runner writes length-prefixed ConformanceRequests to standard input and reads
 // length-prefixed ConformanceResponses from standard output (conformance/conformance.proto). Binary to binary goes through the
-// generated types; anything with JSON goes through dynamic messages over the descriptor set (roadmap 0010). JSPB and text
-// format are answered "skipped".
+// generated types; anything with JSON or text format goes through dynamic messages over the descriptor set (roadmaps 0010,
+// 0011). JSPB is answered "skipped".
 
 /// A message type the runner names, as the generated type that reads and writes it.
 struct Testee: Sendable {
@@ -37,11 +37,32 @@ enum Registry {
     ]
 }
 
+/// Writes a dynamic message in the requested format.
+func encode(
+    _ message: DynamicMessage, as output: Conformance_WireFormat, _ request: Conformance_ConformanceRequest
+) -> Conformance_ConformanceResponse.OneOf_Result {
+    switch output {
+        case .textFormat:
+            return .textPayload(Dynamic.text.encode(message, printUnknownFields: request.printUnknownFields))
+        case .json:
+            return transcode(request) { coder throws(ProtoJSONError) in
+                .jsonPayload(String(decoding: try coder.encode(message), as: UTF8.self))
+            }
+        default:
+            do throws(DynamicMessageError) {
+                return .protobufPayload(try Dynamic.schema.encode(message))
+            } catch {
+                return .serializeError("\(error)")
+            }
+    }
+}
+
 enum Dynamic {
     static let schema = DynamicSchema(
         (try? FileDescriptorSet.decode(
             from: [UInt8](Data(base64Encoded: descriptorSetBase64, options: .ignoreUnknownCharacters) ?? Data())))
             ?? FileDescriptorSet(files: []))
+    static let text = ProtoTextFormat(schema: schema)
 }
 
 func respond(to request: Conformance_ConformanceRequest) -> Conformance_ConformanceResponse.OneOf_Result {
@@ -73,8 +94,23 @@ func respond(to request: Conformance_ConformanceRequest) -> Conformance_Conforma
                     return .serializeError("\(error)")
                 }
             }
+        case .protobufPayload(let payload)? where output == .textFormat:
+            do throws(DynamicMessageError) {
+                let message = try Dynamic.schema.decode(payload, as: request.messageType)
+                return .textPayload(Dynamic.text.encode(message, printUnknownFields: request.printUnknownFields))
+            } catch {
+                return .parseError("\(error)")
+            }
+        case .textPayload(let text)?:
+            let message: DynamicMessage
+            do throws(ProtoTextFormatError) {
+                message = try Dynamic.text.decode(text, as: request.messageType)
+            } catch {
+                return .parseError("\(error)")
+            }
+            return encode(message, as: output, request)
         default:
-            return .skipped("only binary and JSON are supported")
+            return .skipped("JSPB is not supported")
     }
 }
 

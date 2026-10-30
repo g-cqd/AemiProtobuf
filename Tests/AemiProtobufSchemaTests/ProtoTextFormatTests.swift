@@ -27,8 +27,7 @@ import Testing
         #expect(message.fields[13] == .bool(true) && message.fields[14] == .string("abé"))
         #expect(message.fields[15] == .bytes([0, 255]) && message.fields[21] == .enumeration(2))
         #expect(message.fields[22] == .enumeration(1) && message.fields[31] == .list([.int32(1), .int32(2), .int32(3)]))
-        #expect(message.fields[71 - 1] != nil || true)
-        #expect(message.fields[62] == nil)
+        #expect(message.fields[69] == .map([.string("k"): .string("v")]))
     }
 
     @Test func `groups by type name, extensions in brackets, and Any expanded`() throws {
