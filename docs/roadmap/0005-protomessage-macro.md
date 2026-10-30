@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 blocked-by: []
 date: 2026-10-25
 ---
@@ -19,10 +19,26 @@ Scope: `@ProtoMessage`, `@ProtoField(n, encoding)`, `@ProtoOneof` over a struct;
 3. Diagnostics, each with a test: no `@ProtoField`, no default, a map, a kind that does not fit the type, a repeated number, a
    number out of range or reserved, a non-literal number, a class, an array of optionals or an optional array.
 
+## Done since (2026-10-30)
+
+- `@ProtoOneof` (0026), maps (0025), unknown fields (0022, ADR-0012) and merging (0020) are in, each with its own entry.
+- The definition: `@ProtoMessage` conforms the type to `AemiProtoDefined`, writing `protoName`, `protoDefinition` and
+  `protoDependencies`; `@ProtoOneof` writes its members' lines. The definition is in edition 2023, which states exactly what
+  the macro means:
+  - implicit presence for a plain field, explicit for an `Optional`;
+  - `LEGACY_REQUIRED`, delimited groups, `repeated_field_encoding = EXPANDED` for `packed: false`;
+  - maps as `map<K, V>`, oneofs as blocks.
+
+  An integer enumeration that is `CaseIterable` gets its definition by conforming. Its values are named `TYPE_CASE`, and it
+  is closed unless `init(rawValue:)` accepts a number with no case. `ProtoDefinitions.file(for:package:)` gathers a type and
+  everything it reaches into one file, iteratively, and names a type with no definition.
+- Oracle (`ProtoDefinitionTests`): every-kind, oneof, map, group and required test types. Each file compiles with
+  `ProtoCompiler`, and a dynamic message of the compiled descriptor reads the macro's bytes and writes bytes the macro reads
+  back to the same value.
+- The `Codable` fallback is decided against. The macro refuses what it cannot write, because a silently slower message is a
+  worse failure than a compile error.
+
 ## Open
 
-- `@ProtoOneof` (0026) and maps (0025). The descriptor and `protoDefinition` text the original scope names.
-- Unknown-field preservation (0022), and merging a message field given twice (0020; the last occurrence wins today).
-- A fallback to `Codable` with a note, where AemiJSON's macro degrades instead of refusing: this macro refuses, because a
-  silently slower message is a worse failure than a compile error.
-- Mutation coverage of the macro target.
+- Mutation coverage of the macro target (deferred with the CI work, 0013).
+- Definitions name types by their own name, so two nested types of one name collide (`duplicateName`).
