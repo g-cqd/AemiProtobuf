@@ -14,6 +14,15 @@ public struct BreakingChange: Sendable, Equatable {
         case enumRemoved(String)
         case enumValueRemoved(enumName: String, value: String, number: Int32)
         case enumValueRenumbered(enumName: String, value: String, oldNumber: Int32, newNumber: Int32)
+        /// The field moved into, out of, or between oneofs (`nil` is no oneof; a proto3 `optional` counts as none).
+        case fieldOneofChanged(message: String, field: String, oldOneof: String?, newOneof: String?)
+        /// The set of required fields differs: a reader of one version refuses messages of the other.
+        case requiredFieldsChanged(message: String, oldRequired: [String], newRequired: [String])
+        /// Field numbers a message or an enumeration reserved, `start ... end` inclusive, are no longer all reserved.
+        case reservedRangeRemoved(scope: String, start: Int32, end: Int32, isEnum: Bool)
+        case reservedNameRemoved(scope: String, name: String, isEnum: Bool)
+        /// The wire is unchanged; the JSON form is not.
+        case fieldJSONNameChanged(message: String, field: String, oldName: String, newName: String)
     }
 
     public let kind: Kind
@@ -25,11 +34,31 @@ public struct BreakingChange: Sendable, Equatable {
     }
 
     /// Whether data written by one version is misread or refused by the other. A rename is not: only JSON and source break.
-    /// The `buf breaking` rule this change is.
-    public var bufRule: String { "" }
-
-    public var breaksTheWire: Bool {
-        if case .fieldRenamed = kind { return false }
-        return true
+    /// The `buf breaking` rule this change is (buf 1.75's names).
+    public var bufRule: String {
+        switch kind {
+            case .messageRemoved: "MESSAGE_NO_DELETE"
+            case .fieldRemoved, .fieldRenumbered: "FIELD_NO_DELETE_UNLESS_NUMBER_RESERVED"
+            case .fieldRenamed: "FIELD_SAME_NAME"
+            case .fieldTypeIncompatible, .fieldTypeNameChanged: "FIELD_WIRE_COMPATIBLE_TYPE"
+            case .fieldLabelChanged: "FIELD_WIRE_COMPATIBLE_CARDINALITY"
+            case .enumRemoved: "ENUM_NO_DELETE"
+            case .enumValueRemoved, .enumValueRenumbered: "ENUM_VALUE_NO_DELETE_UNLESS_NUMBER_RESERVED"
+            case .fieldOneofChanged: "FIELD_SAME_ONEOF"
+            case .requiredFieldsChanged: "MESSAGE_SAME_REQUIRED_FIELDS"
+            case .reservedRangeRemoved(_, _, _, let isEnum), .reservedNameRemoved(_, _, let isEnum):
+                isEnum ? "RESERVED_ENUM_NO_DELETE" : "RESERVED_MESSAGE_NO_DELETE"
+            case .fieldJSONNameChanged: "FIELD_SAME_JSON_NAME"
+        }
     }
+
+    /// Whether data written by one version is misread or refused by the other: the change is one of buf's WIRE rules. A rename,
+    /// a JSON name, and a removed message or enumeration (nothing on the wire names a type) are not.
+    public var breaksTheWire: Bool { Self.wireRules.contains(bufRule) }
+
+    static let wireRules: Set<String> = [
+        "FIELD_NO_DELETE_UNLESS_NUMBER_RESERVED", "FIELD_WIRE_COMPATIBLE_TYPE", "FIELD_WIRE_COMPATIBLE_CARDINALITY",
+        "ENUM_VALUE_NO_DELETE_UNLESS_NUMBER_RESERVED", "FIELD_SAME_ONEOF", "MESSAGE_SAME_REQUIRED_FIELDS",
+        "RESERVED_MESSAGE_NO_DELETE", "RESERVED_ENUM_NO_DELETE"
+    ]
 }

@@ -42,8 +42,10 @@ struct SchemaComparatorDepthTests {
         let changes = SchemaComparator().compare(old: before, new: after)
         #expect(changes.map(\.kind) == [.fieldRenamed(message: "p.M", number: 1, oldName: "old", newName: "new")])
         #expect(changes.allSatisfy { !$0.breaksTheWire })
+        // A removed message is reported, but nothing on the wire names a type: buf files it under FILE, not WIRE.
         let removed = SchemaComparator().compare(old: before, new: set(messages: []))
-        #expect(!removed.isEmpty && removed.allSatisfy { $0.breaksTheWire })
+        #expect(removed.map(\.bufRule) == ["MESSAGE_NO_DELETE"])
+        #expect(removed.allSatisfy { !$0.breaksTheWire })
     }
 
     @Test func `reordering fields or messages is not a change`() {
