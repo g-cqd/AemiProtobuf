@@ -1,9 +1,12 @@
 import AemiProtobuf
+import AemiProtobufJSON
+import AemiProtobufSchema
 import Foundation
 
 // The protobuf conformance testee: the runner writes length-prefixed ConformanceRequests to standard input and reads
-// length-prefixed ConformanceResponses from standard output (conformance/conformance.proto). Binary in, binary out; JSON,
-// JSPB and text format are answered "skipped" until roadmap 0010.
+// length-prefixed ConformanceResponses from standard output (conformance/conformance.proto). Binary to binary goes through the
+// generated types; anything with JSON goes through dynamic messages over the descriptor set (roadmap 0010). JSPB and text
+// format are answered "skipped".
 
 /// A message type the runner names, as the generated type that reads and writes it.
 struct Testee: Sendable {
@@ -34,12 +37,65 @@ enum Registry {
     ]
 }
 
+enum Dynamic {
+    static let schema = DynamicSchema(
+        (try? FileDescriptorSet.decode(
+            from: [UInt8](Data(base64Encoded: descriptorSetBase64, options: .ignoreUnknownCharacters) ?? Data())))
+            ?? FileDescriptorSet(files: []))
+}
+
 func respond(to request: Conformance_ConformanceRequest) -> Conformance_ConformanceResponse.OneOf_Result {
+    let output = request.requestedOutputFormat
+    switch request.payload {
+        case .protobufPayload(let payload)? where output == .protobuf: return binary(payload, request)
+        case .protobufPayload(let payload)? where output == .json:
+            return transcode(request) { coder throws(ProtoJSONError) in
+                let message: DynamicMessage
+                do throws(DynamicMessageError) {
+                    message = try coder.schema.decode(payload, as: request.messageType)
+                } catch {
+                    return .parseError("\(error)")
+                }
+                return .jsonPayload(String(decoding: try coder.encode(message), as: UTF8.self))
+            }
+        case .jsonPayload(let json)? where output == .protobuf || output == .json:
+            return transcode(request) { coder throws(ProtoJSONError) in
+                let message: DynamicMessage
+                do throws(ProtoJSONError) {
+                    message = try coder.decode(json: Array(json.utf8), as: request.messageType)
+                } catch {
+                    return .parseError("\(error)")
+                }
+                if output == .json { return .jsonPayload(String(decoding: try coder.encode(message), as: UTF8.self)) }
+                do throws(DynamicMessageError) {
+                    return .protobufPayload(try coder.schema.encode(message))
+                } catch {
+                    return .serializeError("\(error)")
+                }
+            }
+        default:
+            return .skipped("only binary and JSON are supported")
+    }
+}
+
+/// Runs a JSON request with a coder for its category; an error the body does not answer is a serialization error.
+func transcode(
+    _ request: Conformance_ConformanceRequest,
+    _ body: (ProtoJSONCoder) throws(ProtoJSONError) -> Conformance_ConformanceResponse.OneOf_Result
+) -> Conformance_ConformanceResponse.OneOf_Result {
+    let options = ProtoJSONCoder.Options(ignoreUnknownFields: request.testCategory == .jsonIgnoreUnknownParsingTest)
+    do throws(ProtoJSONError) {
+        return try body(ProtoJSONCoder(schema: Dynamic.schema, options: options))
+    } catch {
+        return .serializeError("\(error)")
+    }
+}
+
+func binary(_ payload: [UInt8], _ request: Conformance_ConformanceRequest)
+    -> Conformance_ConformanceResponse.OneOf_Result
+{
     guard let testee = Registry.testees[request.messageType] else {
         return .skipped("no generated type for \(request.messageType)")
-    }
-    guard case .protobufPayload(let payload)? = request.payload else {
-        return .skipped("only binary input is supported")
     }
     let message: any Sendable
     do {
@@ -47,7 +103,6 @@ func respond(to request: Conformance_ConformanceRequest) -> Conformance_Conforma
     } catch {
         return .parseError("\(error)")
     }
-    guard request.requestedOutputFormat == .protobuf else { return .skipped("only binary output is supported") }
     do {
         return .protobufPayload(try testee.encode(message))
     } catch {

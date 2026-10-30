@@ -93,7 +93,7 @@ import Testing
                 + #""mapStringNestedMessage":{"k":{"a":3}},"mapInt64Int64":{"9223372036854775807":"1"}}"#)
         #expect(message.fields[32] == .list([.int64(1), .int64(2)]))
         #expect(message.fields[56] == .map([.int32(-1): .int32(2)]))
-        #expect(message.fields[69] == .map([.bool(true): .bool(false)]))
+        #expect(message.fields[68] == .map([.bool(true): .bool(false)]))
         #expect(throws: ProtoJSONError.self) { try S.read(#"{"mapBoolBool":{"yes":true}}"#) }
         #expect(throws: ProtoJSONError.self) { try S.read(#"{"repeatedInt32":[1,null]}"#) }
     }

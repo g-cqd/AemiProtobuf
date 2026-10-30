@@ -18,7 +18,7 @@ extension DynamicValue {
     }
 
     /// Whether an implicit-presence field holding this value is left out: zero, `false`, empty. A negative zero is written.
-    var isImplicitDefault: Bool {
+    public var isImplicitDefault: Bool {
         switch self {
             case .int32(let value), .enumeration(let value): value == 0
             case .int64(let value): value == 0

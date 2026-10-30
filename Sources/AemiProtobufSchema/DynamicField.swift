@@ -23,6 +23,12 @@ public final class DynamicField: Sendable {
     /// The index of the declared oneof the field is in; a proto3 `optional`'s synthetic oneof is none.
     public let oneofIndex: Int?
 
+    /// The field's JSON name: the descriptor's `json_name`, or protoc's lowerCamel form of the name when it has none. An
+    /// extension's is its fully qualified name in brackets.
+    public let jsonName: String
+    /// Whether the field is an extension of the message, declared elsewhere.
+    public let isExtension: Bool
+
     public var name: String { descriptor.name }
     public var number: Int32 { descriptor.number }
 
@@ -38,6 +44,21 @@ public final class DynamicField: Sendable {
         let valueValidatesUTF8: Bool
     }
 
+    /// protoc's JSON name for a field name: each underscore dropped and the letter after it upper-cased.
+    static func lowerCamel(_ name: String) -> String {
+        var result = ""
+        var upper = false
+        for character in name {
+            if character == "_" {
+                upper = true
+            } else {
+                result += upper ? character.uppercased() : String(character)
+                upper = false
+            }
+        }
+        return result
+    }
+
     /// The values a packed run can hold: the numeric scalars and enumerations.
     static func isPackable(_ type: FieldType) -> Bool {
         switch type {
@@ -46,14 +67,19 @@ public final class DynamicField: Sendable {
         }
     }
 
+    /// For an extension, `extensionName` is its fully qualified name and `message` the scope it was declared in.
     init(
         _ descriptor: FieldDescriptor, in message: String, features enclosing: ResolvedFeatures, schema: FlatSchema,
-        index: SchemaIndex
+        index: SchemaIndex, extensionName: String? = nil
     ) {
         let features = enclosing.merged(descriptor.features)
         let resolved = descriptor.typeName.isEmpty ? nil : index.resolve(descriptor.typeName, in: message)
         let entry = resolved.flatMap { schema.messages[$0] }.flatMap { $0.isMapEntry ? $0 : nil }
         self.descriptor = descriptor
+        isExtension = extensionName != nil
+        jsonName =
+            extensionName.map { "[" + $0 + "]" }
+            ?? (descriptor.jsonName.isEmpty ? Self.lowerCamel(descriptor.name) : descriptor.jsonName)
         self.typeName = resolved
         isRepeated = descriptor.label == .repeated
         let delimited = descriptor.type == .message && entry == nil && features.messageEncoding == 2

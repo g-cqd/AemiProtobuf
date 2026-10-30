@@ -165,6 +165,7 @@ if isDev {
             dependencies: [
                 "AemiProtobufCore",
                 "AemiProtobufSchema",
+                "AemiProtobufJSON",
                 "AemiProtobuf",
                 .product(name: "Benchmark", package: "benchmark")
             ],

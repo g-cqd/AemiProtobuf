@@ -6,6 +6,8 @@ struct FlatSchema {
     var closedEnumValues: [String: Set<Int32>] = [:]
     /// Extensions by the fully qualified name (no leading dot) of the message they extend.
     var extensions: [String: [FieldDescriptor]] = [:]
+    /// Extensions with their scope, by the message they extend. Only with `resolvingFeatures`.
+    var declaredExtensions: [String: [ExtensionDeclaration]] = [:]
     /// The features in force in each message: its file's, every enclosing message's, then its own. Only with `resolvingFeatures`.
     var messageFeatures: [String: ResolvedFeatures] = [:]
 
@@ -25,9 +27,7 @@ struct FlatSchema {
                     Pending(name: scope + $0.name, message: $0, file: file, features: features)
                 })
             for e in file.enums { add(e, named: scope + e.name, in: file) }
-            for field in file.extensions {
-                extensions[String(field.extendee.drop { $0 == "." }), default: []].append(field)
-            }
+            register(file.extensions, scope: file.package, features: features, declaring: resolvingFeatures)
         }
         while let next = pending.popLast() {
             let (name, message, file) = (next.name, next.message, next.file)
@@ -39,8 +39,20 @@ struct FlatSchema {
                     Pending(name: name + "." + $0.name, message: $0, file: file, features: features)
                 })
             for e in message.nestedEnums { add(e, named: name + "." + e.name, in: file) }
-            for field in message.extensions {
-                extensions[String(field.extendee.drop { $0 == "." }), default: []].append(field)
+            register(message.extensions, scope: name, features: features, declaring: resolvingFeatures)
+        }
+    }
+
+    /// Files each extension under the message it extends, and with `declaring`, with its scope.
+    private mutating func register(
+        _ fields: [FieldDescriptor], scope: String, features: ResolvedFeatures, declaring: Bool
+    ) {
+        for field in fields {
+            let extendee = String(field.extendee.drop { $0 == "." })
+            extensions[extendee, default: []].append(field)
+            if declaring {
+                declaredExtensions[extendee, default: []]
+                    .append(ExtensionDeclaration(scope: scope, field: field, features: features))
             }
         }
     }
