@@ -54,10 +54,12 @@ struct ProtoMessageMacro: ExtensionMacro, MemberMacro {
         .map { "\(access)\($0)" }
         if let check = ProtoMessageCodegen.missingRequired(fields) { members.append(access + check) }
         if !declaresCodingKeys(decl) { members.append(ProtoMessageCodegen.codingKeys(fields)) }
+        members += ProtoDefinitionCodegen.message(decl.name.text, fields).map { access + $0 }
         return [
             try ProtoExtension.make(
                 type, inheritance: decl.inheritanceClause,
-                wanted: ["AemiProtoFastEncodable", "AemiProtoFastDecodable", "Codable"], members: members)
+                wanted: ["AemiProtoFastEncodable", "AemiProtoFastDecodable", "Codable", "AemiProtoDefined"],
+                members: members)
         ]
     }
 

@@ -21,6 +21,7 @@ struct ProtoOneofMacro: ExtensionMacro {
         let access = ProtoExtension.access(decl.modifiers)
         var generated = [access + encode(members), access + decode(members)]
         if let check = missingRequired(members) { generated.append(access + check) }
+        generated += ProtoDefinitionCodegen.oneof(members).map { access + $0 }
         return [
             try ProtoExtension.make(
                 type, inheritance: decl.inheritanceClause, wanted: ["AemiProtoOneof", "Codable"], members: generated)

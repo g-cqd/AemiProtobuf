@@ -130,7 +130,7 @@ struct ProtoMessageDiagnosticsTests {
                     var unknownFields = UnknownFields()
                 }
 
-                extension M: AemiProtoFastEncodable, AemiProtoFastDecodable, Codable {
+                extension M: AemiProtoFastEncodable, AemiProtoFastDecodable, Codable, AemiProtoDefined {
                     func __aepbEncode(into w: inout WireWriter) throws(WireError) {
                         if self.a != 0 {
                             w.appendTag(1, .varint)
@@ -158,6 +158,21 @@ struct ProtoMessageDiagnosticsTests {
 
                     enum CodingKeys: Int, CodingKey {
                         case a = 1
+                    }
+
+                    static var protoName: String {
+                        "M"
+                    }
+
+                    static var protoDefinition: String {
+                        var lines = ["message M {"]
+                        lines.append("  int64 a = 1 [features.field_presence = IMPLICIT];")
+                        lines.append("}")
+                        return lines.joined(separator: "\\n") + "\\n"
+                    }
+
+                    static var protoDependencies: [Any.Type] {
+                        []
                     }
                 }
                 """, macros: macros)

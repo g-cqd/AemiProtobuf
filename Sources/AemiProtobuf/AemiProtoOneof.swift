@@ -12,4 +12,16 @@ public protocol AemiProtoOneof: AemiProtoRequiredFields {
     static func __aepbDecodeField(
         _ tag: FieldTag, from reader: inout WireReader, into value: inout Self?, unknown: inout UnknownFields
     ) throws(WireError) -> Bool
+
+    /// The members' field lines, for the message's definition (``AemiProtoDefined``).
+    static var __aepbOneofDefinition: [String] { get }
+    /// The types the members refer to.
+    static var __aepbOneofDependencies: [Any.Type] { get }
+}
+
+extension AemiProtoOneof {
+    /// The members' field lines in the message's definition; `@ProtoOneof` writes them (roadmap 0005).
+    public static var __aepbOneofDefinition: [String] { [] }
+    /// The types the members refer to.
+    public static var __aepbOneofDependencies: [Any.Type] { [] }
 }
