@@ -5,6 +5,8 @@
 public struct SchemaIndex: Sendable {
     private var messages: [String: MessageDescriptor] = [:]
     private var enums: Set<String> = []
+    private var closedEnums: [String: Set<Int32>] = [:]
+    private var extensionFields: [String: [FieldDescriptor]] = [:]
 
     /// Indexes every message and enum, nested ones included.
     /// - Complexity: O(messages + enums).
@@ -12,7 +14,15 @@ public struct SchemaIndex: Sendable {
         let flat = FlatSchema(set)
         messages = flat.messages
         enums = Set(flat.enums.keys)
+        closedEnums = flat.closedEnumValues
+        extensionFields = flat.extensions
     }
+
+    /// The values of the closed enumeration with this fully qualified name; `nil` for an open one or none.
+    public func closedEnumValues(named name: String) -> Set<Int32>? { closedEnums[name] }
+
+    /// The extensions declared, anywhere in the set, for the message with this fully qualified name.
+    public func extensions(of messageName: String) -> [FieldDescriptor] { extensionFields[messageName] ?? [] }
 
     /// The message with this fully qualified name (no leading dot).
     public func message(named name: String) -> MessageDescriptor? { messages[name] }

@@ -33,9 +33,15 @@ extension WireValidator {
         while head < queue.count {
             let job = queue[head]
             head += 1
+            var extensions: [Int32: FieldDescriptor] = [:]
+            for field in index.extensions(of: job.scope) { extensions[field.number] = field }
+            let scope = job.scope
             let check = checkMessage(
                 bytes, job.range, job.descriptor, depth: job.depth, budget: maxFindings - findings.count,
-                collectNested: true)
+                collectNested: true, extensions: extensions,
+                closedValues: { field in
+                    index.resolve(field.typeName, in: scope).flatMap(index.closedEnumValues(named:))
+                })
             findings += check.errors.map { WireFinding(path: job.path, error: $0) }
             if check.stopped || findings.count >= maxFindings {
                 findings.append(WireFinding(path: job.path, error: .findingLimitReached))
