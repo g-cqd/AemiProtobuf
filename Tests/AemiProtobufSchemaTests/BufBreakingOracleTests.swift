@@ -36,6 +36,6 @@ import Testing
         #expect(removed.map(\.bufRule) == ["MESSAGE_NO_DELETE"])
         let json = SchemaComparator().compare(old: try load("json-name-old"), new: try load("json-name-new"))
         #expect(json.map(\.bufRule) == ["FIELD_SAME_JSON_NAME"])
-        #expect(!json.contains(where: \.breaksTheWire))
+        #expect(json.allSatisfy { !$0.breaksTheWire })
     }
 }
