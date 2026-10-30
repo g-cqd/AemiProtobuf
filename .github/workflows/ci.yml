@@ -57,6 +57,20 @@ jobs:
           swift-version: ${{ steps.toolchain.outputs.version }}
       - run: Scripts/quality.sh test
 
+  linux:
+    name: Tests on Linux (debug and release)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Toolchain version
+        id: toolchain
+        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
+      - name: Install Swift ${{ steps.toolchain.outputs.version }}
+        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
+        with:
+          swift-version: ${{ steps.toolchain.outputs.version }}
+      - run: Scripts/quality.sh test
+
   conformance:
     name: Conformance (protobuf ${{ vars.PROTOBUF_VERSION || '36.2' }})
     runs-on: macos-26
