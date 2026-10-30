@@ -1,3 +1,4 @@
+import AemiProtobufCore
 import AemiProtobufSchema
 import Benchmark
 
@@ -40,6 +41,49 @@ struct SchemaBenchmarks {
                     return
                 }
                 blackHole(errors)
+            }
+        }
+
+        // Roadmap 0007: nested validation, a message holding 100 messages of a three-field message, through the work queue.
+        let nested = FileDescriptorSet(files: [
+            FileDescriptor(
+                name: "nested.proto", package: "bench",
+                messages: [
+                    MessageDescriptor(
+                        name: "Outer",
+                        fields: [
+                            FieldDescriptor(
+                                name: "items", number: 1, label: .repeated, type: .message, typeName: ".bench.Inner")
+                        ]),
+                    MessageDescriptor(
+                        name: "Inner",
+                        fields: [
+                            FieldDescriptor(name: "id", number: 1, type: .int64),
+                            FieldDescriptor(name: "name", number: 2, type: .string),
+                            FieldDescriptor(name: "values", number: 3, label: .repeated, type: .int32)
+                        ])
+                ])
+        ])
+        var outer = WireWriter()
+        for index in 0 ..< 100 {
+            try? outer.appendMessage(field: 1) { w throws(WireError) in
+                w.appendTag(1, .varint)
+                w.appendVarint(UInt64(index))
+                w.appendTag(2, .lengthDelimited)
+                w.appendString("item \(index)")
+                w.appendPackedVarints(field: 3, [Int32(index), 1, 2])
+            }
+        }
+        let nestedBytes = outer.bytes
+        Benchmark("Schema.validateNested100") { benchmark in
+            let validator = WireValidator()
+            for _ in benchmark.scaledIterations {
+                let findings = validator.validate(bytes: nestedBytes, against: "bench.Outer", in: nested)
+                guard findings.isEmpty else {
+                    benchmark.error("Validator rejected valid nested bytes: \(findings)")
+                    return
+                }
+                blackHole(findings)
             }
         }
     }

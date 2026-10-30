@@ -16,3 +16,14 @@ extension WireReader {
         return try body(&nested)
     }
 }
+
+extension WireReader {
+    /// The bytes of the group whose start-group `tag` was just read, without its end-group tag; the reader continues after it.
+    /// What ``readGroup(_:_:)`` hands its body, for a caller that reads it later (a validator queues nested messages).
+    public mutating func readGroupRange(_ tag: FieldTag) throws(WireError) -> Range<Int> {
+        guard depth < limits.maxDepth else { throw .depthExceeded(limit: limits.maxDepth, at: tagOffset) }
+        let start = offset
+        try skipField(tag)
+        return start ..< tagOffset
+    }
+}
