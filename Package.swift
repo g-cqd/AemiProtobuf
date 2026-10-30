@@ -34,7 +34,10 @@ let package = Package(
         .library(name: "AemiProtobufCore", targets: ["AemiProtobufCore"]),
         // `@ProtoMessage` source from a descriptor set, and the protoc plugin that runs it (roadmaps 0014, 0028).
         .library(name: "AemiProtobufGenerator", targets: ["AemiProtobufGenerator"]),
-        .executable(name: "protoc-gen-aemi", targets: ["ProtocGenAemi"])
+        .executable(name: "protoc-gen-aemi", targets: ["ProtocGenAemi"]),
+        // The schema linter and breaking-change check, as a tool and as `swift package protobuf-check` (roadmap 0008).
+        .executable(name: "aemi-proto-check", targets: ["aemi-proto-check"]),
+        .plugin(name: "ProtobufCheck", targets: ["ProtobufCheck"])
     ],
     dependencies: [
         // Shared byte kernels (`Varint`, `UTF8Validation` via `AemiKernels`). Pinned to the revision AemiJSON pins:
@@ -84,6 +87,17 @@ let package = Package(
             name: "ProtocGenAemi",
             dependencies: ["AemiProtobufGenerator"],
             swiftSettings: strictSettings),
+        .executableTarget(
+            name: "aemi-proto-check",
+            dependencies: ["AemiProtobufSchema"],
+            path: "Sources/AemiProtoCheck",
+            swiftSettings: strictSettings),
+        .plugin(
+            name: "ProtobufCheck",
+            capability: .command(
+                intent: .custom(
+                    verb: "protobuf-check", description: "Lint a descriptor set, or compare two for breaking changes")),
+            dependencies: ["aemi-proto-check"]),
         .testTarget(
             name: "AemiProtobufGeneratorTests",
             dependencies: ["AemiProtobufGenerator", "AemiProtobufSchema"],
