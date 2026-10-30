@@ -5,6 +5,7 @@
 #   Scripts/compare.sh bench    the full benchmark run (about 10 minutes, release); raw text to $OUT/raw.txt
 #   Scripts/compare.sh memory   peak and retained memory of one 20,000-record decode per codec, one process each
 #   Scripts/compare.sh report   turn $OUT/raw.txt into $OUT/report.md
+#   Scripts/compare.sh cpp      the C++ peer: protoc --cpp_out code over the installed libprotobuf, on the 2,000-record message
 #   Scripts/compare.sh all      check, bench, report
 #
 # OUT defaults to Benchmarks/Comparison/results (untracked). Run on a quiet machine: the numbers are wall clock.
@@ -32,6 +33,18 @@ do_check() {
     else
         printf 'protoc is not installed: the independent decode check was skipped\n'
     fi
+}
+
+do_cpp() {
+    printf '==> C++ peer (libprotobuf %s)\n' "$(pkg-config --modversion protobuf)"
+    [ -f "$OUT/users-n2000.bin" ] || do_check
+    build="$OUT/cpp"
+    mkdir -p "$build"
+    protoc --proto_path="$DIR" --cpp_out="$build" "$DIR/comparison.proto"
+    # shellcheck disable=SC2046  # pkg-config's flags are words
+    clang++ -O2 -std=c++17 -I"$build" "$DIR/cpp/bench.cc" "$build/comparison.pb.cc" -o "$build/bench" \
+        $(pkg-config --cflags --libs protobuf) || fail "the C++ peer did not build"
+    "$build/bench" "$OUT/users-n2000.bin" | tee "$OUT/cpp.md"
 }
 
 do_bench() {
@@ -65,6 +78,7 @@ case "${1:-}" in
     bench) do_bench ;;
     memory) do_memory ;;
     report) do_report ;;
+    cpp) do_cpp ;;
     all) do_check; do_bench; do_memory; do_report ;;
-    *) fail "usage: compare.sh check|bench|memory|report|all" 2 ;;
+    *) fail "usage: compare.sh check|bench|memory|report|cpp|all" 2 ;;
 esac
