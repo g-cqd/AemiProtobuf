@@ -58,6 +58,8 @@ jobs:
           swift-version: ${{ steps.toolchain.outputs.version }}
       - run: Scripts/quality.sh test
       - run: Scripts/quality.sh coverage
+      - name: The swift-nio adapter (roadmap 0014)
+        run: AEMIPROTOBUF_NIO=1 swift test --filter AemiProtobufNIOTests
 
   sanitizers:
     name: AddressSanitizer, ThreadSanitizer
