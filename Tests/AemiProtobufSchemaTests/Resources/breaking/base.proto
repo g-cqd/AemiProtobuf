@@ -1,0 +1,15 @@
+syntax = "proto2";
+package bc;
+enum Shade { DARK = 0; LIGHT = 1; MID = 2; }
+message M {
+  optional int32 a = 1;
+  optional string b = 2;
+  repeated int32 c = 3;
+  optional Shade shade = 4;
+  required int32 r = 5;
+  optional int32 j = 6 [json_name = "jay"];
+  oneof choice { int32 x = 7; string y = 8; }
+  optional int32 z = 9;
+  reserved 100 to 110;
+}
+message Gone { optional int32 g = 1; }

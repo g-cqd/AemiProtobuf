@@ -25,6 +25,9 @@ public struct BreakingChange: Sendable, Equatable {
     }
 
     /// Whether data written by one version is misread or refused by the other. A rename is not: only JSON and source break.
+    /// The `buf breaking` rule this change is.
+    public var bufRule: String { "" }
+
     public var breaksTheWire: Bool {
         if case .fieldRenamed = kind { return false }
         return true
