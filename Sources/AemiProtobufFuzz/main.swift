@@ -22,6 +22,21 @@ func roundTrip<T: AemiProtoFastEncodable & AemiProtoFastDecodable & Codable & Eq
     }
 }
 
+/// What a decoded message cannot exceed: every `fixed32` element took four bytes of input, and a group at least its two tags.
+func checkSizes(_ message: FuzzMessage, _ count: Int) {
+    guard message.fixed.count * 4 <= count else { fatalError("more fixed32 elements than the input holds") }
+    if case .grouped = message.choice, count < 2 { fatalError("a group from fewer than two bytes") }
+}
+
+/// A dynamic message that decodes encodes to bytes that decode and encode to the same bytes (roadmap 0006).
+func dynamicRoundTrip(_ set: FileDescriptorSet, _ typeName: String, _ bytes: [UInt8]) {
+    let schema = DynamicSchema(set)
+    guard let message = try? schema.decode(bytes, as: typeName) else { return }
+    guard let encoded = try? schema.encode(message), let again = try? schema.decode(encoded, as: typeName),
+        (try? schema.encode(again)) == encoded
+    else { fatalError("a dynamic message did not survive a round trip") }
+}
+
 @_cdecl("LLVMFuzzerTestOneInput")
 public func LLVMFuzzerTestOneInput(_ start: UnsafePointer<UInt8>?, _ count: Int) -> CInt {
     guard let start, count > 0 else { return 0 }
@@ -33,6 +48,7 @@ public func LLVMFuzzerTestOneInput(_ start: UnsafePointer<UInt8>?, _ count: Int)
         while let tag = try r.nextTag() { try r.readUnknownField(tag, into: &unknown) }
     }
     roundTrip(FuzzMessage.self, bytes)
+    if let message = try? ProtobufDecoder().decode(FuzzMessage.self, fromBytes: bytes) { checkSizes(message, count) }
     roundTrip(FuzzRequired.self, bytes)
     _ = try? ProtobufDecoder().decode(FuzzCodable.self, from: bytes)
 
@@ -41,8 +57,9 @@ public func LLVMFuzzerTestOneInput(_ start: UnsafePointer<UInt8>?, _ count: Int)
         guard let encoded = try? set.encode(), (try? FileDescriptorSet.decode(from: encoded)) == set else {
             fatalError("a descriptor set did not survive a round trip")
         }
-        if let message = set.files.first?.messages.first {
+        if let file = set.files.first, let message = file.messages.first {
             _ = WireValidator().validate(bytes: bytes, against: message)
+            dynamicRoundTrip(set, (file.package.isEmpty ? "" : file.package + ".") + message.name, bytes)
         }
     }
 
