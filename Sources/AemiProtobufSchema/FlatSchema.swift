@@ -6,22 +6,27 @@ struct FlatSchema {
     var closedEnumValues: [String: Set<Int32>] = [:]
     /// Extensions by the fully qualified name (no leading dot) of the message they extend.
     var extensions: [String: [FieldDescriptor]] = [:]
+    /// The features in force in each message: its file's, every enclosing message's, then its own.
+    var messageFeatures: [String: ResolvedFeatures] = [:]
 
     /// Walks the set with an explicit work list (no recursion).
     /// - Complexity: O(messages + enums).
     init(_ set: FileDescriptorSet) {
-        var pending: [(String, MessageDescriptor, FileDescriptor)] = []
+        var pending: [(String, MessageDescriptor, FileDescriptor, ResolvedFeatures)] = []
         for file in set.files {
             let scope = file.package.isEmpty ? "" : file.package + "."
-            pending.append(contentsOf: file.messages.map { (scope + $0.name, $0, file) })
+            let features = ResolvedFeatures.of(file)
+            pending.append(contentsOf: file.messages.map { (scope + $0.name, $0, file, features) })
             for e in file.enums { add(e, named: scope + e.name, in: file) }
             for field in file.extensions {
                 extensions[String(field.extendee.drop { $0 == "." }), default: []].append(field)
             }
         }
-        while let (name, message, file) = pending.popLast() {
+        while let (name, message, file, enclosing) = pending.popLast() {
             messages[name] = message
-            pending.append(contentsOf: message.nestedMessages.map { (name + "." + $0.name, $0, file) })
+            let features = enclosing.merged(message.features)
+            messageFeatures[name] = features
+            pending.append(contentsOf: message.nestedMessages.map { (name + "." + $0.name, $0, file, features) })
             for e in message.nestedEnums { add(e, named: name + "." + e.name, in: file) }
             for field in message.extensions {
                 extensions[String(field.extendee.drop { $0 == "." }), default: []].append(field)
