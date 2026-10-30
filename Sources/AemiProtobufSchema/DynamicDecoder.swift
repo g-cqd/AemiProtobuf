@@ -10,13 +10,7 @@ struct DynamicDecoder {
     struct Link {
         let parent: Int
         let field: Int32
-        let slot: Slot
-    }
-
-    enum Slot {
-        case single
-        case element(Int)
-        case mapValue(DynamicValue)
+        let slot: DynamicSlot
     }
 
     struct Node {
@@ -24,10 +18,7 @@ struct DynamicDecoder {
         let depth: Int
         /// `nil` for the root, and for a node a later oneof member or map entry replaced.
         var parent: Link?
-        var values: [Int32: DynamicValue] = [:]
-        var lists: [Int32: [DynamicValue]] = [:]
-        var maps: [Int32: [DynamicValue: DynamicValue]] = [:]
-        var unknown = UnknownFields()
+        var fields = DynamicFields()
         /// The node of each singular message field, which a later occurrence merges into.
         var children: [Int32: Int] = [:]
         /// The node of each message value of each map field, by key.
@@ -75,7 +66,7 @@ struct DynamicDecoder {
             attached[index] = index == 0 || node.parent.map { attached[$0.parent] } ?? false
             guard attached[index] else { continue }
             for field in node.type.requiredFields
-            where node.values[field.number] == nil && node.children[field.number] == nil {
+            where node.fields.values[field.number] == nil && node.children[field.number] == nil {
                 throw .missingRequired(path: node.type.name + "." + field.name)
             }
         }
@@ -86,30 +77,11 @@ struct DynamicDecoder {
         var index = nodes.count - 1
         while index > 0 {
             if let link = nodes[index].parent {
-                let message = finish(index)
-                switch link.slot {
-                    case .single: nodes[link.parent].values[link.field] = .message(message)
-                    case .element(let position):
-                        nodes[link.parent].lists[link.field, default: []][position] = .message(message)
-                    case .mapValue(let key): nodes[link.parent].maps[link.field, default: [:]][key] = .message(message)
-                }
+                let message = nodes[index].fields.take(typeName: nodes[index].type.name)
+                nodes[link.parent].fields.place(message, field: link.field, slot: link.slot)
             }
             index -= 1
         }
-        return finish(0)
-    }
-
-    /// The node's message, its storage handed over.
-    private mutating func finish(_ index: Int) -> DynamicMessage {
-        // Taken out of the node first, so the dictionary is unique and grows in place.
-        var fields = nodes[index].values
-        nodes[index].values = [:]
-        let lists = nodes[index].lists
-        nodes[index].lists = [:]
-        let maps = nodes[index].maps
-        nodes[index].maps = [:]
-        for (number, items) in lists { fields[number] = .list(items) }
-        for (number, entries) in maps { fields[number] = .map(entries) }
-        return DynamicMessage(typeName: nodes[index].type.name, fields: fields, unknownFields: nodes[index].unknown)
+        return nodes[0].fields.take(typeName: nodes[0].type.name)
     }
 }

@@ -5,7 +5,7 @@ extension DynamicDecoder {
     /// as unknown; a repeated scalar is read packed or not, whichever came.
     mutating func read(_ tag: FieldTag, from reader: inout WireReader, into node: Int) throws(WireError) {
         guard let field = nodes[node].type.field(number: Int32(tag.fieldNumber.rawValue)) else {
-            try reader.readUnknownField(tag, into: &nodes[node].unknown)
+            try reader.readUnknownField(tag, into: &nodes[node].fields.unknown)
             return
         }
         if let entry = field.mapEntry, tag.wireType == .lengthDelimited {
@@ -26,15 +26,15 @@ extension DynamicDecoder {
                         if let value = try self.scalar(field, tag, from: &run, into: node) { values.append(value) }
                     }
                 }
-                if nodes[node].lists[field.number] == nil {
-                    nodes[node].lists[field.number] = values
+                if nodes[node].fields.lists[field.number] == nil {
+                    nodes[node].fields.lists[field.number] = values
                 } else {
-                    nodes[node].lists[field.number, default: []].append(contentsOf: values)
+                    nodes[node].fields.lists[field.number, default: []].append(contentsOf: values)
                 }
             case (let type, let wire) where field.mapEntry == nil && wire == Self.wireType(of: type):
                 try readScalar(field, tag, from: &reader, into: node)
             default:
-                try reader.readUnknownField(tag, into: &nodes[node].unknown)
+                try reader.readUnknownField(tag, into: &nodes[node].fields.unknown)
         }
     }
 
@@ -43,10 +43,10 @@ extension DynamicDecoder {
     ) throws(WireError) {
         guard let value = try scalar(field, tag, from: &reader, into: node) else { return }
         if field.isRepeated {
-            nodes[node].lists[field.number, default: []].append(value)
+            nodes[node].fields.lists[field.number, default: []].append(value)
         } else {
             clearOneof(of: field, in: node)
-            nodes[node].values[field.number] = value
+            nodes[node].fields.values[field.number] = value
         }
     }
 
@@ -56,7 +56,7 @@ extension DynamicDecoder {
     ) throws(WireError) -> DynamicValue? {
         let value = try Self.scalar(field.type, from: &reader, validatingUTF8: field.validatesUTF8, bytes: bytes)
         if case .enumeration(let number) = value, let closed = field.closedEnumValues, !closed.contains(number) {
-            nodes[node].unknown.appendVarint(field: tag.fieldNumber, UInt64(bitPattern: Int64(number)))
+            nodes[node].fields.unknown.appendVarint(field: tag.fieldNumber, UInt64(bitPattern: Int64(number)))
             return nil
         }
         return value
@@ -75,8 +75,9 @@ extension DynamicDecoder {
     private mutating func attach(_ field: DynamicField, range: Range<Int>, to node: Int) throws(WireError) {
         let number = field.number
         if field.isRepeated {
-            let position = nodes[node].lists[number, default: []].count
-            nodes[node].lists[number, default: []].append(.message(DynamicMessage(typeName: field.typeName ?? "")))
+            let position = nodes[node].fields.lists[number, default: []].count
+            nodes[node].fields.lists[number, default: []]
+                .append(.message(DynamicMessage(typeName: field.typeName ?? "")))
             spawn(field.typeName, Link(parent: node, field: number, slot: .element(position)), ranges: [range])
             return
         }
@@ -105,7 +106,7 @@ extension DynamicDecoder {
     private mutating func clearOneof(of field: DynamicField, in node: Int) {
         guard let oneof = field.oneofIndex, let members = nodes[node].type.oneofMembers[oneof] else { return }
         for member in members where member != field.number {
-            nodes[node].values[member] = nil
+            nodes[node].fields.values[member] = nil
             if let child = nodes[node].children.removeValue(forKey: member) { nodes[child].parent = nil }
         }
     }

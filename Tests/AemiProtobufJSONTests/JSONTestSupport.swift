@@ -17,8 +17,6 @@ enum JSONTestSupport {
         return DynamicSchema(set)
     }()
 
-    static let coder = ProtoJSONCoder(schema: schema)
-
     /// Reads `json` as a `TestAllTypesProto3` (or `type`).
     static func read(_ json: String, as type: String = proto3, options: ProtoJSONCoder.Options = .init())
         throws(ProtoJSONError) -> DynamicMessage

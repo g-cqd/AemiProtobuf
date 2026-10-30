@@ -34,7 +34,7 @@ extension DynamicDecoder {
             var writer = WireWriter()
             writer.appendTag(tag.fieldNumber, .lengthDelimited)
             writer.appendBytes(Array(bytes[range]))
-            nodes[node].unknown.appendEncoded(writer.bytes)
+            nodes[node].fields.unknown.appendEncoded(writer.bytes)
             return
         }
         let resolvedKey = key ?? schema.defaultValue(of: entry.key, typeName: nil)
@@ -43,7 +43,7 @@ extension DynamicDecoder {
             nodes[replaced].parent = nil
         }
         let empty = schema.defaultValue(of: entry.value, typeName: entry.valueTypeName)
-        nodes[node].maps[number, default: [:]][resolvedKey] = value ?? empty
+        nodes[node].fields.maps[number, default: [:]][resolvedKey] = value ?? empty
         guard !valueRanges.isEmpty else { return }
         let child = spawn(
             entry.valueTypeName, Link(parent: node, field: number, slot: .mapValue(resolvedKey)), ranges: valueRanges)

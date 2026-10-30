@@ -85,4 +85,50 @@ import Testing
         let second = try #require(try view.message(1)?.message(1))
         #expect(throws: WireError.self) { try second.message(1) }
     }
+
+    @Test func `every scalar accessor reads its wire type, and repeated messages come in order`() throws {
+        var writer = WireWriter()
+        writer.appendTag(1, .varint)
+        writer.appendVarint(UInt64(bitPattern: -2))
+        writer.appendTag(2, .varint)
+        writer.appendVarint(ZigZag.encode(Int64(-5)))
+        writer.appendTag(3, .fixed32)
+        writer.appendFixed32(UInt32(bitPattern: -7))
+        writer.appendTag(4, .fixed32)
+        writer.appendFloat(0.5)
+        writer.appendTag(5, .fixed64)
+        writer.appendFixed64(UInt64(bitPattern: -9))
+        writer.appendTag(6, .lengthDelimited)
+        writer.appendBytes([1, 2])
+        writer.appendTag(7, .lengthDelimited)
+        writer.appendBytes([0x08, 0x01])
+        writer.appendTag(7, .startGroup)
+        writer.appendTag(1, .varint)
+        writer.appendVarint(2)
+        writer.appendTag(7, .endGroup)
+        let view = try ProtoMessageView(writer.bytes)
+        #expect(view.int64(1) == -2 && view.uint32(1) == UInt32.max - 1 && view.bool(1) == true)
+        #expect(view.sint64(2) == -5)
+        #expect(view.sfixed32(3) == -7 && view.fixed32(3) == UInt32(bitPattern: -7))
+        #expect(view.float(4) == 0.5)
+        #expect(view.sfixed64(5) == -9 && view.fixed64(5) == UInt64(bitPattern: -9))
+        #expect(view.bytes(6) == [1, 2] && view.bytes(9) == nil)
+        #expect(!view.utf8Equals(9, ""))
+        #expect(try view.string(9) == nil)
+        let children = try view.messages(7)
+        #expect(children.map { $0.uint64(1) } == [1, 2])
+        #expect(try view.varints(6) == [1, 2])  // a payload of varints reads as a packed run
+    }
+
+    @Test func `a message with many fields finds them through its table`() throws {
+        var writer = WireWriter()
+        for number in 1 ... 40 {
+            writer.appendTag(FieldNumber(rawValue: UInt32(number)) ?? 1, .varint)
+            writer.appendVarint(UInt64(number * 10))
+        }
+        writer.appendTag(3, .varint)
+        writer.appendVarint(7)
+        let view = try ProtoMessageView(writer.bytes)
+        #expect(view.uint64(40) == 400 && view.uint64(3) == 7 && view.uint64(41) == nil)
+    }
 }

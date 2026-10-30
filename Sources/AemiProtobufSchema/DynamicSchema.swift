@@ -4,7 +4,7 @@ public import AemiProtobufCore
 ///
 /// Field semantics come from the descriptors and the edition features in force (``ResolvedFeatures``): presence, packing,
 /// delimited encoding, closed enumerations, UTF-8 checking, maps and oneofs. Reading and writing are iterative, so nesting is
-/// bounded only by `WireLimits.maxDepth`. Extensions are read as unknown fields.
+/// bounded only by `WireLimits.maxDepth`. An extension the set declares is a field of the message it extends.
 public struct DynamicSchema: Sendable {
     private let types: [String: DynamicMessageType]
     private let enums: [String: EnumDescriptor]
@@ -16,9 +16,16 @@ public struct DynamicSchema: Sendable {
         var types: [String: DynamicMessageType] = [:]
         for (name, message) in flat.messages {
             let features = flat.messageFeatures[name] ?? .proto2
-            let fields = message.fields.map {
+            let declared = message.fields.map {
                 DynamicField($0, in: name, features: features, schema: flat, index: index)
             }
+            let extensions = (flat.declaredExtensions[name] ?? [])
+                .map {
+                    DynamicField(
+                        $0.field, in: $0.scope, features: $0.features, schema: flat, index: index,
+                        extensionName: $0.fullName)
+                }
+            let fields = declared + extensions
             types[name] = DynamicMessageType(name: name, descriptor: message, fields: fields)
         }
         self.types = types
@@ -58,7 +65,7 @@ public struct DynamicSchema: Sendable {
     }
 
     /// The value an absent field reads as: zero, empty, `false`, an enumeration's first value, an empty message.
-    func defaultValue(of field: FieldDescriptor, typeName: String?) -> DynamicValue {
+    public func defaultValue(of field: FieldDescriptor, typeName: String?) -> DynamicValue {
         DynamicValue.zero(
             of: field.type, typeName: typeName, firstEnumValue: typeName.flatMap { enums[$0]?.values.first?.number })
     }

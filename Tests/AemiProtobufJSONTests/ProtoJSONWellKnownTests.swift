@@ -14,11 +14,11 @@ import Testing
     }
 
     @Test func `Timestamp is RFC 3339 in UTC, with 0, 3, 6 or 9 fractional digits`() throws {
-        let epoch = try #require(try field(#"{"optionalTimestamp":"1970-01-01T00:00:00Z"}"#, 101))
+        let epoch = try #require(try field(#"{"optionalTimestamp":"1970-01-01T00:00:00Z"}"#, 302))
         #expect(epoch.fields.isEmpty)
-        let offset = try #require(try field(#"{"optionalTimestamp":"1970-01-01T01:00:01.5+01:00"}"#, 101))
+        let offset = try #require(try field(#"{"optionalTimestamp":"1970-01-01T01:00:01.5+01:00"}"#, 302))
         #expect(offset.fields == [1: .int64(1), 2: .int32(500_000_000)])
-        let max = try #require(try field(#"{"optionalTimestamp":"9999-12-31T23:59:59.999999999Z"}"#, 101))
+        let max = try #require(try field(#"{"optionalTimestamp":"9999-12-31T23:59:59.999999999Z"}"#, 302))
         #expect(max.fields[1] == .int64(253_402_300_799))
         #expect(
             try S.write(try S.read(#"{"optionalTimestamp":"2017-01-15T01:30:15.010Z"}"#))
@@ -35,7 +35,7 @@ import Testing
     }
 
     @Test func `Duration is seconds with an s, signed, 0, 3, 6 or 9 fractional digits`() throws {
-        let value = try #require(try field(#"{"optionalDuration":"-1.5s"}"#, 102))
+        let value = try #require(try field(#"{"optionalDuration":"-1.5s"}"#, 301))
         #expect(value.fields == [1: .int64(-1), 2: .int32(-500_000_000)])
         #expect(
             try S.write(try S.read(#"{"optionalDuration":"-0.000000001s"}"#))
@@ -48,7 +48,7 @@ import Testing
     }
 
     @Test func `FieldMask is comma-separated lowerCamel paths`() throws {
-        let mask = try #require(try field(#"{"optionalFieldMask":"fooBar,baz.quxQuux"}"#, 104))
+        let mask = try #require(try field(#"{"optionalFieldMask":"fooBar,baz.quxQuux"}"#, 303))
         #expect(mask.fields == [1: .list([.string("foo_bar"), .string("baz.qux_quux")])])
         #expect(
             try S.write(try S.read(#"{"optionalFieldMask":"fooBar,baz"}"#)) == #"{"optionalFieldMask":"fooBar,baz"}"#)
@@ -59,13 +59,13 @@ import Testing
         let message = try S.read(
             #"{"optionalInt32Wrapper":0,"optionalInt64Wrapper":"5","optionalStringWrapper":"","optionalBoolWrapper":null}"#
         )
-        guard case .message(let int32)? = message.fields[201], case .message(let int64)? = message.fields[202] else {
+        guard case .message(let int32)? = message.fields[202], case .message(let int64)? = message.fields[203] else {
             Issue.record("\(message)")
             return
         }
         #expect(int32.fields.isEmpty)
         #expect(int64.fields == [1: .int64(5)])
-        #expect(message.fields[208] == nil)
+        #expect(message.fields[201] == nil)
         #expect(
             try S.write(message) == #"{"optionalInt32Wrapper":0,"optionalInt64Wrapper":"5","optionalStringWrapper":""}"#
         )
@@ -91,5 +91,12 @@ import Testing
         #expect(throws: ProtoJSONError.self) { try S.read(#"{"optionalAny":{"optionalInt32":1}}"#) }
         #expect(throws: ProtoJSONError.self) { try S.read(#"{"optionalAny":{"@type":"type.googleapis.com/no.Such"}}"#) }
         #expect(try S.write(try S.read(#"{"optionalAny":{}}"#)) == #"{"optionalAny":{}}"#)
+        // Empty is an object of no fields, not a JSON form under `value`; a Duration without `value` is its default.
+        let empty = #"{"optionalAny":{"@type":"type.googleapis.com/google.protobuf.Empty"}}"#
+        #expect(try S.write(try S.read(empty)) == empty)
+        let zero = #"{"optionalAny":{"@type":"type.googleapis.com/google.protobuf.Duration"}}"#
+        #expect(
+            try S.write(try S.read(zero))
+                == #"{"optionalAny":{"@type":"type.googleapis.com/google.protobuf.Duration","value":"0s"}}"#)
     }
 }

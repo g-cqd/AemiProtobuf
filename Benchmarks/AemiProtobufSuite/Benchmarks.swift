@@ -17,6 +17,7 @@ let benchmarks: @Sendable () -> Void = {
     SchemaBenchmarks.register()
     registerCoderBenchmarks()
     ViewBenchmarks.register()
+    JSONBenchmarks.register()
 
     let records = UserRecord.corpus(count: 1_000)
     // An empty buffer on failure makes the read benchmark visibly trivial instead of crashing the harness.

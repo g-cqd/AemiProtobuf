@@ -11,6 +11,8 @@ public final class DynamicMessageType: Sendable {
     private let dense: [Int]
     /// The fields of each declared oneof, by the oneof's index.
     let oneofMembers: [Int: [Int32]]
+    /// Fields by JSON name and by declared name, the JSON name first where the two collide.
+    private let byName: [String: Int]
     /// The required fields, checked after a read.
     let requiredFields: [DynamicField]
 
@@ -29,6 +31,12 @@ public final class DynamicMessageType: Sendable {
         oneofMembers = Dictionary(grouping: self.fields.filter { $0.oneofIndex != nil }) { $0.oneofIndex ?? 0 }
             .mapValues { $0.map(\.number) }
         requiredFields = self.fields.filter(\.isRequired)
+        var byName: [String: Int] = [:]
+        for (offset, field) in self.fields.enumerated() where byName[field.name] == nil && !field.isExtension {
+            byName[field.name] = offset
+        }
+        for (offset, field) in self.fields.enumerated() { byName[field.jsonName] = offset }
+        self.byName = byName
     }
 
     /// The field with this number, or `nil` if the type declares none.
@@ -40,8 +48,8 @@ public final class DynamicMessageType: Sendable {
         return positions[number].map { fields[$0] }
     }
 
-    /// The field with this name (as declared), or `nil`.
-    public func field(named name: String) -> DynamicField? { fields.first { $0.name == name } }
+    /// The field with this JSON name or declared name, or `nil`.
+    public func field(named name: String) -> DynamicField? { byName[name].map { fields[$0] } }
 
     public var isMapEntry: Bool { descriptor.isMapEntry }
 }
