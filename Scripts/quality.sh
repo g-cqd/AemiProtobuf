@@ -9,7 +9,10 @@
 #   Scripts/quality.sh bench       allocation thresholds, then the benchmark report (release)
 #   Scripts/quality.sh mutation    swift-mutation-testing on the wire core, with the wire core's tests (about 10 minutes)
 #   Scripts/quality.sh fast        format, lint, analyzers   (the pre-commit hook)
-#   Scripts/quality.sh all         fast, test, model, bench  (the pre-push hook and CI; mutation runs on its own schedule)
+#   Scripts/quality.sh docs        DocC for every public module, warnings as errors (Scripts/docs.sh)
+#   Scripts/quality.sh coverage    line coverage per module against Scripts/coverage.floor
+#   Scripts/quality.sh sanitizers  the suite under AddressSanitizer, then ThreadSanitizer
+#   Scripts/quality.sh all         fast, docs, test, model, bench  (the pre-push hook and CI; mutation runs on its own schedule)
 #
 # Exit: 0 every gate held, 1 a gate failed, 2 a tool is missing or could not run.
 set -eu
@@ -98,8 +101,15 @@ case "${1:-}" in
     model) Scripts/model.sh all ;;
     bench) gate_bench ;;
     mutation) gate_mutation ;;
+    docs) Scripts/docs.sh || fail "documentation" ;;
+    coverage) Scripts/coverage.sh || fail "a module's line coverage fell under its floor (Scripts/coverage.floor)" ;;
+    sanitizers)
+        # The depth-limit test recurses through Codable 100 levels, which ASan's larger frames do not fit in a test thread's
+        # 512 KB; the limit it checks holds in the builds that ship (it passes in debug and release).
+        swift test --sanitize=address --skip 'deeply nested input is refused at the limit' || fail "AddressSanitizer"
+        swift test --sanitize=thread || fail "ThreadSanitizer" ;;
     fast) gate_format; gate_lint; gate_analyzers ;;
-    all) gate_format; gate_lint; gate_analyzers; gate_test; Scripts/model.sh all; gate_bench ;;
-    *) fail "usage: quality.sh format|lint|analyzers|test|model|bench|mutation|fast|all" 2 ;;
+    all) gate_format; gate_lint; gate_analyzers; Scripts/docs.sh || fail "documentation"; gate_test; Scripts/model.sh all; gate_bench ;;
+    *) fail "usage: quality.sh format|lint|analyzers|docs|coverage|sanitizers|test|model|bench|mutation|fast|all" 2 ;;
 esac
 printf '[OK] %s\n' "$1"

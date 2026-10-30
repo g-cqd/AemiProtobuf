@@ -42,6 +42,7 @@ jobs:
           path: ~/Library/Caches/aemiprotobuf/tools
           key: tools-${{ runner.os }}-${{ hashFiles('Scripts/tools.lock') }}
       - run: Scripts/quality.sh fast
+      - run: Scripts/quality.sh docs
 
   test:
     name: Tests (debug and release)
@@ -56,6 +57,21 @@ jobs:
         with:
           swift-version: ${{ steps.toolchain.outputs.version }}
       - run: Scripts/quality.sh test
+      - run: Scripts/quality.sh coverage
+
+  sanitizers:
+    name: AddressSanitizer, ThreadSanitizer
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - name: Toolchain version
+        id: toolchain
+        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
+      - name: Install Swift ${{ steps.toolchain.outputs.version }}
+        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
+        with:
+          swift-version: ${{ steps.toolchain.outputs.version }}
+      - run: Scripts/quality.sh sanitizers
 
   linux:
     name: Tests on Linux (debug and release)

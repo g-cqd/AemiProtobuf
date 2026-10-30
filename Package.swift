@@ -141,3 +141,15 @@ if isDev {
             swiftSettings: strictSettings,
             plugins: [.plugin(name: "BenchmarkPlugin", package: "benchmark")]))
 }
+
+// The libFuzzer target (roadmap 0013), gated as AemiJSON's is: `-sanitize=fuzzer` is a Linux capability of the toolchain, and
+// the default build is never asked to link a `main`-less executable. Unsafe flags are fine here: the target is internal and gated.
+if Context.environment["AEMIPROTOBUF_FUZZ"] != nil {
+    package.targets.append(
+        .executableTarget(
+            name: "AemiProtobufFuzz",
+            dependencies: ["AemiProtobuf", "AemiProtobufCore", "AemiProtobufSchema"],
+            swiftSettings: strictSettings + [.unsafeFlags(["-parse-as-library", "-sanitize=fuzzer"])],
+            linkerSettings: [.unsafeFlags(["-sanitize=fuzzer"])]))
+    package.products.append(.executable(name: "AemiProtobufFuzz", targets: ["AemiProtobufFuzz"]))
+}

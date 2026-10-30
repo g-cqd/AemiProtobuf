@@ -37,7 +37,7 @@
 public macro ProtoMessage(unknownFields: ProtoUnknownFields = .preserve) =
     #externalMacro(module: "AemiProtobufMacros", type: "ProtoMessageMacro")
 
-/// Gives a property of a ``ProtoMessage()`` struct its protobuf field number, and its kind where the Swift type is ambiguous.
+/// Gives a property of a ``ProtoMessage(unknownFields:)`` struct its protobuf field number, and its kind where the Swift type is ambiguous.
 /// - Parameters:
 ///   - number: the field number, `1...536870911` outside `19000...19999`; unique in the struct.
 ///   - kind: `.sint32`, `.fixed64` and the other kinds Swift has no distinct type for; `.automatic` infers it from the type.

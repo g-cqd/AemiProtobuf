@@ -1,0 +1,6 @@
+# module floor-percent (Scripts/coverage.sh); set from the measured run, lowered never without a reason
+AemiProtobufCore 97
+AemiProtobufSchema 90
+AemiProtobufGenerator 78
+AemiProtobuf 65
+AemiProtobufMacros 60
