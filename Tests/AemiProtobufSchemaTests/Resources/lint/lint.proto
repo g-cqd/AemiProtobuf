@@ -1,0 +1,18 @@
+syntax = "proto3";
+package Bad_Package.v1;
+enum shade { shade_dark = 0; SHADE_LIGHT = 1; }
+enum Aliased { option allow_alias = true; ALIASED_A = 0; ALIASED_B = 0; }
+enum FirstNotZero { FIRST_NOT_ZERO_ONE = 0; }
+message bad_message {
+  int32 goodField = 1;
+  int32 good_field_2 = 2;
+  int32 field1 = 3;
+  int32 _leading = 4;
+  int32 double__under = 5;
+  oneof BadOneof { int32 x = 6; }
+  message Inner_Bad { int32 a = 1; }
+}
+message GoodMessage { int32 fine_field = 1; oneof good_oneof { int32 y = 2; } }
+message HTTPServer { int32 v = 1; }
+message Message2 { int32 v = 1; }
+service bad_service { rpc do_thing(GoodMessage) returns (GoodMessage); }
