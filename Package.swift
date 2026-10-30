@@ -185,3 +185,20 @@ if Context.environment["AEMIPROTOBUF_FUZZ"] != nil {
             linkerSettings: [.unsafeFlags(["-sanitize=fuzzer"])]))
     package.products.append(.executable(name: "AemiProtobufFuzz", targets: ["AemiProtobufFuzz"]))
 }
+
+// The swift-nio adapter (roadmap 0014), gated as AemiJSON's is (`AEMIPROTOBUF_NIO`): swift-nio enters the graph only here, so
+// the base products stay free of it. `ByteBuffer` read in place, written into, and framed by channel handlers.
+if Context.environment["AEMIPROTOBUF_NIO"] != nil {
+    package.dependencies.append(.package(url: "https://github.com/apple/swift-nio.git", from: "2.104.0"))
+    let nioCore: Target.Dependency = .product(name: "NIOCore", package: "swift-nio")
+    package.products.append(.library(name: "AemiProtobufNIO", targets: ["AemiProtobufNIO"]))
+    package.targets.append(
+        .target(
+            name: "AemiProtobufNIO", dependencies: ["AemiProtobuf", "AemiProtobufCore", nioCore],
+            swiftSettings: strictSettings))
+    package.targets.append(
+        .testTarget(
+            name: "AemiProtobufNIOTests",
+            dependencies: ["AemiProtobufNIO", nioCore, .product(name: "NIOEmbedded", package: "swift-nio")],
+            swiftSettings: strictSettings))
+}
