@@ -1,0 +1,194 @@
+[
+ {
+  "name": "proto3-scalars",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "08fbffffffffffffffff011080ccbbbcdeffffffff011880d0acf30e208080a0a89c94b6e6f90128990130efb886a396053d7b00000041c8010000000000004df7ffffff51f6ffffffffffffff5d0000c03f6100000000000002c06801720668c3a96c6c6f7a0200ffa80102b00101",
+  "expected": "08fbffffffffffffffff011080ccbbbcdeffffffff011880d0acf30e208080a0a89c94b6e6f90128990130efb886a396053d7b00000041c8010000000000004df7ffffff51f6ffffffffffffff5d0000c03f6100000000000002c06801720668c3a96c6c6f7a0200ffa80102b00101"
+ },
+ {
+  "name": "proto3-defaults-are-omitted",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "",
+  "expected": ""
+ },
+ {
+  "name": "proto3-negative-zero-is-kept",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "5d00000080610000000000000080",
+  "expected": "5d00000080610000000000000080"
+ },
+ {
+  "name": "proto3-optional-zero-is-kept",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "920100",
+  "expected": "920100"
+ },
+ {
+  "name": "proto3-repeated",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "fa010d01feffffffffffffffff01ac02a202020102aa02080700000008000000d20210000000000000e03f0000000000000080da02020100e2020161e20200e20202c3a7ea020178ea0200820302080182030082030208039a03020001",
+  "expected": "fa010d01feffffffffffffffff01ac02a202020102aa02080700000008000000d20210000000000000e03f0000000000000080da02020100e2020161e20200e20202c3a7ea020178ea0200820302080182030082030208039a03020001"
+ },
+ {
+  "name": "proto3-packing",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "da04020102b20508000000000000f03fc2050102c80503c805049d0600002040b00600",
+  "expected": "da04020102b20508000000000000f03fc2050102c80503c805049d0600002040b00600"
+ },
+ {
+  "name": "proto3-maps",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "c203040801100ac2030408021014ca030d08ffffffffffffffffff011000a2040408011000aa04060a0161120178aa04050a01621200ba04050a01651200ba04070a016d12020809d204050a01661002",
+  "expected": "c203040801100ac2030408021014ca030d08ffffffffffffffffff011000a2040408011000aa04060a0161120178aa04050a01621200ba04050a01651200ba04070a016d12020809d204050a01661002"
+ },
+ {
+  "name": "proto3-nested",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "920118080112140802da010f7204646565709201061204fa010105da01026801",
+  "expected": "920118080112140802da010f7204646565709201061204fa010105da01026801"
+ },
+ {
+  "name": "proto3-oneof-message",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "8207020804",
+  "expected": "8207020804"
+ },
+ {
+  "name": "proto3-oneof-empty-string",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "8a0700",
+  "expected": "8a0700"
+ },
+ {
+  "name": "proto3-wellknown",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "d20c00f21204080510068a13060a0174120176",
+  "expected": "d20c00f21204080510068a13060a0174120176"
+ },
+ {
+  "name": "proto2-scalars",
+  "type": "protobuf_test_messages.proto2.TestAllTypesProto2",
+  "input": "08fbffffffffffffffff011080ccbbbcdeffffffff011880d0acf30e208080a0a89c94b6e6f90128990130efb886a396053d7b00000041c8010000000000004df7ffffff51f6ffffffffffffff5d0000c03f6100000000000002c06801720668c3a96c6c6f7a0200ffa80102b00101",
+  "expected": "08fbffffffffffffffff011080ccbbbcdeffffffff011880d0acf30e208080a0a89c94b6e6f90128990130efb886a396053d7b00000041c8010000000000004df7ffffff51f6ffffffffffffff5d0000c03f6100000000000002c06801720668c3a96c6c6f7a0200ffa80102b00101"
+ },
+ {
+  "name": "proto2-zeros-are-kept",
+  "type": "protobuf_test_messages.proto2.TestAllTypesProto2",
+  "input": "080068007200",
+  "expected": "080068007200"
+ },
+ {
+  "name": "proto2-repeated",
+  "type": "protobuf_test_messages.proto2.TestAllTypesProto2",
+  "input": "f80101f801feffffffffffffffff01f801ac02a00201a00202ad0207000000ad0208000000d102000000000000e03fd1020000000000000080d80201d80200e2020161e20200e20202c3a7ea020178ea020082030208018203008203020803980300980301",
+  "expected": "f80101f801feffffffffffffffff01f801ac02a00201a00202ad0207000000ad0208000000d102000000000000e03fd1020000000000000080d80201d80200e2020161e20200e20202c3a7ea020178ea020082030208018203008203020803980300980301"
+ },
+ {
+  "name": "proto2-packing",
+  "type": "protobuf_test_messages.proto2.TestAllTypesProto2",
+  "input": "da04020102b20508000000000000f03fc2050102c80503c805049d0600002040b00600",
+  "expected": "da04020102b20508000000000000f03fc2050102c80503c805049d0600002040b00600"
+ },
+ {
+  "name": "proto2-maps",
+  "type": "protobuf_test_messages.proto2.TestAllTypesProto2",
+  "input": "c203040801100ac2030408021014ca030d08ffffffffffffffffff011000a2040408011000aa04060a0161120178aa04050a01621200ba04050a01651200ba04070a016d12020809d204050a01661002",
+  "expected": "c203040801100ac2030408021014ca030d08ffffffffffffffffff011000a2040408011000aa04060a0161120178aa04050a01621200ba04050a01651200ba04070a016d12020809d204050a01661002"
+ },
+ {
+  "name": "proto2-nested",
+  "type": "protobuf_test_messages.proto2.TestAllTypesProto2",
+  "input": "920117080112130802da010e7204646565709201051203f80105da01026801",
+  "expected": "920117080112130802da010e7204646565709201051203f80105da01026801"
+ },
+ {
+  "name": "proto2-groups",
+  "type": "protobuf_test_messages.proto2.TestAllTypesProto2",
+  "input": "cb0cd00c01d80c02cc0ce30ce80c03e40c",
+  "expected": "cb0cd00c01d80c02cc0ce30ce80c03e40c"
+ },
+ {
+  "name": "proto2-defaults-written-when-set",
+  "type": "protobuf_test_messages.proto2.TestAllTypesProto2",
+  "input": "880febe590c5ffffffffff01f20f07526f7365627564",
+  "expected": "880febe590c5ffffffffff01f20f07526f7365627564"
+ },
+ {
+  "name": "editions2-scalars",
+  "type": "protobuf_test_messages.editions.proto2.TestAllTypesProto2",
+  "input": "08fbffffffffffffffff011080ccbbbcdeffffffff011880d0acf30e208080a0a89c94b6e6f90128990130efb886a396053d7b00000041c8010000000000004df7ffffff51f6ffffffffffffff5d0000c03f6100000000000002c06801720668c3a96c6c6f7a0200ffa80102b00101",
+  "expected": "08fbffffffffffffffff011080ccbbbcdeffffffff011880d0acf30e208080a0a89c94b6e6f90128990130efb886a396053d7b00000041c8010000000000004df7ffffff51f6ffffffffffffff5d0000c03f6100000000000002c06801720668c3a96c6c6f7a0200ffa80102b00101"
+ },
+ {
+  "name": "editions2-delimited",
+  "type": "protobuf_test_messages.editions.proto2.TestAllTypesProto2",
+  "input": "cb0cd00c01cc0ce30cf00c07e40c",
+  "expected": "cb0cd00c01cc0ce30cf00c07e40c"
+ },
+ {
+  "name": "editions2-packing",
+  "type": "protobuf_test_messages.editions.proto2.TestAllTypesProto2",
+  "input": "da04020102b20508000000000000f03fc2050102c80503c805049d0600002040b00600",
+  "expected": "da04020102b20508000000000000f03fc2050102c80503c805049d0600002040b00600"
+ },
+ {
+  "name": "editions3-scalars",
+  "type": "protobuf_test_messages.editions.proto3.TestAllTypesProto3",
+  "input": "08fbffffffffffffffff011080ccbbbcdeffffffff011880d0acf30e208080a0a89c94b6e6f90128990130efb886a396053d7b00000041c8010000000000004df7ffffff51f6ffffffffffffff5d0000c03f6100000000000002c06801720668c3a96c6c6f7a0200ffa80102b00101",
+  "expected": "08fbffffffffffffffff011080ccbbbcdeffffffff011880d0acf30e208080a0a89c94b6e6f90128990130efb886a396053d7b00000041c8010000000000004df7ffffff51f6ffffffffffffff5d0000c03f6100000000000002c06801720668c3a96c6c6f7a0200ffa80102b00101"
+ },
+ {
+  "name": "editions3-maps",
+  "type": "protobuf_test_messages.editions.proto3.TestAllTypesProto3",
+  "input": "c203040801100ac2030408021014ca030d08ffffffffffffffffff011000a2040408011000aa04060a0161120178aa04050a01621200ba04050a01651200ba04070a016d12020809d204050a01661002",
+  "expected": "c203040801100ac2030408021014ca030d08ffffffffffffffffff011000a2040408011000aa04060a0161120178aa04050a01621200ba04050a01651200ba04070a016d12020809d204050a01661002"
+ },
+ {
+  "name": "editions3-defaults-are-omitted",
+  "type": "protobuf_test_messages.editions.proto3.TestAllTypesProto3",
+  "input": "",
+  "expected": ""
+ },
+ {
+  "name": "merge-proto3-nested",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "0801920109080112050801720178fa010101080292010812060802fa010103fa010102",
+  "expected": "080292010d080112090802720178fa010103fa01020102"
+ },
+ {
+  "name": "merge-proto3-maps-last-key-wins",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "c2030408011001ba04070a016b12020801c2030408011002ba04070a016b12021200",
+  "expected": "c2030408011001c2030408011002ba04070a016b12020801ba04070a016b12021200"
+ },
+ {
+  "name": "merge-proto3-oneof-last-wins",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "8207020801f80607",
+  "expected": "f80607"
+ },
+ {
+  "name": "merge-proto3-oneof-message-merges",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "820702080182070412020802",
+  "expected": "820706080112020802"
+ },
+ {
+  "name": "merge-proto3-oneof-replaced-then-back",
+  "type": "protobuf_test_messages.proto3.TestAllTypesProto3",
+  "input": "82070208018a0701738207021200",
+  "expected": "8207021200"
+ },
+ {
+  "name": "merge-proto2-groups",
+  "type": "protobuf_test_messages.proto2.TestAllTypesProto2",
+  "input": "cb0cd00c01cc0ccb0cd80c02cc0c",
+  "expected": "cb0cd00c01d80c02cc0c"
+ },
+ {
+  "name": "merge-editions2-delimited",
+  "type": "protobuf_test_messages.editions.proto2.TestAllTypesProto2",
+  "input": "da01020804cb0cd00c01cc0cda01026801cb0cd80c02cc0c",
+  "expected": "da010408046801cb0cd00c01d80c02cc0c"
+ }
+]

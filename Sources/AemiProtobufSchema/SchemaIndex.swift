@@ -10,8 +10,9 @@ public struct SchemaIndex: Sendable {
 
     /// Indexes every message and enum, nested ones included.
     /// - Complexity: O(messages + enums).
-    public init(_ set: FileDescriptorSet) {
-        let flat = FlatSchema(set)
+    public init(_ set: FileDescriptorSet) { self.init(flat: FlatSchema(set)) }
+
+    init(flat: FlatSchema) {
         messages = flat.messages
         enums = Set(flat.enums.keys)
         closedEnums = flat.closedEnumValues
