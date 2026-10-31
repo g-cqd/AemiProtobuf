@@ -45,9 +45,9 @@ let package = Package(
         // Shared byte kernels (`Varint`, `UTF8Validation` via `AemiKernels`). Pinned to the revision AemiJSON pins:
         // SwiftPM rejects one package identity at two revisions in a graph, so the siblings move together.
         .package(
-            url: "https://github.com/Aemi-Studio/aemi.git", revision: "2fbe4e417cca85876ffe6bd55241238a7a61443a"),
+            url: "https://github.com/Aemi-Studio/aemi.git", revision: "a20fb18feff6a9ff54ebee5bb70f4bee126c9e8e"),
         // The JSON parser under AemiProtobufJSON. This revision pins the same aemi as above.
-        .package(url: "https://github.com/g-cqd/AemiJSON.git", revision: "b59ce29617af52ec8585377d694e64becbe2ce81"),
+        .package(url: "https://github.com/g-cqd/AemiJSON.git", revision: "fa6f74e4dd65f9e99e3a8af31f8d5fb9e40a0469"),
         // For `@ProtoMessage` only. The same wide range as AemiJSON, so a consumer of both resolves one swift-syntax.
         .package(url: "https://github.com/swiftlang/swift-syntax.git", "603.0.0" ..< "605.0.0")
     ],
