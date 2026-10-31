@@ -38,6 +38,8 @@ enum ProtoJSONNumber {
 
     /// The parts of a JSON number (RFC 8259 grammar): sign, integer digits, fraction digits, and the exponent; `nil` for
     /// anything else, white space included.
+    // @fc:disable cut-then-decode -- every slice decoded in split is a `prefix` of ASCII digits, cut only after ASCII
+    // bytes, so no character straddles a cut
     static func split(_ text: String) -> NumberParts? {
         var bytes = Substring(text).utf8[...]
         let negative = bytes.first == UInt8(ascii: "-")
@@ -68,6 +70,7 @@ enum ProtoJSONNumber {
             negative: negative, integer: String(decoding: integer, as: UTF8.self),
             fraction: String(decoding: fraction, as: UTF8.self), exponent: exponent)
     }
+    // @fc:enable cut-then-decode
 
     /// A `double` from a JSON number's text, or from one of the three strings; `nil` for other text and for a finite number
     /// too large for a `double`.
