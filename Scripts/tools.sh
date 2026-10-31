@@ -56,22 +56,6 @@ install_release() { # tool VERSION-variable-prefix
     [ "$reported" = "$version" ] || { rm -rf "$dir"; fail "$tool reports '$reported', not $version"; }
 }
 
-install_source() { # tool COMMIT-variable-prefix
-    tool=$1 upper=$2
-    commit=$(pinned "${upper}_COMMIT")
-    short=$(printf '%s' "$commit" | cut -c1-12)
-    dir="$CACHE/$tool-$short"
-    [ -x "$dir/$tool" ] && return 0
-    scratch=$(mktemp -d)
-    printf '==> building %s at %s (several minutes)\n' "$tool" "$short"
-    git clone --quiet "https://github.com/g-cqd/$tool.git" "$scratch/$tool" || fail "$tool: clone failed"
-    git -C "$scratch/$tool" checkout --quiet "$commit" || fail "$tool: commit $commit not found"
-    [ "$(git -C "$scratch/$tool" rev-parse HEAD)" = "$commit" ] || fail "$tool: checked out the wrong commit"
-    (cd "$scratch/$tool" && swift build -c release --product "$tool") >&2 || fail "$tool: build failed"
-    mkdir -p "$dir"
-    cp "$scratch/$tool/.build/release/$tool" "$dir/$tool"
-}
-
 install_tla() {
     jar="$CACHE/tla2tools-$TLA2TOOLS_VERSION.jar"
     [ -f "$jar" ] && return 0
@@ -107,8 +91,8 @@ install_one() {
         deadwood) install_release deadwood DEADWOOD ;;
         dolly) install_release dolly DOLLY ;;
         arcleak) install_release arcleak ARCLEAK ;;
-        fcheck) install_source fcheck FCHECK ;;
-        modeler) install_source modeler MODELER ;;
+        fcheck) install_release fcheck FCHECK ;;
+        modeler) install_release modeler MODELER ;;
         tla2tools) install_tla ;;
         mutation) install_mutation ;;
         *) fail "unknown tool: $1" ;;
@@ -120,8 +104,8 @@ tool_path() {
         deadwood) echo "$CACHE/deadwood-$DEADWOOD_VERSION/deadwood" ;;
         dolly) echo "$CACHE/dolly-$DOLLY_VERSION/dolly" ;;
         arcleak) echo "$CACHE/arcleak-$ARCLEAK_VERSION/arcleak" ;;
-        fcheck) echo "$CACHE/fcheck-$(printf '%s' "$FCHECK_COMMIT" | cut -c1-12)/fcheck" ;;
-        modeler) echo "$CACHE/modeler-$(printf '%s' "$MODELER_COMMIT" | cut -c1-12)/modeler" ;;
+        fcheck) echo "$CACHE/fcheck-$FCHECK_VERSION/fcheck" ;;
+        modeler) echo "$CACHE/modeler-$MODELER_VERSION/modeler" ;;
         tla2tools) echo "$CACHE/tla2tools-$TLA2TOOLS_VERSION.jar" ;;
         mutation) echo "$CACHE/swift-mutation-testing-$MUTATION_VERSION/swift-mutation-testing" ;;
         *) fail "unknown tool: $1" ;;
