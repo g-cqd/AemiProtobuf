@@ -5,7 +5,10 @@ extension DynamicDecoder {
     /// An absent key or value reads as its zero, a later entry with the same key replaces the earlier one, and an entry whose
     /// closed enumeration value has no case is kept whole as an unknown field.
     mutating func readEntry(
-        _ field: DynamicField, _ entry: DynamicField.MapEntry, _ tag: FieldTag, from reader: inout WireReader,
+        _ field: DynamicField,
+        _ entry: DynamicField.MapEntry,
+        _ tag: FieldTag,
+        from reader: inout WireReader,
         into node: Int
     ) throws(WireError) {
         let range = try reader.readPayloadRange()
@@ -19,12 +22,20 @@ extension DynamicDecoder {
                 let number = next.fieldNumber.rawValue
                 if number == 1, next.wireType == Self.wireType(of: entry.key.type) {
                     key = try Self.scalar(
-                        entry.key.type, from: &inner, validatingUTF8: entry.keyValidatesUTF8, bytes: bytes)
+                        entry.key.type,
+                        from: &inner,
+                        validatingUTF8: entry.keyValidatesUTF8,
+                        bytes: bytes
+                    )
                 } else if number == 2, isMessage, next.wireType == .lengthDelimited {
                     valueRanges.append(try inner.readPayloadRange())
                 } else if number == 2, !isMessage, next.wireType == Self.wireType(of: entry.value.type) {
                     value = try Self.scalar(
-                        entry.value.type, from: &inner, validatingUTF8: entry.valueValidatesUTF8, bytes: bytes)
+                        entry.value.type,
+                        from: &inner,
+                        validatingUTF8: entry.valueValidatesUTF8,
+                        bytes: bytes
+                    )
                 } else {
                     try inner.skipField(next)
                 }
@@ -46,7 +57,10 @@ extension DynamicDecoder {
         nodes[node].fields.maps[number, default: [:]][resolvedKey] = value ?? empty
         guard !valueRanges.isEmpty else { return }
         let child = spawn(
-            entry.valueTypeName, Link(parent: node, field: number, slot: .mapValue(resolvedKey)), ranges: valueRanges)
+            entry.valueTypeName,
+            Link(parent: node, field: number, slot: .mapValue(resolvedKey)),
+            ranges: valueRanges
+        )
         nodes[node].mapChildren[number, default: [:]][resolvedKey] = child
     }
 
@@ -55,7 +69,10 @@ extension DynamicDecoder {
 
     /// Reads one scalar of `type`. A `string` that need not be UTF-8 and is not is kept as `.bytes`.
     static func scalar(
-        _ type: FieldType, from reader: inout WireReader, validatingUTF8: Bool, bytes: [UInt8]
+        _ type: FieldType,
+        from reader: inout WireReader,
+        validatingUTF8: Bool,
+        bytes: [UInt8]
     ) throws(WireError) -> DynamicValue {
         switch type {
             case .int32: .int32(Int32(truncatingIfNeeded: try reader.readVarint()))
@@ -78,7 +95,9 @@ extension DynamicDecoder {
     }
 
     private static func string(
-        from reader: inout WireReader, validatingUTF8: Bool, bytes: [UInt8]
+        from reader: inout WireReader,
+        validatingUTF8: Bool,
+        bytes: [UInt8]
     ) throws(WireError) -> DynamicValue {
         if validatingUTF8 { return .string(try reader.readString()) }
         let range = try reader.readPayloadRange()

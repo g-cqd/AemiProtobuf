@@ -40,7 +40,11 @@ public struct ProtobufDecoder: Sendable {
         }
         let context = _ProtobufDecodeContext(bytes: bytes, limits: limits, userInfo: userInfo)
         let root = _ProtobufDecoderImpl(
-            context: context, source: .message(ranges: [0 ..< bytes.count]), depth: 0, codingPath: [])
+            context: context,
+            source: .message(ranges: [0 ..< bytes.count]),
+            depth: 0,
+            codingPath: []
+        )
         return try T(from: root)
     }
 

@@ -11,7 +11,8 @@ struct ProtoParserOneofTests {
     @Test func `parsed oneof and proto3 optional equal what protoc produced`() throws {
         let source = String(decoding: try resource("oneof", "proto"), as: UTF8.self)
         let expected = try #require(
-            try FileDescriptorSet.decode(from: [UInt8](try resource("oneof", "pb"))).files.first)
+            try FileDescriptorSet.decode(from: [UInt8](try resource("oneof", "pb"))).files.first
+        )
         let parsed = try ProtoParser().parse(source, name: "oneof.proto")
         #expect(parsed == expected)
     }

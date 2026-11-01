@@ -3,7 +3,9 @@ import AemiProtobufSchema
 extension ProtoJSONPrinter {
     /// Writes the JSON form of a well-known type.
     mutating func expandWellKnown(
-        _ kind: WellKnownType, _ message: DynamicMessage, _ type: DynamicMessageType
+        _ kind: WellKnownType,
+        _ message: DynamicMessage,
+        _ type: DynamicMessageType
     ) throws(ProtoJSONError) {
         let fields = message.fields
         let path = type.name

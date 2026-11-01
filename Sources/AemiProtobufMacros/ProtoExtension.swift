@@ -16,7 +16,10 @@ enum ProtoExtension {
     /// `extension Type: <the wanted protocols the type does not already declare> { members }`. The declared list is read from
     /// syntax, because a macro's `protocols` omits `Codable` (a typealias for two protocols).
     static func make(
-        _ type: some TypeSyntaxProtocol, inheritance: InheritanceClauseSyntax?, wanted: [String], members: [String]
+        _ type: some TypeSyntaxProtocol,
+        inheritance: InheritanceClauseSyntax?,
+        wanted: [String],
+        members: [String]
     ) throws -> ExtensionDeclSyntax {
         let declared = Set(inheritance?.inheritedTypes.map(\.type.trimmedDescription) ?? [])
         let missing = wanted.filter { protocolName in

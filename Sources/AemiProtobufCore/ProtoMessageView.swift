@@ -52,7 +52,8 @@ public struct ProtoMessageView: Sendable {
                     case .endGroup: throw .unexpectedEndGroup(at: reader.tagOffset)
                 }
                 entries.append(
-                    Entry(number: tag.fieldNumber.rawValue, wireType: tag.wireType, value: value, payload: payload))
+                    Entry(number: tag.fieldNumber.rawValue, wireType: tag.wireType, value: value, payload: payload)
+                )
             }
             return entries
         }

@@ -3,7 +3,12 @@ import AemiProtobufCore
 extension WireValidator {
     /// Checks the payload of a scalar, string, bytes or group field the tag has just announced, leaving the reader after it.
     func validatePayload(
-        _ tag: FieldTag, field: FieldDescriptor, packed: Bool, reader: inout WireReader, bytes: [UInt8], depth: Int
+        _ tag: FieldTag,
+        field: FieldDescriptor,
+        packed: Bool,
+        reader: inout WireReader,
+        bytes: [UInt8],
+        depth: Int
     ) throws(WireError) -> WireValidationError? {
         if packed {
             let payload = try reader.readPayloadRange()

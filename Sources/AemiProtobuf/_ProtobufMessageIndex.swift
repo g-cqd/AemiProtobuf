@@ -33,7 +33,10 @@ struct _ProtobufMessageIndex {
     }
 
     private static func index(
-        _ bytes: [UInt8], _ range: Range<Int>, _ depth: Int, _ limits: WireLimits,
+        _ bytes: [UInt8],
+        _ range: Range<Int>,
+        _ depth: Int,
+        _ limits: WireLimits,
         into entries: inout [_ProtobufFieldEntry]
     ) throws(WireError) {
         try WireReader.withReader(over: bytes, in: range, depth: depth, limits: limits) { r throws(WireError) in
@@ -42,21 +45,31 @@ struct _ProtobufMessageIndex {
                 switch tag.wireType {
                     case .varint:
                         entries.append(
-                            .init(number: number, wireType: .varint, payload: try r.readVarint(), length: 0))
+                            .init(number: number, wireType: .varint, payload: try r.readVarint(), length: 0)
+                        )
                     case .fixed32:
                         entries.append(
                             .init(
-                                number: number, wireType: .fixed32, payload: UInt64(try r.readFixed32()), length: 0)
+                                number: number,
+                                wireType: .fixed32,
+                                payload: UInt64(try r.readFixed32()),
+                                length: 0
+                            )
                         )
                     case .fixed64:
                         entries.append(
-                            .init(number: number, wireType: .fixed64, payload: try r.readFixed64(), length: 0))
+                            .init(number: number, wireType: .fixed64, payload: try r.readFixed64(), length: 0)
+                        )
                     case .lengthDelimited:
                         let payload = try r.readPayloadRange()
                         entries.append(
                             .init(
-                                number: number, wireType: .lengthDelimited, payload: UInt64(payload.lowerBound),
-                                length: payload.count))
+                                number: number,
+                                wireType: .lengthDelimited,
+                                payload: UInt64(payload.lowerBound),
+                                length: payload.count
+                            )
+                        )
                     case .startGroup, .endGroup:
                         try r.skipField(tag)
                 }

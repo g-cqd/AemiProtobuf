@@ -59,8 +59,13 @@ struct ProtoSourceWriter {
             .map { .line("option \($0) = \($1);", indent: indent) }
         for enumeration in message.nestedEnums { body += enumLines(enumeration, indent: indent) }
         body += members(
-            fields: message.fields, extensions: message.extensions, nested: message.nestedMessages, scope: scope,
-            indent: indent, oneofs: message.oneofs)
+            fields: message.fields,
+            extensions: message.extensions,
+            nested: message.nestedMessages,
+            scope: scope,
+            indent: indent,
+            oneofs: message.oneofs
+        )
         for range in message.extensionRanges {
             let suffix = bracketed(optionEntries(range.options, "ExtensionRangeOptions"))
             body.append(.line("extensions \(rangeText(range, endIncluded: false))\(suffix);", indent: indent))
@@ -76,7 +81,8 @@ struct ProtoSourceWriter {
         names.map {
             .line(
                 "reserved " + (isEditions ? $0 : ProtoLiteral.quoted(Array($0.utf8), keepUTF8: true)) + ";",
-                indent: indent)
+                indent: indent
+            )
         }
     }
 

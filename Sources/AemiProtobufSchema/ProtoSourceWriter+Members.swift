@@ -9,7 +9,10 @@ extension ProtoSourceWriter {
     /// Fields, extensions and nested messages in an order that keeps each list's order when compiled again: a group's or map's
     /// message is emitted with its field, every other nested message as soon as the messages before it are out.
     func members(
-        fields: [FieldDescriptor], extensions: [FieldDescriptor], nested: [MessageDescriptor], scope: String,
+        fields: [FieldDescriptor],
+        extensions: [FieldDescriptor],
+        nested: [MessageDescriptor],
+        scope: String,
         indent: Int,
         oneofs: [OneofDescriptor] = []
     ) -> [Work] {
@@ -81,7 +84,11 @@ extension ProtoSourceWriter {
 
     /// A field's line, a map's line, or a group's header and body.
     private func fieldWork(
-        _ field: FieldDescriptor, label: String, nested: [MessageDescriptor], scope: String, indent: Int
+        _ field: FieldDescriptor,
+        label: String,
+        nested: [MessageDescriptor],
+        scope: String,
+        indent: Int
     )
         -> [Work]
     {
@@ -99,7 +106,8 @@ extension ProtoSourceWriter {
             return [
                 .line(
                     "map<\(typeText(key)), \(typeText(value))> \(field.name) = \(field.number)\(suffix);",
-                    indent: indent)
+                    indent: indent
+                )
             ]
         }
         return [.line("\(label)\(typeText(field)) \(field.name) = \(field.number)\(suffix);", indent: indent)]

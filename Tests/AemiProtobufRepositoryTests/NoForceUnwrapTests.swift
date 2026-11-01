@@ -30,7 +30,9 @@ struct NoForceUnwrapTests {
         while let directory = pending.popLast() {
             let entries =
                 (try? FileManager.default.contentsOfDirectory(
-                    at: directory, includingPropertiesForKeys: [.isDirectoryKey])) ?? []
+                    at: directory,
+                    includingPropertiesForKeys: [.isDirectoryKey]
+                )) ?? []
             for entry in entries {
                 if (try? entry.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
                     pending.append(entry)

@@ -10,7 +10,9 @@ public struct ProtobufFrameDecoder<Message: AemiProtoFastDecodable>: ByteToMessa
     public let decoder: ProtobufDecoder
 
     public init(
-        format: FrameFormat, maxFrameBytes: Int = 4 * 1_024 * 1_024, decoder: ProtobufDecoder = ProtobufDecoder()
+        format: FrameFormat,
+        maxFrameBytes: Int = 4 * 1_024 * 1_024,
+        decoder: ProtobufDecoder = ProtobufDecoder()
     ) {
         self.format = format
         self.maxFrameBytes = maxFrameBytes
@@ -20,7 +22,11 @@ public struct ProtobufFrameDecoder<Message: AemiProtoFastDecodable>: ByteToMessa
     public mutating func decode(context: ChannelHandlerContext, buffer: inout ByteBuffer) throws -> DecodingState {
         guard
             let message = try buffer.readProtobuf(
-                Message.self, format: format, decoder: decoder, maxFrameBytes: maxFrameBytes)
+                Message.self,
+                format: format,
+                decoder: decoder,
+                maxFrameBytes: maxFrameBytes
+            )
         else { return .needMoreData }
         context.fireChannelRead(Self.wrapInboundOut(message))
         return .continue

@@ -3,7 +3,9 @@ import Testing
 
 struct SchemaComparatorDepthTests {
     private func set(
-        package: String = "p", messages: [MessageDescriptor] = [], enums: [EnumDescriptor] = []
+        package: String = "p",
+        messages: [MessageDescriptor] = [],
+        enums: [EnumDescriptor] = []
     ) -> FileDescriptorSet {
         FileDescriptorSet(files: [FileDescriptor(name: "a.proto", package: package, messages: messages, enums: enums)])
     }
@@ -20,18 +22,22 @@ struct SchemaComparatorDepthTests {
                 name: "Outer",
                 nestedMessages: [
                     MessageDescriptor(name: "Inner", fields: [field("a", 1), field("b", 2)])
-                ])
+                ]
+            )
         ])
         let after = set(messages: [
             MessageDescriptor(
-                name: "Outer", nestedMessages: [MessageDescriptor(name: "Inner", fields: [field("a", 1, .string)])])
+                name: "Outer",
+                nestedMessages: [MessageDescriptor(name: "Inner", fields: [field("a", 1, .string)])]
+            )
         ])
         let kinds = SchemaComparator().compare(old: before, new: after).map(\.kind)
         #expect(
             kinds == [
                 .fieldTypeIncompatible(message: "p.Outer.Inner", field: "a", oldType: .int32, newType: .string),
                 .fieldRemoved(message: "p.Outer.Inner", field: "b", number: 2)
-            ])
+            ]
+        )
         let gone = set(messages: [MessageDescriptor(name: "Outer")])
         #expect(SchemaComparator().compare(old: before, new: gone).map(\.kind) == [.messageRemoved("p.Outer.Inner")])
     }
@@ -64,7 +70,8 @@ struct SchemaComparatorDepthTests {
         #expect(
             SchemaComparator().compare(old: before, new: after).map(\.kind) == [
                 .fieldTypeNameChanged(message: "p.M", field: "m", oldTypeName: ".p.A", newTypeName: ".p.B")
-            ])
+            ]
+        )
         #expect(SchemaComparator().compare(old: before, new: before).isEmpty)
     }
 
@@ -75,7 +82,8 @@ struct SchemaComparatorDepthTests {
                 values: [
                     EnumValueDescriptor(name: "A", number: 0), EnumValueDescriptor(name: "B", number: 1),
                     EnumValueDescriptor(name: "C", number: 2)
-                ]),
+                ]
+            ),
             EnumDescriptor(name: "Gone", values: [EnumValueDescriptor(name: "X", number: 0)])
         ])
         let after = set(enums: [
@@ -84,13 +92,15 @@ struct SchemaComparatorDepthTests {
                 values: [
                     EnumValueDescriptor(name: "A", number: 0), EnumValueDescriptor(name: "B", number: 5),
                     EnumValueDescriptor(name: "D", number: 3)
-                ])
+                ]
+            )
         ])
         #expect(
             SchemaComparator().compare(old: before, new: after).map(\.kind) == [
                 .enumValueRenumbered(enumName: "p.E", value: "B", oldNumber: 1, newNumber: 5),
                 .enumValueRemoved(enumName: "p.E", value: "C", number: 2), .enumRemoved("p.Gone")
-            ])
+            ]
+        )
     }
 
     @Test(arguments: [
@@ -100,7 +110,9 @@ struct SchemaComparatorDepthTests {
         (.message, .string, false), (.double, .float, false), (.enum, .int32, true), (.double, .double, true)
     ])
     func `wire compatibility follows the protobuf compatibility classes`(
-        old: FieldType, new: FieldType, compatible: Bool
+        old: FieldType,
+        new: FieldType,
+        compatible: Bool
     ) {
         let before = set(messages: [MessageDescriptor(name: "M", fields: [field("f", 1, old)])])
         let after = set(messages: [MessageDescriptor(name: "M", fields: [field("f", 1, new)])])

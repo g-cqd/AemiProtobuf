@@ -55,7 +55,8 @@ public enum ProtocPlugin {
                     case (2, .lengthDelimited): parameter = try r.readString()
                     case (15, .lengthDelimited):
                         set.files.append(
-                            try r.readMessage { r throws(WireError) in try FileDescriptor.decode(from: &r) })
+                            try r.readMessage { r throws(WireError) in try FileDescriptor.decode(from: &r) }
+                        )
                     default: try r.skipField(tag)
                 }
             }

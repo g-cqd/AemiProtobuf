@@ -26,10 +26,12 @@ struct OneofDescriptorTests {
     @Test func `a field naming a missing oneof index is refused`() throws {
         let bad = FileDescriptorSet(files: [
             FileDescriptor(
-                name: "x.proto", syntax: "proto3",
+                name: "x.proto",
+                syntax: "proto3",
                 messages: [
                     MessageDescriptor(name: "M", fields: [FieldDescriptor(name: "a", number: 1, oneofIndex: 3)])
-                ])
+                ]
+            )
         ])
         let bytes = try bad.encode()
         #expect(throws: DescriptorError.oneofIndexOutOfRange(message: "M", field: "a", index: 3)) {

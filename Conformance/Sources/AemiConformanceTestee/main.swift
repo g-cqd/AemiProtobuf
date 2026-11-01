@@ -19,7 +19,8 @@ struct Testee: Sendable {
             encode: { value in
                 guard let value = value as? T else { throw ProtobufEncodingError.unsupported("\(T.self)") }
                 return try ProtobufEncoder().encodeToBytes(value)
-            })
+            }
+        )
     }
 }
 
@@ -39,7 +40,9 @@ enum Registry {
 
 /// Writes a dynamic message in the requested format.
 func encode(
-    _ message: DynamicMessage, as output: Conformance_WireFormat, _ request: Conformance_ConformanceRequest
+    _ message: DynamicMessage,
+    as output: Conformance_WireFormat,
+    _ request: Conformance_ConformanceRequest
 ) -> Conformance_ConformanceResponse.OneOf_Result {
     switch output {
         case .textFormat:
@@ -60,8 +63,10 @@ func encode(
 enum Dynamic {
     static let schema = DynamicSchema(
         (try? FileDescriptorSet.decode(
-            from: [UInt8](Data(base64Encoded: descriptorSetBase64, options: .ignoreUnknownCharacters) ?? Data())))
-            ?? FileDescriptorSet(files: []))
+            from: [UInt8](Data(base64Encoded: descriptorSetBase64, options: .ignoreUnknownCharacters) ?? Data())
+        ))
+            ?? FileDescriptorSet(files: [])
+    )
     static let text = ProtoTextFormat(schema: schema)
 }
 
@@ -168,5 +173,6 @@ while let header = read(4) {
     let response = (try? ProtobufEncoder().encodeToBytes(Conformance_ConformanceResponse(result: result))) ?? []
     let size = UInt32(response.count)
     FileHandle.standardOutput.write(
-        Data([UInt8(size & 0xFF), UInt8(size >> 8 & 0xFF), UInt8(size >> 16 & 0xFF), UInt8(size >> 24)] + response))
+        Data([UInt8(size & 0xFF), UInt8(size >> 8 & 0xFF), UInt8(size >> 16 & 0xFF), UInt8(size >> 24)] + response)
+    )
 }

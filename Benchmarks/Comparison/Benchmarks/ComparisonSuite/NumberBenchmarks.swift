@@ -20,14 +20,19 @@ func registerNumberBenchmarks() {
         return m
     }
     registerNumbers(
-        "doublesFull", values: Corpus.fullPrecisionDoubles(count), fast: PackedDoubles.init, spMake: doubles)
+        "doublesFull",
+        values: Corpus.fullPrecisionDoubles(count),
+        fast: PackedDoubles.init,
+        spMake: doubles
+    )
     registerNumbers("doublesShort", values: Corpus.shortDoubles(count), fast: PackedDoubles.init, spMake: doubles)
     registerNumbers("intsWide", values: Corpus.wideIntegers(count), fast: PackedInt64s.init, spMake: ints)
     registerNumbers("intsSmall", values: Corpus.smallIntegers(count), fast: PackedInt64s.init, spMake: ints)
 }
 
 private func registerNumbers<
-    E: Codable & Equatable, F: Codable & AemiProtoFastEncodable & AemiProtoFastDecodable & Equatable,
+    E: Codable & Equatable,
+    F: Codable & AemiProtoFastEncodable & AemiProtoFastDecodable & Equatable,
     M: SwiftProtobuf.Message & Equatable
 >(_ name: String, values: [E], fast make: @escaping ([E]) -> F, spMake: ([E]) -> M) {
     let spValue = spMake(values)

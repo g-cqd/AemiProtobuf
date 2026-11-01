@@ -5,7 +5,8 @@ import Testing
 struct ProtoParserTests {
     @Test func `parse .proto text matches structure from protoc descriptor`() throws {
         let url = try #require(
-            Bundle.module.url(forResource: "sample", withExtension: "proto", subdirectory: "Resources"))
+            Bundle.module.url(forResource: "sample", withExtension: "proto", subdirectory: "Resources")
+        )
         let text = try String(contentsOf: url, encoding: .utf8)
 
         let parser = ProtoParser()

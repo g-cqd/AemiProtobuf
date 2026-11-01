@@ -10,7 +10,8 @@ struct WirePrimitivesTests {
             (UInt64(0), "00"), (1, "01"), (127, "7f"), (128, "80 01"), (150, "96 01"), (300, "ac 02"),
             (16_383, "ff 7f"), (16_384, "80 80 01"), (UInt64(UInt32.max), "ff ff ff ff 0f"),
             (UInt64.max, "ff ff ff ff ff ff ff ff ff 01")
-        ] as [(UInt64, String)])
+        ] as [(UInt64, String)]
+    )
     func `varint encodes to the documented bytes and reads back`(value: UInt64, encoded: String) throws {
         let bytes = try written { $0.appendVarint(value) }
         #expect(bytes == hex(encoded))
@@ -29,7 +30,8 @@ struct WirePrimitivesTests {
         arguments: [
             (Int32(0), UInt32(0)), (Int32(-1), UInt32(1)), (Int32(1), UInt32(2)), (Int32(-2), UInt32(3)),
             (Int32.max, UInt32(4_294_967_294)), (Int32.min, UInt32(4_294_967_295))
-        ] as [(Int32, UInt32)])
+        ] as [(Int32, UInt32)]
+    )
     func `zig-zag maps 32-bit values as the encoding guide lists`(value: Int32, mapped: UInt32) {
         #expect(ZigZag.encode(value) == mapped)
         #expect(ZigZag.decode(mapped) == value)
@@ -39,7 +41,8 @@ struct WirePrimitivesTests {
         arguments: [
             (Int64(0), UInt64(0)), (Int64(-1), UInt64(1)), (Int64(1), UInt64(2)), (Int64.max, UInt64.max - 1),
             (Int64.min, UInt64.max)
-        ] as [(Int64, UInt64)])
+        ] as [(Int64, UInt64)]
+    )
     func `zig-zag maps 64-bit values as the encoding guide lists`(value: Int64, mapped: UInt64) {
         #expect(ZigZag.encode(value) == mapped)
         #expect(ZigZag.decode(mapped) == value)
@@ -106,7 +109,8 @@ struct WirePrimitivesTests {
             (UInt64(0), WireError.invalidTag(0, at: 7)), (0x0E, .invalidWireType(6, at: 7)),
             (0x0F, .invalidWireType(7, at: 7)), (0xFFFF_FFFF, .invalidWireType(7, at: 7)),
             (0x1_0000_0008, .invalidTag(0x1_0000_0008, at: 7))
-        ] as [(UInt64, WireError)])
+        ] as [(UInt64, WireError)]
+    )
     func `a malformed tag is refused with its offset`(raw: UInt64, expected: WireError) {
         #expect(throws: expected) { _ = try FieldTag(rawValue: raw, at: 7) }
     }

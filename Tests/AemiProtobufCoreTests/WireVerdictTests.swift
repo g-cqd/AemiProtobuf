@@ -25,7 +25,8 @@ struct WireVerdictTests {
 
     static func loadCases() throws -> [Case] {
         let url = try #require(
-            Bundle.module.url(forResource: "decode-raw-verdicts", withExtension: "jsonl", subdirectory: "Resources"))
+            Bundle.module.url(forResource: "decode-raw-verdicts", withExtension: "jsonl", subdirectory: "Resources")
+        )
         return try String(contentsOf: url, encoding: .utf8).split(separator: "\n")
             .map {
                 try JSONDecoder().decode(Case.self, from: Data($0.utf8))

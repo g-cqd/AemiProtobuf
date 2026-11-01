@@ -22,7 +22,10 @@ public struct SchemaLinter: Sendable {
             if !file.package.isEmpty {
                 check(
                     file.package.split(separator: ".").allSatisfy { Self.isSnake(String($0), upper: false) },
-                    "PACKAGE_LOWER_SNAKE_CASE", file.package, "Package")
+                    "PACKAGE_LOWER_SNAKE_CASE",
+                    file.package,
+                    "Package"
+                )
             }
             var enums = file.enums
             var pending = file.messages
@@ -47,7 +50,11 @@ public struct SchemaLinter: Sendable {
                 check(enumeration.values.first?.number == 0, "ENUM_FIRST_VALUE_ZERO", enumeration.name, "Enum")
                 for value in enumeration.values {
                     check(
-                        Self.isSnake(value.name, upper: true), "ENUM_VALUE_UPPER_SNAKE_CASE", value.name, "Enum value")
+                        Self.isSnake(value.name, upper: true),
+                        "ENUM_VALUE_UPPER_SNAKE_CASE",
+                        value.name,
+                        "Enum value"
+                    )
                 }
             }
             for service in file.services {

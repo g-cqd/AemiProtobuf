@@ -13,10 +13,17 @@ enum ViewBenchmarks {
             -> FieldDescriptor
         {
             FieldDescriptor(
-                name: name, number: number, label: repeated ? .repeated : .optional, type: type, typeName: typeName)
+                name: name,
+                number: number,
+                label: repeated ? .repeated : .optional,
+                type: type,
+                typeName: typeName
+            )
         }
         let address = MessageDescriptor(
-            name: "Address", fields: [field("street", 1, .string), field("city", 2, .string), field("zip", 3, .int32)])
+            name: "Address",
+            fields: [field("street", 1, .string), field("city", 2, .string), field("zip", 3, .int32)]
+        )
         let user = MessageDescriptor(
             name: "User",
             fields: [
@@ -25,9 +32,12 @@ enum ViewBenchmarks {
                 field("score", 5, .double), field("tags", 6, .string, repeated: true),
                 field("samples", 7, .int32, repeated: true), field("address", 8, .message, typeName: ".bench.Address"),
                 field("delta", 9, .int32), field("stamp", 10, .uint64)
-            ])
+            ]
+        )
         let users = MessageDescriptor(
-            name: "Users", fields: [field("users", 1, .message, repeated: true, typeName: ".bench.User")])
+            name: "Users",
+            fields: [field("users", 1, .message, repeated: true, typeName: ".bench.User")]
+        )
         return FileDescriptorSet(files: [
             FileDescriptor(name: "bench.proto", package: "bench", messages: [users, user, address])
         ])

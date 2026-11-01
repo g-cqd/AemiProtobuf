@@ -115,9 +115,11 @@ enum ProtoMessageCodegen {
     private static func decodeCases(_ f: ProtoFieldSpec, keepsUnknown: Bool) -> [String] {
         // A closed enumeration's number with no case is kept as an unknown varint field, as C++ keeps it (roadmap 0023).
         let scalar = ProtoFieldScalar(
-            kind: f.kind, swiftType: f.swiftType,
+            kind: f.kind,
+            swiftType: f.swiftType,
             unknown: keepsUnknown
-                ? "self.unknownFields.appendVarint(field: \(f.number), UInt64(bitPattern: Int64(__raw)))" : nil)
+                ? "self.unknownFields.appendVarint(field: \(f.number), UInt64(bitPattern: Int64(__raw)))" : nil
+        )
         let wire = f.kind.wireType
         switch f.shape {
             case .oneof: return []

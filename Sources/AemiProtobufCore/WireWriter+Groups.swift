@@ -3,7 +3,8 @@ extension WireWriter {
     /// - Throws: ``WireError/depthExceeded(limit:at:)`` past `limits.maxDepth`, or whatever `body` throws; the writer is then
     ///   unchanged.
     public mutating func appendGroup(
-        field: FieldNumber, _ body: (inout WireWriter) throws(WireError) -> Void
+        field: FieldNumber,
+        _ body: (inout WireWriter) throws(WireError) -> Void
     ) throws(WireError) {
         guard depth < limits.maxDepth else { throw .depthExceeded(limit: limits.maxDepth, at: bytes.count) }
         let rollback = bytes.count

@@ -2,7 +2,9 @@
 
 /// Runs `body` over `bytes` with a fresh reader. Shortens every reader test to one line.
 func read<R>(
-    _ bytes: [UInt8], limits: WireLimits = .default, _ body: (inout WireReader) throws(WireError) -> R
+    _ bytes: [UInt8],
+    limits: WireLimits = .default,
+    _ body: (inout WireReader) throws(WireError) -> R
 ) throws(WireError) -> R {
     try WireReader.withReader(over: bytes, limits: limits, body)
 }

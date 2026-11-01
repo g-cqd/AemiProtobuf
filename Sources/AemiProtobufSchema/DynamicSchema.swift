@@ -22,8 +22,13 @@ public struct DynamicSchema: Sendable {
             let extensions = (flat.declaredExtensions[name] ?? [])
                 .map {
                     DynamicField(
-                        $0.field, in: $0.scope, features: $0.features, schema: flat, index: index,
-                        extensionName: $0.fullName)
+                        $0.field,
+                        in: $0.scope,
+                        features: $0.features,
+                        schema: flat,
+                        index: index,
+                        extensionName: $0.fullName
+                    )
                 }
             let fields = declared + extensions
             types[name] = DynamicMessageType(name: name, descriptor: message, fields: fields)
@@ -43,7 +48,9 @@ public struct DynamicSchema: Sendable {
     /// - Throws: ``DynamicMessageError/unknownMessageType(_:)``, or ``DynamicMessageError/wire(_:)`` for malformed input, a
     ///   `string` that must be UTF-8 and is not, nesting past `limits.maxDepth`, or a missing required field.
     public func decode(
-        _ bytes: [UInt8], as typeName: String, limits: WireLimits = .default
+        _ bytes: [UInt8],
+        as typeName: String,
+        limits: WireLimits = .default
     ) throws(DynamicMessageError) -> DynamicMessage {
         guard let type = types[typeName] else { throw .unknownMessageType(typeName) }
         var decoder = DynamicDecoder(schema: self, bytes: bytes, limits: limits, root: type)
@@ -67,6 +74,9 @@ public struct DynamicSchema: Sendable {
     /// The value an absent field reads as: zero, empty, `false`, an enumeration's first value, an empty message.
     public func defaultValue(of field: FieldDescriptor, typeName: String?) -> DynamicValue {
         DynamicValue.zero(
-            of: field.type, typeName: typeName, firstEnumValue: typeName.flatMap { enums[$0]?.values.first?.number })
+            of: field.type,
+            typeName: typeName,
+            firstEnumValue: typeName.flatMap { enums[$0]?.values.first?.number }
+        )
     }
 }

@@ -52,7 +52,8 @@ struct WireValidatorTests {
             errors.contains { err in
                 if case .unexpectedWireType(field: 1, expected: .varint, actual: .fixed32, at: _) = err { return true }
                 return false
-            })
+            }
+        )
     }
 
     @Test func `unknown field disallowed is reported`() {
@@ -68,6 +69,7 @@ struct WireValidatorTests {
             errors.contains { err in
                 if case .unknownField(let num, at: _) = err, num.rawValue == 99 { return true }
                 return false
-            })
+            }
+        )
     }
 }

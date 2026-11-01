@@ -47,9 +47,11 @@ import Testing
 
     @Test func `the validator refuses what protoc refuses, and differs only where it means to`() throws {
         let kinds = try FileDescriptorSet.decode(
-            from: [UInt8](try Data(contentsOf: resource("differential-kinds", "pb"))))
+            from: [UInt8](try Data(contentsOf: resource("differential-kinds", "pb")))
+        )
         let proto2 = try FileDescriptorSet.decode(
-            from: [UInt8](try Data(contentsOf: resource("differential-proto2", "pb"))))
+            from: [UInt8](try Data(contentsOf: resource("differential-proto2", "pb")))
+        )
         let all = try cases()
         #expect(all.count == 868)
         var stricter = 0
@@ -63,10 +65,12 @@ import Testing
                 stricter += 1
                 #expect(
                     findings.allSatisfy { Self.isDeliberate($0.error) },
-                    "protoc accepts \(item.message) [\(hex)]: \(findings)")
+                    "protoc accepts \(item.message) [\(hex)]: \(findings)"
+                )
             }
         }
         print(
-            "differential: \(all.count) inputs, \(stricter) accepted by protoc and refused by the validator by design")
+            "differential: \(all.count) inputs, \(stricter) accepted by protoc and refused by the validator by design"
+        )
     }
 }

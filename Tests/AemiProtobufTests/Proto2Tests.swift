@@ -57,7 +57,8 @@ import Testing
         #expect(missing { _ = try decode(RequiredHolder.self, many) } == "many[1].a")
         #expect(
             missing { _ = try ProtobufEncoder().encodeToBytes(RequiredHolder(a: 1, child: RequiredHolder())) }
-                == "child.a")
+                == "child.a"
+        )
     }
 
     @Test func `a required field supplied by a later occurrence of its message is present`() throws {

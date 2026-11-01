@@ -30,6 +30,7 @@ switch (arguments.first, arguments.count) {
         exit(changes.contains(where: \.breaksTheWire) ? 1 : 0)
     default:
         FileHandle.standardError.write(
-            Data("usage: aemi-proto-check lint SET.pb | aemi-proto-check breaking OLD.pb NEW.pb [--all]\n".utf8))
+            Data("usage: aemi-proto-check lint SET.pb | aemi-proto-check breaking OLD.pb NEW.pb [--all]\n".utf8)
+        )
         exit(2)
 }

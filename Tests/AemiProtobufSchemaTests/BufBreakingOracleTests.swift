@@ -16,7 +16,8 @@ import Testing
 
     private static func oracle() throws -> [String: [String]] {
         let url = try #require(
-            Bundle.module.url(forResource: "expected", withExtension: "json", subdirectory: directory))
+            Bundle.module.url(forResource: "expected", withExtension: "json", subdirectory: directory)
+        )
         return try JSONDecoder().decode([String: [String]].self, from: try Data(contentsOf: url))
     }
 

@@ -8,11 +8,26 @@ public struct ResolvedFeatures: Sendable, Equatable {
     public var messageEncoding: Int32  // LENGTH_PREFIXED 1, DELIMITED 2
 
     public static let proto2 = Self(
-        fieldPresence: 1, enumType: 2, repeatedFieldEncoding: 2, utf8Validation: 3, messageEncoding: 1)
+        fieldPresence: 1,
+        enumType: 2,
+        repeatedFieldEncoding: 2,
+        utf8Validation: 3,
+        messageEncoding: 1
+    )
     public static let proto3 = Self(
-        fieldPresence: 2, enumType: 1, repeatedFieldEncoding: 1, utf8Validation: 2, messageEncoding: 1)
+        fieldPresence: 2,
+        enumType: 1,
+        repeatedFieldEncoding: 1,
+        utf8Validation: 2,
+        messageEncoding: 1
+    )
     public static let edition2023 = Self(
-        fieldPresence: 1, enumType: 1, repeatedFieldEncoding: 1, utf8Validation: 2, messageEncoding: 1)
+        fieldPresence: 1,
+        enumType: 1,
+        repeatedFieldEncoding: 1,
+        utf8Validation: 2,
+        messageEncoding: 1
+    )
 
     /// The defaults of `file`'s syntax or edition, then its own features.
     public static func of(_ file: FileDescriptor) -> Self {

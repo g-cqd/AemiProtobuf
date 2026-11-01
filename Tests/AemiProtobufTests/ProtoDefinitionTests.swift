@@ -11,7 +11,8 @@ extension Shade: AemiProtoDefined {}
 /// macro wrote and writes bytes the macro reads back to the same value.
 @Suite struct ProtoDefinitionTests {
     private func roundTrip<T: AemiProtoFastEncodable & AemiProtoFastDecodable & AemiProtoDefined & Equatable>(
-        _ value: T, _ package: String
+        _ value: T,
+        _ package: String
     ) throws {
         let text = try ProtoDefinitions.file(for: [T.self], package: package)
         let set = try ProtoCompiler { $0 == "defined.proto" ? text : nil }.compile(["defined.proto"])
@@ -33,7 +34,8 @@ extension Shade: AemiProtoDefined {}
         #expect(text.contains("  repeated fixed64 rFixed64 = 21;"))
         #expect(Kinds.protoName == "Kinds")
         #expect(
-            Color.protoDefinition.contains("COLOR_GREEN = 1;") && Color.protoDefinition.contains("enum_type = CLOSED"))
+            Color.protoDefinition.contains("COLOR_GREEN = 1;") && Color.protoDefinition.contains("enum_type = CLOSED")
+        )
     }
 
     @Test func `the definitions compile, and dynamic messages of them read and write what the macro does`() throws {

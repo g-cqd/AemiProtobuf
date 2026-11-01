@@ -25,7 +25,8 @@ import Testing
 
     static func cases() throws -> [Case] {
         let url = try #require(
-            Bundle.module.url(forResource: "cases", withExtension: "json", subdirectory: "Resources/dynamic"))
+            Bundle.module.url(forResource: "cases", withExtension: "json", subdirectory: "Resources/dynamic")
+        )
         return try JSONDecoder().decode([Case].self, from: Data(contentsOf: url))
     }
 

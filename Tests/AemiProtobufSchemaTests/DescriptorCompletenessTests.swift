@@ -9,7 +9,8 @@ import Testing
 @Suite struct DescriptorCompletenessTests {
     private func set() throws -> (FileDescriptorSet, [UInt8]) {
         let url = try #require(
-            Bundle.module.url(forResource: "conformance-set", withExtension: "pb", subdirectory: "Resources"))
+            Bundle.module.url(forResource: "conformance-set", withExtension: "pb", subdirectory: "Resources")
+        )
         let bytes = [UInt8](try Data(contentsOf: url))
         return (try FileDescriptorSet.decode(from: bytes), bytes)
     }

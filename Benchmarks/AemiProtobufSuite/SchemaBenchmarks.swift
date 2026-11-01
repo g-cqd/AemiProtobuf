@@ -28,7 +28,8 @@ struct SchemaBenchmarks {
         // Roadmap 0002: descriptor.proto (1,300 lines: options, extensions, defaults, reservations), compiled as protoc does.
         let descriptorProto = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
             .appending(
-                path: "../../Tests/AemiProtobufSchemaTests/Resources/parser/src/google/protobuf/descriptor.proto")
+                path: "../../Tests/AemiProtobufSchemaTests/Resources/parser/src/google/protobuf/descriptor.proto"
+            )
         let descriptorSource = (try? String(contentsOf: descriptorProto, encoding: .utf8)) ?? ""
         let compiler = ProtoCompiler { $0 == "google/protobuf/descriptor.proto" ? descriptorSource : nil }
         Benchmark("Schema.compileDescriptorProto") { benchmark in
@@ -47,7 +48,8 @@ struct SchemaBenchmarks {
                 FieldDescriptor(name: "id", number: 1, type: .int64),
                 FieldDescriptor(name: "name", number: 2, type: .string),
                 FieldDescriptor(name: "values", number: 3, label: .repeated, type: .int32)
-            ])
+            ]
+        )
         let bytes: [UInt8] = [0x08, 0x2A, 0x12, 0x03, 0x41, 0x64, 0x61, 0x1A, 0x03, 0x01, 0x02, 0x03]
         Benchmark("Schema.validate3Fields") { benchmark in
             let validator = WireValidator()
@@ -64,22 +66,31 @@ struct SchemaBenchmarks {
         // Roadmap 0007: nested validation, a message holding 100 messages of a three-field message, through the work queue.
         let nested = FileDescriptorSet(files: [
             FileDescriptor(
-                name: "nested.proto", package: "bench",
+                name: "nested.proto",
+                package: "bench",
                 messages: [
                     MessageDescriptor(
                         name: "Outer",
                         fields: [
                             FieldDescriptor(
-                                name: "items", number: 1, label: .repeated, type: .message, typeName: ".bench.Inner")
-                        ]),
+                                name: "items",
+                                number: 1,
+                                label: .repeated,
+                                type: .message,
+                                typeName: ".bench.Inner"
+                            )
+                        ]
+                    ),
                     MessageDescriptor(
                         name: "Inner",
                         fields: [
                             FieldDescriptor(name: "id", number: 1, type: .int64),
                             FieldDescriptor(name: "name", number: 2, type: .string),
                             FieldDescriptor(name: "values", number: 3, label: .repeated, type: .int32)
-                        ])
-                ])
+                        ]
+                    )
+                ]
+            )
         ])
         var outer = WireWriter()
         for index in 0 ..< 100 {

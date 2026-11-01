@@ -33,7 +33,8 @@ struct WirePackedVarintTests {
         #expect(
             w.bytes == [0x0A, 0x0A] + [UInt8](repeating: 0xFF, count: 9) + [
                 0x01, 0x12, 0x05, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F
-            ])
+            ]
+        )
     }
 
     @Test(arguments: [0, 1, 2, 63, 64, 1_000])

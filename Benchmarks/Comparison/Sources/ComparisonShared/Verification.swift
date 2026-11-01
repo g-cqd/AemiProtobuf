@@ -27,23 +27,31 @@ extension Codecs {
         check(
             run("aemi json decode") { try aemiDecoder.decode([JSONUser].self, from: jsonAemi).map(\.record) }
                 == records,
-            "AemiJSON Codable round trip")
+            "AemiJSON Codable round trip"
+        )
         check(
             run("macro decode") { try aemiDecoder.decode([MacroJSONUser].self, from: jsonAemi).map(\.record) }
                 == records,
-            "AemiJSON @JSONCodable decodes AemiJSON bytes")
+            "AemiJSON @JSONCodable decodes AemiJSON bytes"
+        )
         check(
             run("foundation decodes aemi") {
                 try Foundation.JSONDecoder().decode([JSONUser].self, from: jsonAemi).map(\.record)
-            } == records, "Foundation decodes AemiJSON bytes")
+            } == records,
+            "Foundation decodes AemiJSON bytes"
+        )
         check(
             run("aemi decodes foundation") {
                 try aemiDecoder.decode([JSONUser].self, from: jsonFoundation).map(\.record)
             }
-                == records, "AemiJSON decodes Foundation bytes")
+                == records,
+            "AemiJSON decodes Foundation bytes"
+        )
         check(
             run("proto fast decode") { try ProtobufDecoder().decode(ProtoUsers.self, fromBytes: protoFast).records }
-                == records, "AemiProtobuf fast-path round trip")
+                == records,
+            "AemiProtobuf fast-path round trip"
+        )
         var direct = WireWriter(reservingCapacity: 128)
         do throws(WireError) { try protoUsers.__aepbEncode(into: &direct) } catch {
             v.findings.append("direct writer threw \(error)")
@@ -69,11 +77,15 @@ extension Codecs {
             run("swift-protobuf decodes aemi bytes") {
                 SwiftProtobufUsers.records(try Users(serializedBytes: protoFast))
             }
-                == records, "swift-protobuf decodes AemiProtobuf bytes")
+                == records,
+            "swift-protobuf decodes AemiProtobuf bytes"
+        )
         check(
             run("aemi decodes swift-protobuf bytes") {
                 try ProtobufDecoder().decode(ProtoUsers.self, fromBytes: swiftProtobufBytes).records
-            } == records, "AemiProtobuf decodes swift-protobuf bytes")
+            } == records,
+            "AemiProtobuf decodes swift-protobuf bytes"
+        )
         return v
     }
 }

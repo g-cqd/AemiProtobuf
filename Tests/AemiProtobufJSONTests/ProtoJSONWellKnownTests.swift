@@ -22,10 +22,12 @@ import Testing
         #expect(max.fields[1] == .int64(253_402_300_799))
         #expect(
             try S.write(try S.read(#"{"optionalTimestamp":"2017-01-15T01:30:15.010Z"}"#))
-                == #"{"optionalTimestamp":"2017-01-15T01:30:15.010Z"}"#)
+                == #"{"optionalTimestamp":"2017-01-15T01:30:15.010Z"}"#
+        )
         #expect(
             try S.write(try S.read(#"{"optionalTimestamp":"1969-12-31T23:59:59.000001Z"}"#))
-                == #"{"optionalTimestamp":"1969-12-31T23:59:59.000001Z"}"#)
+                == #"{"optionalTimestamp":"1969-12-31T23:59:59.000001Z"}"#
+        )
         for bad in [
             "0000-01-01T00:00:00Z", "1970-01-01T00:00:00", "1970-01-01 00:00:00Z", "1970-01-01T00:00:00.1234567890Z",
             "1970-01-01t00:00:00z"
@@ -39,7 +41,8 @@ import Testing
         #expect(value.fields == [1: .int64(-1), 2: .int32(-500_000_000)])
         #expect(
             try S.write(try S.read(#"{"optionalDuration":"-0.000000001s"}"#))
-                == #"{"optionalDuration":"-0.000000001s"}"#)
+                == #"{"optionalDuration":"-0.000000001s"}"#
+        )
         #expect(try S.write(try S.read(#"{"optionalDuration":"3s"}"#)) == #"{"optionalDuration":"3s"}"#)
         #expect(try S.write(try S.read(#"{"optionalDuration":"1.25s"}"#)) == #"{"optionalDuration":"1.250s"}"#)
         for bad in ["1", "1.5", "315576000001s", "1.0000000001s", "- 1s", "s"] {
@@ -51,7 +54,8 @@ import Testing
         let mask = try #require(try field(#"{"optionalFieldMask":"fooBar,baz.quxQuux"}"#, 303))
         #expect(mask.fields == [1: .list([.string("foo_bar"), .string("baz.qux_quux")])])
         #expect(
-            try S.write(try S.read(#"{"optionalFieldMask":"fooBar,baz"}"#)) == #"{"optionalFieldMask":"fooBar,baz"}"#)
+            try S.write(try S.read(#"{"optionalFieldMask":"fooBar,baz"}"#)) == #"{"optionalFieldMask":"fooBar,baz"}"#
+        )
         #expect(throws: ProtoJSONError.self) { try S.read(#"{"optionalFieldMask":"foo_bar"}"#) }
     }
 
@@ -97,6 +101,7 @@ import Testing
         let zero = #"{"optionalAny":{"@type":"type.googleapis.com/google.protobuf.Duration"}}"#
         #expect(
             try S.write(try S.read(zero))
-                == #"{"optionalAny":{"@type":"type.googleapis.com/google.protobuf.Duration","value":"0s"}}"#)
+                == #"{"optionalAny":{"@type":"type.googleapis.com/google.protobuf.Duration","value":"0s"}}"#
+        )
     }
 }

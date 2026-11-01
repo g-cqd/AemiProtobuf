@@ -45,7 +45,9 @@ let package = Package(
         // Shared byte kernels (`Varint`, `UTF8Validation` via `AemiKernels`). Pinned to the revision AemiJSON pins:
         // SwiftPM rejects one package identity at two revisions in a graph, so the siblings move together.
         .package(
-            url: "https://github.com/Aemi-Studio/aemi.git", revision: "18b02d36ed4bafd68afab7ea3894cc822c86e2f7"),
+            url: "https://github.com/Aemi-Studio/aemi.git",
+            revision: "18b02d36ed4bafd68afab7ea3894cc822c86e2f7"
+        ),
         // The JSON parser under AemiProtobufJSON. This revision pins the same aemi as above.
         .package(url: "https://github.com/g-cqd/AemiJSON.git", revision: "2bb8507e079f552bfd893d5cdf487aab98e86a78"),
         // For `@ProtoMessage` only. The same wide range as AemiJSON, so a consumer of both resolves one swift-syntax.
@@ -58,7 +60,8 @@ let package = Package(
                 .product(name: "AemiKernel", package: "aemi"),
                 .product(name: "AemiKernels", package: "aemi")
             ],
-            swiftSettings: kernelSettings),
+            swiftSettings: kernelSettings
+        ),
         // The `@ProtoMessage` compiler plugin. It reads syntax and writes source; it links nothing into the library.
         .macro(
             name: "AemiProtobufMacros",
@@ -68,21 +71,24 @@ let package = Package(
                 .product(name: "SwiftDiagnostics", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax")
             ],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         .target(
             name: "AemiProtobuf",
             dependencies: [
                 "AemiProtobufCore", "AemiProtobufMacros",
                 .product(name: "AemiKernel", package: "aemi")
             ],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         .target(
             name: "AemiProtobufSchema",
             dependencies: [
                 "AemiProtobufCore",
                 .product(name: "AemiKernel", package: "aemi")
             ],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         .target(
             name: "AemiProtobufJSON",
             dependencies: [
@@ -90,48 +96,60 @@ let package = Package(
                 "AemiProtobufSchema",
                 .product(name: "AemiJSONCore", package: "AemiJSON")
             ],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         .target(
             name: "AemiProtobufGenerator",
             dependencies: ["AemiProtobufSchema", "AemiProtobufCore"],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         .executableTarget(
             name: "ProtocGenAemi",
             dependencies: ["AemiProtobufGenerator"],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         .executableTarget(
             name: "aemi-proto-check",
             dependencies: ["AemiProtobufSchema"],
             path: "Sources/AemiProtoCheck",
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         .plugin(
             name: "ProtobufCheck",
             capability: .command(
                 intent: .custom(
-                    verb: "protobuf-check", description: "Lint a descriptor set, or compare two for breaking changes")),
-            dependencies: ["aemi-proto-check"]),
+                    verb: "protobuf-check",
+                    description: "Lint a descriptor set, or compare two for breaking changes"
+                )
+            ),
+            dependencies: ["aemi-proto-check"]
+        ),
         .testTarget(
             name: "AemiProtobufGeneratorTests",
             dependencies: ["AemiProtobufGenerator", "AemiProtobufSchema"],
             resources: [.copy("Resources")],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         // What the generator writes for the test protos, compiled and checked against protoc's bytes.
         .testTarget(
             name: "AemiProtobufGeneratedTests",
             dependencies: ["AemiProtobuf"],
             resources: [.copy("Resources")],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         // The wire core's behaviour. `swift-mutation-testing` runs this target only (.swift-mutation-testing.yml).
         .testTarget(
             name: "AemiProtobufCoreTests",
             dependencies: ["AemiProtobufCore"],
             resources: [.copy("Resources")],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         .testTarget(
             name: "AemiProtobufTests",
             dependencies: ["AemiProtobuf", "AemiProtobufCore", "AemiProtobufSchema"],
             resources: [.copy("Resources")],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         .testTarget(
             name: "AemiProtobufMacrosTests",
             dependencies: [
@@ -139,17 +157,20 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax")
             ],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         .testTarget(
             name: "AemiProtobufJSONTests",
             dependencies: ["AemiProtobufJSON", "AemiProtobufSchema", "AemiProtobufCore"],
             resources: [.copy("Resources")],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         .testTarget(
             name: "AemiProtobufSchemaTests",
             dependencies: ["AemiProtobufSchema", "AemiProtobufCore"],
             resources: [.copy("Resources")],
-            swiftSettings: strictSettings),
+            swiftSettings: strictSettings
+        ),
         // The repository's own gates: structure, recursion, documents and hygiene. They read the working tree and run git, so they
         // are kept out of the target that is copied to a sandbox for mutation testing.
         .testTarget(name: "AemiProtobufRepositoryTests", swiftSettings: strictSettings)
@@ -171,7 +192,9 @@ if isDev {
             ],
             path: "Benchmarks/AemiProtobufSuite",
             swiftSettings: strictSettings,
-            plugins: [.plugin(name: "BenchmarkPlugin", package: "benchmark")]))
+            plugins: [.plugin(name: "BenchmarkPlugin", package: "benchmark")]
+        )
+    )
 }
 
 // The libFuzzer target (roadmap 0013), gated as AemiJSON's is: `-sanitize=fuzzer` is a Linux capability of the toolchain, and
@@ -182,7 +205,9 @@ if Context.environment["AEMIPROTOBUF_FUZZ"] != nil {
             name: "AemiProtobufFuzz",
             dependencies: ["AemiProtobuf", "AemiProtobufCore", "AemiProtobufSchema"],
             swiftSettings: strictSettings + [.unsafeFlags(["-parse-as-library", "-sanitize=fuzzer"])],
-            linkerSettings: [.unsafeFlags(["-sanitize=fuzzer"])]))
+            linkerSettings: [.unsafeFlags(["-sanitize=fuzzer"])]
+        )
+    )
     package.products.append(.executable(name: "AemiProtobufFuzz", targets: ["AemiProtobufFuzz"]))
 }
 
@@ -194,11 +219,16 @@ if Context.environment["AEMIPROTOBUF_NIO"] != nil {
     package.products.append(.library(name: "AemiProtobufNIO", targets: ["AemiProtobufNIO"]))
     package.targets.append(
         .target(
-            name: "AemiProtobufNIO", dependencies: ["AemiProtobuf", "AemiProtobufCore", nioCore],
-            swiftSettings: strictSettings))
+            name: "AemiProtobufNIO",
+            dependencies: ["AemiProtobuf", "AemiProtobufCore", nioCore],
+            swiftSettings: strictSettings
+        )
+    )
     package.targets.append(
         .testTarget(
             name: "AemiProtobufNIOTests",
             dependencies: ["AemiProtobufNIO", nioCore, .product(name: "NIOEmbedded", package: "swift-nio")],
-            swiftSettings: strictSettings))
+            swiftSettings: strictSettings
+        )
+    )
 }

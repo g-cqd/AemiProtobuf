@@ -9,5 +9,8 @@ struct GroupHolder: Equatable {
 
     /// What `Resources/groups.bin` holds.
     static let sample = GroupHolder(
-        after: 7, data: GroupData(groupInt32: -1, groupUint32: 3), items: [GroupItem(value: 1), GroupItem()])
+        after: 7,
+        data: GroupData(groupInt32: -1, groupUint32: 3),
+        items: [GroupItem(value: 1), GroupItem()]
+    )
 }

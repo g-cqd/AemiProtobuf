@@ -89,7 +89,12 @@ struct ProtoTokenizer {
         if byte == UInt8(ascii: "\"") || byte == UInt8(ascii: "'") {
             let bytes = try string(quote: byte)
             return ProtoToken(
-                kind: .string, text: text(from: start), bytes: bytes, line: startLine, column: startColumn)
+                kind: .string,
+                text: text(from: start),
+                bytes: bytes,
+                line: startLine,
+                column: startColumn
+            )
         }
         guard byte < 0x80, byte > 0x20 else { throw error("unexpected character") }
         advance()

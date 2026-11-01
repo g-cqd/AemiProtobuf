@@ -20,10 +20,19 @@ struct UserRecord {
         (0 ..< count)
             .map { i in
                 UserRecord(
-                    id: Int64(i) * 7919 + 1, name: "user-\(i)-name", email: "user\(i)@example.com", active: i % 2 == 0,
-                    score: Double(i) * 0.25 + 0.5, tags: ["alpha", "beta\(i % 10)", "gamma"],
-                    samples: (0 ..< 8).map { Int32($0 * 37 - 5 + i) }, street: "\(i) Main Street", city: "Springfield",
-                    zip: Int32(10_000 + i % 9_000), delta: Int32(i % 50) - 25, stamp: UInt64(1_700_000_000 + i))
+                    id: Int64(i) * 7919 + 1,
+                    name: "user-\(i)-name",
+                    email: "user\(i)@example.com",
+                    active: i % 2 == 0,
+                    score: Double(i) * 0.25 + 0.5,
+                    tags: ["alpha", "beta\(i % 10)", "gamma"],
+                    samples: (0 ..< 8).map { Int32($0 * 37 - 5 + i) },
+                    street: "\(i) Main Street",
+                    city: "Springfield",
+                    zip: Int32(10_000 + i % 9_000),
+                    delta: Int32(i % 50) - 25,
+                    stamp: UInt64(1_700_000_000 + i)
+                )
             }
     }
 

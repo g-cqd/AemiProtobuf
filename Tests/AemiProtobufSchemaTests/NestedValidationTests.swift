@@ -13,7 +13,8 @@ struct NestedValidationTests {
 
     @Test func `the bytes protoc wrote for a nested message have no findings at any depth`() throws {
         #expect(
-            WireValidator().validate(bytes: try resource("nested", "bin"), against: "p.q.Outer", in: try set()).isEmpty)
+            WireValidator().validate(bytes: try resource("nested", "bin"), against: "p.q.Outer", in: try set()).isEmpty
+        )
     }
 
     @Test func `a finding in a nested message carries the path of fields to it`() throws {
@@ -64,17 +65,23 @@ struct NestedValidationTests {
 
     @Test func `type names written relative resolve from the innermost scope outward`() throws {
         let file = FileDescriptor(
-            name: "r.proto", package: "p",
+            name: "r.proto",
+            package: "p",
             messages: [
                 MessageDescriptor(name: "Leaf", fields: [FieldDescriptor(name: "s", number: 1, type: .string)]),
                 MessageDescriptor(
-                    name: "Outer", fields: [FieldDescriptor(name: "a", number: 1, type: .message, typeName: "Leaf")]),
+                    name: "Outer",
+                    fields: [FieldDescriptor(name: "a", number: 1, type: .message, typeName: "Leaf")]
+                ),
                 MessageDescriptor(
-                    name: "Holder", fields: [FieldDescriptor(name: "h", number: 1, type: .message, typeName: "Inner")],
+                    name: "Holder",
+                    fields: [FieldDescriptor(name: "h", number: 1, type: .message, typeName: "Inner")],
                     nestedMessages: [
                         MessageDescriptor(name: "Inner", fields: [FieldDescriptor(name: "n", number: 1, type: .int32)])
-                    ])
-            ])
+                    ]
+                )
+            ]
+        )
         let set = FileDescriptorSet(files: [file])
         let index = SchemaIndex(set)
         #expect(index.resolve("Leaf", in: "p.Outer") == "p.Leaf")
@@ -92,19 +99,25 @@ struct NestedValidationTests {
         #expect(
             WireValidator().validate(bytes: [], against: "p.q.Nope", in: try set()) == [
                 WireFinding(path: "", error: .unknownMessage("p.q.Nope"))
-            ])
+            ]
+        )
         var broken = try set()
         broken.files[0].messages[2].fields[1].typeName = ".p.q.Missing"
         let findings = WireValidator()
             .validate(
-                bytes: [0x12, 0x00], against: "p.q.Outer", in: broken)
+                bytes: [0x12, 0x00],
+                against: "p.q.Outer",
+                in: broken
+            )
         #expect(findings == [WireFinding(path: "inner", error: .unresolvedType(field: 2, typeName: ".p.q.Missing"))])
     }
 
     @Test func `nesting beyond the depth limit is a finding and the stack is never used for it`() {
         let depth = 2_000
         let message = MessageDescriptor(
-            name: "Node", fields: [FieldDescriptor(name: "next", number: 1, type: .message, typeName: ".Node")])
+            name: "Node",
+            fields: [FieldDescriptor(name: "next", number: 1, type: .message, typeName: ".Node")]
+        )
         let set = FileDescriptorSet(files: [FileDescriptor(name: "n.proto", messages: [message])])
         var bytes: [UInt8] = []
         for _ in 0 ..< depth {
@@ -137,13 +150,21 @@ struct NestedValidationTests {
             name: "q.proto",
             messages: [
                 MessageDescriptor(
-                    name: "Inner", fields: [FieldDescriptor(name: "id", number: 1, label: .required, type: .int32)]),
+                    name: "Inner",
+                    fields: [FieldDescriptor(name: "id", number: 1, label: .required, type: .int32)]
+                ),
                 MessageDescriptor(
-                    name: "Outer", fields: [FieldDescriptor(name: "i", number: 1, type: .message, typeName: "Inner")])
-            ])
+                    name: "Outer",
+                    fields: [FieldDescriptor(name: "i", number: 1, type: .message, typeName: "Inner")]
+                )
+            ]
+        )
         let findings = WireValidator()
             .validate(
-                bytes: [0x0A, 0x00], against: "Outer", in: FileDescriptorSet(files: [file]))
+                bytes: [0x0A, 0x00],
+                against: "Outer",
+                in: FileDescriptorSet(files: [file])
+            )
         #expect(findings == [WireFinding(path: "i", error: .requiredFieldMissing(field: 1, name: "id"))])
     }
 }

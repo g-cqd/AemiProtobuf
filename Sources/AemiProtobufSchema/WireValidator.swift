@@ -29,7 +29,13 @@ public struct WireValidator: Sendable {
     /// - Complexity: O(bytes + descriptor fields) time, O(descriptor fields + maxFindings) space, plus the largest packed payload.
     public func validate(bytes: [UInt8], against descriptor: MessageDescriptor) -> [WireValidationError] {
         let check = checkMessage(
-            bytes, 0 ..< bytes.count, descriptor, depth: 0, budget: maxFindings, collectNested: false)
+            bytes,
+            0 ..< bytes.count,
+            descriptor,
+            depth: 0,
+            budget: maxFindings,
+            collectNested: false
+        )
         return check.stopped ? check.errors + [.findingLimitReached] : check.errors
     }
 

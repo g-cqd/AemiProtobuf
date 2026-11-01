@@ -15,7 +15,8 @@ import Testing
 
     @Test func `every generated message gives protoc's bytes, from text and from binary`() throws {
         let url = try #require(
-            Bundle.module.url(forResource: "cases", withExtension: "json", subdirectory: "Resources/differential"))
+            Bundle.module.url(forResource: "cases", withExtension: "json", subdirectory: "Resources/differential")
+        )
         let cases = try JSONDecoder().decode([Case].self, from: Data(contentsOf: url))
         #expect(cases.count == 120)
         let schema = DynamicMessageCorpusTests.schema

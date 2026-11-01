@@ -15,6 +15,9 @@ struct Maps: Equatable {
     static let sample = Maps(
         names: [2: "two", -1: "minus", 0: ""],
         entries: ["b": MapEntryValue(label: "B", count: 2), "a": MapEntryValue()],
-        shades: [-5: .light, 3: .dark], flags: [true: 1.5, false: 0], blobs: [7: Data([1, 255])],
-        counts: ["é": 1, "z": -2])
+        shades: [-5: .light, 3: .dark],
+        flags: [true: 1.5, false: 0],
+        blobs: [7: Data([1, 255])],
+        counts: ["é": 1, "z": -2]
+    )
 }

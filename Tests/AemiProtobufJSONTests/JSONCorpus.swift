@@ -12,7 +12,8 @@ enum JSONCorpus {
 
     static func cases() throws -> [Case] {
         let url = try #require(
-            Bundle.module.url(forResource: "dynamic-cases", withExtension: "json", subdirectory: "Resources"))
+            Bundle.module.url(forResource: "dynamic-cases", withExtension: "json", subdirectory: "Resources")
+        )
         return try JSONDecoder().decode([Case].self, from: Data(contentsOf: url))
     }
 

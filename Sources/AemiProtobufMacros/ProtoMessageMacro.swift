@@ -42,7 +42,8 @@ struct ProtoMessageMacro: ExtensionMacro, MemberMacro {
             ProtoFieldParser.error(
                 node,
                 "'unknownFields' is the member @ProtoMessage adds; rename the property or use @ProtoMessage(unknownFields: .discard)",
-                in: context)
+                in: context
+            )
             return []
         }
         guard let fields = ProtoFieldParser.fields(of: decl, in: context) else { return [] }
@@ -57,9 +58,11 @@ struct ProtoMessageMacro: ExtensionMacro, MemberMacro {
         members += ProtoDefinitionCodegen.message(decl.name.text, fields).map { access + $0 }
         return [
             try ProtoExtension.make(
-                type, inheritance: decl.inheritanceClause,
+                type,
+                inheritance: decl.inheritanceClause,
                 wanted: ["AemiProtoFastEncodable", "AemiProtoFastDecodable", "Codable", "AemiProtoDefined"],
-                members: members)
+                members: members
+            )
         ]
     }
 

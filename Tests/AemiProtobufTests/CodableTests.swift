@@ -6,8 +6,14 @@ import Testing
 struct CodableTests {
     @Test func `generic Codable struct encodes and decodes round-trip with integer CodingKeys`() throws {
         let person = CodablePerson(
-            id: 42, name: "Alice", email: "alice@example.com",
-            active: true, score: 99.5, tags: ["admin", "staff"], age: 30)
+            id: 42,
+            name: "Alice",
+            email: "alice@example.com",
+            active: true,
+            score: 99.5,
+            tags: ["admin", "staff"],
+            age: 30
+        )
 
         let encoder = ProtobufEncoder()
         let decoder = ProtobufDecoder()
@@ -21,8 +27,14 @@ struct CodableTests {
 
     @Test func `absent optional decodes as nil`() throws {
         let person = CodablePerson(
-            id: 1, name: "Bob", email: "bob@example.com",
-            active: false, score: 12.0, tags: [], age: nil)
+            id: 1,
+            name: "Bob",
+            email: "bob@example.com",
+            active: false,
+            score: 12.0,
+            tags: [],
+            age: nil
+        )
 
         let encoder = ProtobufEncoder()
         let decoder = ProtobufDecoder()

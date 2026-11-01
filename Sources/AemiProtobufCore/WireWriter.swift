@@ -87,14 +87,17 @@ public struct WireWriter {
     ///   the body exceeds `limits.maxMessageBytes`, or whatever `body` throws. On any error the writer is unchanged.
     /// - Complexity: O(body bytes) at worst, from the shift.
     public mutating func appendMessage(
-        field: FieldNumber, _ body: (inout WireWriter) throws(WireError) -> Void
+        field: FieldNumber,
+        _ body: (inout WireWriter) throws(WireError) -> Void
     ) throws(WireError) {
         try appendMessage(field: field, keepingEmpty: true, body)
     }
 
     /// The tag, the body, then the length; an empty body is removed with its tag unless `keepingEmpty`.
     private mutating func appendMessage(
-        field: FieldNumber, keepingEmpty: Bool, _ body: (inout WireWriter) throws(WireError) -> Void
+        field: FieldNumber,
+        keepingEmpty: Bool,
+        _ body: (inout WireWriter) throws(WireError) -> Void
     ) throws(WireError) {
         let mark = try beginMessage(field: field)
         do {
@@ -169,7 +172,8 @@ extension WireWriter {
     /// Writes a nested message as ``appendMessage(field:_:)`` does, unless `body` writes nothing: then nothing is written.
     /// For a non-optional message field, whose empty value is its default and so is left out.
     public mutating func appendNonEmptyMessage(
-        field: FieldNumber, _ body: (inout WireWriter) throws(WireError) -> Void
+        field: FieldNumber,
+        _ body: (inout WireWriter) throws(WireError) -> Void
     ) throws(WireError) {
         try appendMessage(field: field, keepingEmpty: false, body)
     }

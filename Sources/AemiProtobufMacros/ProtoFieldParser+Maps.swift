@@ -9,7 +9,10 @@ extension ProtoFieldParser {
     ]
 
     static func mapField(
-        _ dictionary: DictionaryTypeSyntax, _ name: String, _ arguments: Arguments, _ node: some SyntaxProtocol,
+        _ dictionary: DictionaryTypeSyntax,
+        _ name: String,
+        _ arguments: Arguments,
+        _ node: some SyntaxProtocol,
         in context: some MacroExpansionContext
     ) -> ProtoFieldSpec? {
         guard arguments.kind == nil else {
@@ -34,7 +37,12 @@ extension ProtoFieldParser {
             return nil
         }
         return ProtoFieldSpec(
-            name: name, number: arguments.number, kind: valueKind, shape: .map, swiftType: valueType,
-            key: (keyKind, keyType))
+            name: name,
+            number: arguments.number,
+            kind: valueKind,
+            shape: .map,
+            swiftType: valueType,
+            key: (keyKind, keyType)
+        )
     }
 }

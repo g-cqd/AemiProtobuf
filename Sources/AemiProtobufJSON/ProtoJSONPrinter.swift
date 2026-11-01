@@ -80,8 +80,10 @@ struct ProtoJSONPrinter {
             if let entry = field.mapEntry { return .map([:], entry) }
             if field.isRepeated { return .value(.list([]), field.type, typeName: field.typeName) }
             return .value(
-                schema.defaultValue(of: field.descriptor, typeName: field.typeName), field.type,
-                typeName: field.typeName)
+                schema.defaultValue(of: field.descriptor, typeName: field.typeName),
+                field.type,
+                typeName: field.typeName
+            )
         }
         if let entry = field.mapEntry {
             guard case .map(let map) = value else {

@@ -21,7 +21,9 @@ import Testing
             optional_nested_message < a: 7 >
             repeated_int32: [1, 2] repeated_int32: 3
             map_string_string { key: "k" value: "v" }
-            """, as: proto3)
+            """,
+            as: proto3
+        )
         #expect(message.fields[1] == .int32(-16) && message.fields[4] == .uint64(.max))
         #expect(message.fields[11] == .float(1.5) && message.fields[12] == .double(-.infinity))
         #expect(message.fields[13] == .bool(true) && message.fields[14] == .string("abé"))
@@ -35,7 +37,9 @@ import Testing
             """
             Data { group_int32: 1 }
             [protobuf_test_messages.proto2.extension_int32]: 5
-            """, as: proto2)
+            """,
+            as: proto2
+        )
         guard case .message(let data)? = message.fields[201] else {
             Issue.record("\(message)")
             return
@@ -44,7 +48,8 @@ import Testing
         #expect(message.fields.count == 2)
         let any = try format.decode(
             "optional_any { [type.googleapis.com/protobuf_test_messages.proto3.TestAllTypesProto3] { optional_int32: 9 } }",
-            as: proto3)
+            as: proto3
+        )
         guard case .message(let packed)? = any.fields[305] else {
             Issue.record("\(any)")
             return
@@ -56,12 +61,15 @@ import Testing
     @Test func `what is written reads back to the same message, for every case of the dynamic corpus`() throws {
         for item in try DynamicMessageCorpusTests.cases() {
             let message = try DynamicMessageCorpusTests.schema.decode(
-                DynamicMessageCorpusTests.bytes(item.input), as: item.type)
+                DynamicMessageCorpusTests.bytes(item.input),
+                as: item.type
+            )
             let text = format.encode(message)
             let again = try format.decode(text, as: item.type)
             #expect(
                 try DynamicMessageCorpusTests.schema.encode(again) == DynamicMessageCorpusTests.bytes(item.expected),
-                "\(item.name)\n\(text)")
+                "\(item.name)\n\(text)"
+            )
         }
     }
 

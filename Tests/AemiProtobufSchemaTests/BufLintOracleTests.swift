@@ -20,7 +20,9 @@ import Testing
 
     @Test func `a reserved range that holds a field is a finding (protoc refuses it too)`() {
         let message = MessageDescriptor(
-            name: "M", fields: [FieldDescriptor(name: "a", number: 3)])
+            name: "M",
+            fields: [FieldDescriptor(name: "a", number: 3)]
+        )
         var withReserved = message
         withReserved.reservedRanges = [DescriptorRange(start: 1, end: 5)]
         let set = FileDescriptorSet(files: [FileDescriptor(name: "m.proto", package: "p", messages: [withReserved])])

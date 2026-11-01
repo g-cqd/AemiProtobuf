@@ -21,7 +21,9 @@ public final class DynamicMessageType: Sendable {
         self.descriptor = descriptor
         self.fields = fields.sorted { $0.number < $1.number }
         positions = Dictionary(
-            self.fields.enumerated().map { ($0.element.number, $0.offset) }, uniquingKeysWith: { first, _ in first })
+            self.fields.enumerated().map { ($0.element.number, $0.offset) },
+            uniquingKeysWith: { first, _ in first }
+        )
         let bound = min((self.fields.last.map { Int($0.number) } ?? 0) + 1, 2_048)
         var dense = [Int](repeating: -1, count: bound)
         for (offset, field) in self.fields.enumerated() where Int(field.number) < bound && field.number > 0 {

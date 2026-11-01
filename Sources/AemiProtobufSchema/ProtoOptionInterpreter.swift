@@ -39,16 +39,28 @@ struct ProtoOptionInterpreter {
             }
             for position in file.messages[index].fields.indices {
                 file.messages[index].fields[position].descriptor.options = try encode(
-                    file.messages[index].fields[position].options, "FieldOptions", scope: scope, file: name)
+                    file.messages[index].fields[position].options,
+                    "FieldOptions",
+                    scope: scope,
+                    file: name
+                )
             }
             for position in file.messages[index].descriptor.oneofs.indices {
                 file.messages[index].descriptor.oneofs[position].options = try encode(
-                    file.messages[index].oneofOptions[position], "OneofOptions", scope: scope, file: name)
+                    file.messages[index].oneofOptions[position],
+                    "OneofOptions",
+                    scope: scope,
+                    file: name
+                )
             }
             let messageSet = file.messages[index].descriptor.messageSetWireFormat
             for position in file.messages[index].descriptor.extensionRanges.indices {
                 file.messages[index].descriptor.extensionRanges[position].options = try encode(
-                    file.messages[index].rangeOptions[position], "ExtensionRangeOptions", scope: scope, file: name)
+                    file.messages[index].rangeOptions[position],
+                    "ExtensionRangeOptions",
+                    scope: scope,
+                    file: name
+                )
                 if messageSet, file.messages[index].rangesToMax.contains(position) {
                     file.messages[index].descriptor.extensionRanges[position].end = Int32.max
                 }
@@ -57,24 +69,43 @@ struct ProtoOptionInterpreter {
         for index in file.enums.indices {
             let scope = file.scope(of: file.enums[index].parent)
             file.enums[index].descriptor.options = try encode(
-                file.enums[index].options, "EnumOptions", scope: scope, file: name)
+                file.enums[index].options,
+                "EnumOptions",
+                scope: scope,
+                file: name
+            )
             for position in file.enums[index].descriptor.values.indices {
                 file.enums[index].descriptor.values[position].options = try encode(
-                    file.enums[index].valueOptions[position], "EnumValueOptions", scope: scope, file: name)
+                    file.enums[index].valueOptions[position],
+                    "EnumValueOptions",
+                    scope: scope,
+                    file: name
+                )
             }
         }
         for index in file.extensions.indices {
             file.extensions[index].descriptor.options = try encode(
-                file.extensions[index].options, "FieldOptions", scope: file.scope(of: file.extensions[index].scope),
-                file: name)
+                file.extensions[index].options,
+                "FieldOptions",
+                scope: file.scope(of: file.extensions[index].scope),
+                file: name
+            )
         }
         for index in file.services.indices {
             let scope = file.services[index].fullName
             file.services[index].descriptor.options = try encode(
-                file.services[index].options, "ServiceOptions", scope: file.package, file: name)
+                file.services[index].options,
+                "ServiceOptions",
+                scope: file.package,
+                file: name
+            )
             for position in file.services[index].descriptor.methods.indices {
                 let options = try encode(
-                    file.services[index].methodOptions[position], "MethodOptions", scope: scope, file: name)
+                    file.services[index].methodOptions[position],
+                    "MethodOptions",
+                    scope: scope,
+                    file: name
+                )
                 let body = file.services[index].methodBodies.contains(position)
                 file.services[index].descriptor.methods[position].options = options ?? (body ? [] : nil)
             }
@@ -134,96 +165,5 @@ struct ProtoOptionInterpreter {
             }
         }
         return nodes[0].message
-    }
-
-    /// Sets one option: walks its name path down from the options message (creating the messages it passes through), sets or
-    /// appends the value at the end, and writes the messages back up.
-    private func apply(
-        _ option: ParsedOption, to root: inout DynamicMessage, _ rootType: DynamicMessageType, scope: String,
-        file: String
-    ) throws(ProtoCompileError) {
-        func fail(_ message: String) -> ProtoCompileError {
-            ProtoCompileError(file: file, line: option.line, column: option.column, message: message)
-        }
-        let written = option.name
-            .map { part -> String in
-                switch part {
-                    case .field(let name): name
-                    case .extension(let name): "(" + name + ")"
-                }
-            }
-            .joined(separator: ".")
-        var chain = [root]
-        var path: [DynamicField] = []
-        var type = rootType
-        for (position, part) in option.name.enumerated() {
-            let field: DynamicField?
-            switch part {
-                case .field(let name):
-                    field = type.field(named: name).flatMap { $0.isExtension || $0.name != name ? nil : $0 }
-                case .extension(let name):
-                    field = symbols.resolve(name, in: scope, accept: { $0 == .extension })
-                        .flatMap { type.field(named: "[" + $0 + "]") }
-            }
-            guard let field else { throw fail("Option \"\(written)\" unknown.") }
-            path.append(field)
-            guard position < option.name.count - 1 else { break }
-            guard field.type == .message || field.type == .group, !field.isRepeated,
-                let next = field.typeName.flatMap(schema.messageType(named:))
-            else { throw fail("Option \"\(written)\" is an atomic type, not a message.") }
-            let current = chain[chain.count - 1].fields[field.number]
-            if case .message(let existing)? = current {
-                chain.append(existing)
-            } else {
-                chain.append(DynamicMessage(typeName: next.name))
-            }
-            type = next
-        }
-        guard let leaf = path.last else { throw fail("Option name is empty.") }
-        let value = try value(option.value, for: leaf, scope: scope, fail: fail)
-        let last = chain.count - 1
-        if let entry = leaf.mapEntry, case .message(let pair) = value {
-            guard case .map(var map) = chain[last].fields[leaf.number] ?? .map([:]) else {
-                throw fail("Option \"\(written)\".")
-            }
-            map[pair.fields[1] ?? schema.defaultValue(of: entry.key, typeName: nil)] =
-                pair.fields[2] ?? schema.defaultValue(of: entry.value, typeName: entry.valueTypeName)
-            chain[last].fields[leaf.number] = .map(map)
-        } else if leaf.isRepeated {
-            guard case .list(var items) = chain[last].fields[leaf.number] ?? .list([]) else {
-                throw fail("Option \"\(written)\".")
-            }
-            items.append(value)
-            chain[last].fields[leaf.number] = .list(items)
-        } else {
-            guard chain[last].fields[leaf.number] == nil else { throw fail("Option \"\(written)\" was already set.") }
-            chain[last].fields[leaf.number] = value
-        }
-        for position in stride(from: last, to: 0, by: -1) {
-            chain[position - 1].fields[path[position - 1].number] = .message(chain[position])
-        }
-        root = chain[0]
-    }
-
-    private func value(
-        _ written: ProtoOptionValue, for field: DynamicField, scope: String, fail: (String) -> ProtoCompileError
-    ) throws(ProtoCompileError) -> DynamicValue {
-        if field.type == .message || field.type == .group {
-            guard case .aggregate(let tokens) = written, let type = field.typeName.flatMap(schema.messageType(named:))
-            else {
-                throw fail("Error while parsing option value for \"\(field.name)\": expected a message literal.")
-            }
-            let symbols = symbols
-            var parser = ProtoTextParser(
-                schema: schema, resolveExtension: { symbols.resolve($0, in: scope, accept: { $0 == .extension }) },
-                stream: ProtoTokenStream(tokens, file: ""))
-            return .message(try parser.parse(as: type))
-        }
-        do throws(ProtoValueError) {
-            return try ProtoValueConverter.convert(
-                written, to: field.type, enumeration: field.typeName.flatMap(schema.enumeration(named:)))
-        } catch {
-            throw fail("\(error.message) for option \"\(field.name)\".")
-        }
     }
 }

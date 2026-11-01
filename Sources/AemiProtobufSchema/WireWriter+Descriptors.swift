@@ -33,7 +33,9 @@ extension WireWriter {
     }
 
     mutating func appendMessages<D>(
-        _ number: FieldNumber, _ items: [D], _ encode: (D, inout WireWriter) throws(WireError) -> Void
+        _ number: FieldNumber,
+        _ items: [D],
+        _ encode: (D, inout WireWriter) throws(WireError) -> Void
     ) throws(WireError) {
         for item in items {
             try appendMessage(field: number) { w throws(WireError) in try encode(item, &w) }

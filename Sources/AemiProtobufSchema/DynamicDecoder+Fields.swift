@@ -39,7 +39,10 @@ extension DynamicDecoder {
     }
 
     private mutating func readScalar(
-        _ field: DynamicField, _ tag: FieldTag, from reader: inout WireReader, into node: Int
+        _ field: DynamicField,
+        _ tag: FieldTag,
+        from reader: inout WireReader,
+        into node: Int
     ) throws(WireError) {
         guard let value = try scalar(field, tag, from: &reader, into: node) else { return }
         if field.isRepeated {
@@ -52,7 +55,10 @@ extension DynamicDecoder {
 
     /// Reads one value of `field`; `nil` when it is a closed enumeration's unknown number, which is kept as an unknown field.
     private mutating func scalar(
-        _ field: DynamicField, _ tag: FieldTag, from reader: inout WireReader, into node: Int
+        _ field: DynamicField,
+        _ tag: FieldTag,
+        from reader: inout WireReader,
+        into node: Int
     ) throws(WireError) -> DynamicValue? {
         let value = try Self.scalar(field.type, from: &reader, validatingUTF8: field.validatesUTF8, bytes: bytes)
         if case .enumeration(let number) = value, let closed = field.closedEnumValues, !closed.contains(number) {
@@ -87,7 +93,10 @@ extension DynamicDecoder {
             return
         }
         nodes[node].children[number] = spawn(
-            field.typeName, Link(parent: node, field: number, slot: .single), ranges: [range])
+            field.typeName,
+            Link(parent: node, field: number, slot: .single),
+            ranges: [range]
+        )
     }
 
     /// Creates the node for a message of the type `typeName` names (a type the set lacks reads every field as unknown) and

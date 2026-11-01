@@ -35,6 +35,10 @@ public struct CodableProtoUser: Codable, Equatable {
         score = r.score
         tags = r.tags
         profile = CodableProtoProfile(
-            bio: r.bio, company: r.company, publicRepos: Int64(r.publicRepos), location: r.location)
+            bio: r.bio,
+            company: r.company,
+            publicRepos: Int64(r.publicRepos),
+            location: r.location
+        )
     }
 }

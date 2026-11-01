@@ -83,7 +83,11 @@ struct DynamicEncoder {
     }
 
     private mutating func writeElements(
-        _ items: [DynamicValue], _ field: DynamicField, _ tag: FieldNumber, top: Int, mismatch: DynamicMessageError
+        _ items: [DynamicValue],
+        _ field: DynamicField,
+        _ tag: FieldNumber,
+        top: Int,
+        mismatch: DynamicMessageError
     ) throws(DynamicMessageError) {
         if field.isPacked {
             frames[top].position += 1
@@ -114,8 +118,12 @@ struct DynamicEncoder {
 
     /// Writes the next entry of a map, by key. Both key and value are written, at their defaults too, as protoc does.
     private mutating func writeEntry(
-        of map: [DynamicValue: DynamicValue], _ field: DynamicField, _ entry: DynamicField.MapEntry, _ tag: FieldNumber,
-        top: Int, mismatch: DynamicMessageError
+        of map: [DynamicValue: DynamicValue],
+        _ field: DynamicField,
+        _ entry: DynamicField.MapEntry,
+        _ tag: FieldNumber,
+        top: Int,
+        mismatch: DynamicMessageError
     ) throws(DynamicMessageError) {
         if frames[top].element == 0 { frames[top].entries = map.sorted { DynamicValue.keyPrecedes($0.key, $1.key) } }
         let position = frames[top].element

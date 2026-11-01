@@ -15,7 +15,9 @@ enum ProtoChecks {
                 guard extendee.extensionRanges.contains(where: { number >= ($0.start ?? 0) && number < ($0.end ?? 0) })
                 else {
                     throw ProtoCompileError(
-                        file: file.name, line: field.line, column: field.column,
+                        file: file.name,
+                        line: field.line,
+                        column: field.column,
                         message:
                             "\"\(field.descriptor.extendee.dropFirst())\" does not declare \(number) as an extension number."
                     )
@@ -32,12 +34,14 @@ enum ProtoChecks {
             func fail(_ text: String) -> ProtoCompileError { error(file, field.line, field.column, text) }
             if let other = used[number] {
                 throw fail(
-                    "Field number \(number) has already been used in \"\(message.fullName)\" by field \"\(other)\".")
+                    "Field number \(number) has already been used in \"\(message.fullName)\" by field \"\(other)\"."
+                )
             }
             used[number] = field.descriptor.name
             if (19_000 ... 19_999).contains(number) {
                 throw fail(
-                    "Field numbers 19000 through 19999 are reserved for the protocol buffer library implementation.")
+                    "Field numbers 19000 through 19999 are reserved for the protocol buffer library implementation."
+                )
             }
             if message.descriptor.reservedRanges.contains(where: { number >= ($0.start ?? 0) && number < ($0.end ?? 0) }
             ) {

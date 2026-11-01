@@ -39,7 +39,8 @@ struct FrameDecoderTests {
         #expect(
             try frames([1, 0, 0, 0, 1, 9], format: .grpc, chunks: [0 ..< 6]) == [
                 Frame(isCompressed: true, payload: [9])
-            ])
+            ]
+        )
         for flag in [UInt8(2), 0x80, 0xFE, 0xFF] {
             var decoder = FrameDecoder(format: .grpc)
             decoder.push([flag, 0, 0, 0, 0])

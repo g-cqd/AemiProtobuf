@@ -6,7 +6,9 @@ extension ProtobufEncoder {
     /// - Throws: ``ProtobufEncodingError/unsupported(_:)`` for compression with varint-delimited framing, which has no flag to
     ///   say so; whatever encoding or the compression throws.
     public func encodeFrameToBytes<T: Encodable & AemiProtoFastEncodable>(
-        _ value: T, format: FrameFormat, compression: (any FrameCompression)? = nil
+        _ value: T,
+        format: FrameFormat,
+        compression: (any FrameCompression)? = nil
     ) throws -> [UInt8] {
         let payload = try encodeToBytes(value)
         guard let compression else { return FrameEncoder.frame(payload, format: format) }
@@ -17,7 +19,9 @@ extension ProtobufEncoder {
     }
 
     public func encodeFrame<T: Encodable & AemiProtoFastEncodable>(
-        _ value: T, format: FrameFormat, compression: (any FrameCompression)? = nil
+        _ value: T,
+        format: FrameFormat,
+        compression: (any FrameCompression)? = nil
     ) throws -> Data {
         Data(try encodeFrameToBytes(value, format: format, compression: compression))
     }

@@ -14,7 +14,7 @@ import AemiKernels
 public struct WireReader {
     let buffer: UnsafeRawBufferPointer
     /// Offset of the next unread byte. Always `<= end`.
-    public private(set) var offset: Int
+    public internal(set) var offset: Int
     /// Exclusive end of the bytes this reader may read. Always `<= buffer.count`.
     let end: Int
     let depth: Int
@@ -44,7 +44,9 @@ public struct WireReader {
     /// - Throws: ``WireError/messageTooLarge(limit:)`` if `bytes` is longer than `limits.maxMessageBytes`, or whatever
     ///   `body` throws.
     public static func withReader<R>(
-        over bytes: [UInt8], limits: WireLimits = .default, _ body: (inout WireReader) throws(WireError) -> R
+        over bytes: [UInt8],
+        limits: WireLimits = .default,
+        _ body: (inout WireReader) throws(WireError) -> R
     ) throws(WireError) -> R {
         // `Array.withUnsafeBytes` rethrows `any Error`, so the typed error travels out inside a `Result`.
         let result: Result<R, WireError> = bytes.withUnsafeBytes { raw in
@@ -59,7 +61,9 @@ public struct WireReader {
 
     /// Runs `body` with a reader over `span`. Same contract as the `[UInt8]` overload.
     public static func withReader<R>(
-        over span: RawSpan, limits: WireLimits = .default, _ body: (inout WireReader) throws(WireError) -> R
+        over span: RawSpan,
+        limits: WireLimits = .default,
+        _ body: (inout WireReader) throws(WireError) -> R
     ) throws(WireError) -> R {
         try span.withUnsafeBytes { (raw) throws(WireError) -> R in
             try unsafe run(over: raw, limits: limits, body)
@@ -69,7 +73,8 @@ public struct WireReader {
     /// Runs `body` with a reader over `raw`, for callers that already hold a pointer (`Data`, a network buffer).
     /// - Precondition: `raw` stays valid and unmodified until `body` returns.
     @unsafe public static func withReader<R>(
-        overUnsafeBytes raw: UnsafeRawBufferPointer, limits: WireLimits = .default,
+        overUnsafeBytes raw: UnsafeRawBufferPointer,
+        limits: WireLimits = .default,
         _ body: (inout WireReader) throws(WireError) -> R
     ) throws(WireError) -> R {
         try unsafe run(over: raw, limits: limits, body)
@@ -81,7 +86,10 @@ public struct WireReader {
     /// - Throws: ``WireError/depthExceeded(limit:at:)`` if `depth` exceeds `limits.maxDepth`,
     ///   ``WireError/messageTooLarge(limit:)`` if the range is longer than `limits.maxMessageBytes`, or whatever `body` throws.
     public static func withReader<R>(
-        over bytes: [UInt8], in range: Range<Int>, depth: Int, limits: WireLimits = .default,
+        over bytes: [UInt8],
+        in range: Range<Int>,
+        depth: Int,
+        limits: WireLimits = .default,
         _ body: (inout WireReader) throws(WireError) -> R
     ) throws(WireError) -> R {
         precondition(range.lowerBound >= 0 && range.upperBound <= bytes.count, "range is outside the buffer")
@@ -97,13 +105,21 @@ public struct WireReader {
     }
 
     private static func run<R>(
-        over raw: UnsafeRawBufferPointer, range: Range<Int>? = nil, depth: Int = 0, limits: WireLimits,
+        over raw: UnsafeRawBufferPointer,
+        range: Range<Int>? = nil,
+        depth: Int = 0,
+        limits: WireLimits,
         _ body: (inout WireReader) throws(WireError) -> R
     ) throws(WireError) -> R {
         let span = range ?? 0 ..< raw.count
         guard span.count <= limits.maxMessageBytes else { throw .messageTooLarge(limit: limits.maxMessageBytes) }
         var reader = unsafe WireReader(
-            buffer: raw, offset: span.lowerBound, end: span.upperBound, depth: depth, limits: limits)
+            buffer: raw,
+            offset: span.lowerBound,
+            end: span.upperBound,
+            depth: depth,
+            limits: limits
+        )
         return try body(&reader)
     }
 
@@ -190,54 +206,5 @@ public struct WireReader {
     /// Reads a `float`.
     @inlinable public mutating func readFloat() throws(WireError) -> Float {
         Float(bitPattern: try readFixed32())
-    }
-
-    // MARK: Length-delimited
-
-    /// Reads a length prefix and claims the payload that follows it.
-    /// - Returns: the payload's range in the buffer. `offset` is left after the payload.
-    mutating func takePayload() throws(WireError) -> Range<Int> {
-        let start = offset
-        let declared = try readVarint()
-        let available = end - offset
-        guard declared <= UInt64(available) else {
-            throw .lengthOutOfBounds(declared: declared, remaining: available, at: start)
-        }
-        let lower = offset
-        offset += Int(declared)  // `declared <= available`, so it fits Int
-        return lower ..< offset
-    }
-
-    /// Reads a `bytes` field.
-    public mutating func readBytes() throws(WireError) -> [UInt8] {
-        let range = try takePayload()
-        return unsafe Array(UnsafeRawBufferPointer(rebasing: buffer[range]))
-    }
-
-    /// Reads a `string` field, validating UTF-8 (RFC 3629) before it makes the `String`.
-    /// - Throws: ``WireError/invalidUTF8(at:)`` with the offset of the first byte of the string.
-    public mutating func readString() throws(WireError) -> String {
-        let range = try takePayload()
-        guard !range.isEmpty else { return "" }
-        let payload = unsafe UnsafeRawBufferPointer(rebasing: buffer[range])
-        let bytes = unsafe payload.bindMemory(to: UInt8.self)
-        guard let base = bytes.baseAddress,
-            unsafe AemiKernels.firstInvalidUTF8(base: base, count: bytes.count) == bytes.count
-        else { throw .invalidUTF8(at: range.lowerBound) }
-        return unsafe String(decoding: bytes, as: UTF8.self)  // validated above, so nothing is repaired
-    }
-
-    /// Reads a nested message. `body` gets a reader limited to the message's bytes, one level deeper. The caller's reader
-    /// continues after the message whether or not `body` read all of it.
-    /// - Throws: ``WireError/depthExceeded(limit:at:)`` past `limits.maxDepth`, ``WireError/lengthOutOfBounds(declared:remaining:at:)``,
-    ///   or whatever `body` throws.
-    public mutating func readMessage<R>(
-        _ body: (inout WireReader) throws(WireError) -> R
-    ) throws(WireError) -> R {
-        guard depth < limits.maxDepth else { throw .depthExceeded(limit: limits.maxDepth, at: offset) }
-        let range = try takePayload()
-        var nested = unsafe WireReader(
-            buffer: buffer, offset: range.lowerBound, end: range.upperBound, depth: depth + 1, limits: limits)
-        return try body(&nested)
     }
 }

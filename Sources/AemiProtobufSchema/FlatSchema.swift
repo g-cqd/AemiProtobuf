@@ -25,7 +25,8 @@ struct FlatSchema {
             pending.append(
                 contentsOf: file.messages.map {
                     Pending(name: scope + $0.name, message: $0, file: file, features: features)
-                })
+                }
+            )
             for e in file.enums { add(e, named: scope + e.name, in: file) }
             register(file.extensions, scope: file.package, features: features, declaring: resolvingFeatures)
         }
@@ -37,7 +38,8 @@ struct FlatSchema {
             pending.append(
                 contentsOf: message.nestedMessages.map {
                     Pending(name: name + "." + $0.name, message: $0, file: file, features: features)
-                })
+                }
+            )
             for e in message.nestedEnums { add(e, named: name + "." + e.name, in: file) }
             register(message.extensions, scope: name, features: features, declaring: resolvingFeatures)
         }
@@ -45,7 +47,10 @@ struct FlatSchema {
 
     /// Files each extension under the message it extends, and with `declaring`, with its scope.
     private mutating func register(
-        _ fields: [FieldDescriptor], scope: String, features: ResolvedFeatures, declaring: Bool
+        _ fields: [FieldDescriptor],
+        scope: String,
+        features: ResolvedFeatures,
+        declaring: Bool
     ) {
         for field in fields {
             let extendee = String(field.extendee.drop { $0 == "." })

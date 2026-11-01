@@ -9,10 +9,12 @@ let benchmarks: @Sendable () -> Void = {
     // moves with the machine (a median held 220 to 297 µs across two runs here), so it is reported and never gated.
     let gate = ProcessInfo.processInfo.environment["AEMIPROTOBUF_BENCH_GATE"] != nil
     Benchmark.defaultConfiguration = .init(
-        metrics: gate ? [.mallocCountTotal] : [.wallClock, .mallocCountTotal, .throughput], scalingFactor: .one,
+        metrics: gate ? [.mallocCountTotal] : [.wallClock, .mallocCountTotal, .throughput],
+        scalingFactor: .one,
         maxDuration: .seconds(3),
         maxIterations: 10_000,
-        thresholds: [.mallocCountTotal: .strict])
+        thresholds: [.mallocCountTotal: .strict]
+    )
 
     SchemaBenchmarks.register()
     registerCoderBenchmarks()

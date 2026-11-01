@@ -37,7 +37,8 @@ struct WireGroupSkipExhaustiveTests {
         #expect(disagreements.prefix(5).joined(separator: "\n") == "", "\(disagreements.count) disagreements")
         #expect(
             accepted > 1000 && refused > 1000,
-            "the corpus must exercise both outcomes: \(accepted) accepted, \(refused) refused")
+            "the corpus must exercise both outcomes: \(accepted) accepted, \(refused) refused"
+        )
     }
 
     @Test func `the oracle itself accepts and refuses the cases a person can check`() {

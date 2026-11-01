@@ -50,8 +50,11 @@ extension ProtoJSONParser {
             guard map[.string(key)] == nil else { throw .invalid("\(key) appears twice", path: "") }
             map[.string(key)] = .message(DynamicMessage(typeName: WellKnownType.valueType))
             try spawn(
-                WellKnownType.valueType, item, Link(parent: node, field: 1, slot: .place(.mapValue(.string(key)))),
-                name: key)
+                WellKnownType.valueType,
+                item,
+                Link(parent: node, field: 1, slot: .place(.mapValue(.string(key)))),
+                name: key
+            )
         }
         nodes[node].fields.maps[1] = map
     }
@@ -70,12 +73,18 @@ extension ProtoJSONParser {
             case .bool(let value): nodes[node].fields.values[4] = .bool(value)
             case .object:
                 try spawn(
-                    "google.protobuf.Struct", json, Link(parent: node, field: 5, slot: .place(.single)),
-                    name: "structValue")
+                    "google.protobuf.Struct",
+                    json,
+                    Link(parent: node, field: 5, slot: .place(.single)),
+                    name: "structValue"
+                )
             case .array:
                 try spawn(
-                    "google.protobuf.ListValue", json, Link(parent: node, field: 6, slot: .place(.single)),
-                    name: "listValue")
+                    "google.protobuf.ListValue",
+                    json,
+                    Link(parent: node, field: 6, slot: .place(.single)),
+                    name: "listValue"
+                )
         }
     }
 
@@ -84,8 +93,11 @@ extension ProtoJSONParser {
         for item in JSONShape.elements(of: json) {
             values.append(.message(DynamicMessage(typeName: WellKnownType.valueType)))
             try spawn(
-                WellKnownType.valueType, item, Link(parent: node, field: 1, slot: .place(.element(values.count - 1))),
-                name: "values")
+                WellKnownType.valueType,
+                item,
+                Link(parent: node, field: 1, slot: .place(.element(values.count - 1))),
+                name: "values"
+            )
         }
         nodes[node].fields.lists[1] = values
     }

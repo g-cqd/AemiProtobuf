@@ -28,12 +28,16 @@ struct SchemaComparatorTests {
         let f1 = FileDescriptor(
             messages: [
                 MessageDescriptor(
-                    name: "Msg", fields: [FieldDescriptor(name: "id", number: 1, label: .optional, type: .int32)])
+                    name: "Msg",
+                    fields: [FieldDescriptor(name: "id", number: 1, label: .optional, type: .int32)]
+                )
             ])
         let f2 = FileDescriptor(
             messages: [
                 MessageDescriptor(
-                    name: "Msg", fields: [FieldDescriptor(name: "id", number: 1, label: .optional, type: .int64)])
+                    name: "Msg",
+                    fields: [FieldDescriptor(name: "id", number: 1, label: .optional, type: .int64)]
+                )
             ])
 
         let comp = SchemaComparator()
@@ -45,12 +49,16 @@ struct SchemaComparatorTests {
         let f1 = FileDescriptor(
             messages: [
                 MessageDescriptor(
-                    name: "Msg", fields: [FieldDescriptor(name: "id", number: 1, label: .optional, type: .int32)])
+                    name: "Msg",
+                    fields: [FieldDescriptor(name: "id", number: 1, label: .optional, type: .int32)]
+                )
             ])
         let f2 = FileDescriptor(
             messages: [
                 MessageDescriptor(
-                    name: "Msg", fields: [FieldDescriptor(name: "id", number: 1, label: .optional, type: .string)])
+                    name: "Msg",
+                    fields: [FieldDescriptor(name: "id", number: 1, label: .optional, type: .string)]
+                )
             ])
 
         let comp = SchemaComparator()
@@ -58,19 +66,24 @@ struct SchemaComparatorTests {
         #expect(changes.count == 1)
         #expect(
             changes.first?.kind
-                == .fieldTypeIncompatible(message: "Msg", field: "id", oldType: .int32, newType: .string))
+                == .fieldTypeIncompatible(message: "Msg", field: "id", oldType: .int32, newType: .string)
+        )
     }
 
     @Test func `renumbering a field is reported as breaking`() {
         let f1 = FileDescriptor(
             messages: [
                 MessageDescriptor(
-                    name: "Msg", fields: [FieldDescriptor(name: "id", number: 1, label: .optional, type: .int32)])
+                    name: "Msg",
+                    fields: [FieldDescriptor(name: "id", number: 1, label: .optional, type: .int32)]
+                )
             ])
         let f2 = FileDescriptor(
             messages: [
                 MessageDescriptor(
-                    name: "Msg", fields: [FieldDescriptor(name: "id", number: 2, label: .optional, type: .int32)])
+                    name: "Msg",
+                    fields: [FieldDescriptor(name: "id", number: 2, label: .optional, type: .int32)]
+                )
             ])
 
         let comp = SchemaComparator()

@@ -34,11 +34,32 @@ struct Kinds: Equatable {
 
     /// The value `Resources/kinds.txt` describes.
     static let sample = Kinds(
-        aInt32: -5, aInt64: -9_000_000_000, aUint32: 4_000_000_000, aUint64: 18_000_000_000_000_000_000, aSint32: -300,
-        aSint64: -5_000_000_000, aFixed32: 7, aFixed64: 8_000_000_000, aSfixed32: -9, aSfixed64: -10_000_000_000,
-        aBool: true, aFloat: 1.5, aDouble: -2.25, aString: "héllo", aBytes: Data([0, 255]), color: .blue,
-        leaf: Leaf(name: "L"), maybe: 0, maybeLeaf: Leaf(), rSint32: [-1, 2, -3], rFixed64: [1, 2],
+        aInt32: -5,
+        aInt64: -9_000_000_000,
+        aUint32: 4_000_000_000,
+        aUint64: 18_000_000_000_000_000_000,
+        aSint32: -300,
+        aSint64: -5_000_000_000,
+        aFixed32: 7,
+        aFixed64: 8_000_000_000,
+        aSfixed32: -9,
+        aSfixed64: -10_000_000_000,
+        aBool: true,
+        aFloat: 1.5,
+        aDouble: -2.25,
+        aString: "héllo",
+        aBytes: Data([0, 255]),
+        color: .blue,
+        leaf: Leaf(name: "L"),
+        maybe: 0,
+        maybeLeaf: Leaf(),
+        rSint32: [-1, 2, -3],
+        rFixed64: [1, 2],
         rDouble: [0.5, -0.5],
-        rBool: [true, false], rColor: [.green, .blue], rString: ["a", ""], rBytes: [Data([120])],
-        rLeaf: [Leaf(name: "one"), Leaf()])
+        rBool: [true, false],
+        rColor: [.green, .blue],
+        rString: ["a", ""],
+        rBytes: [Data([120])],
+        rLeaf: [Leaf(name: "one"), Leaf()]
+    )
 }

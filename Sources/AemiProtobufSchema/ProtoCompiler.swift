@@ -57,7 +57,8 @@ public struct ProtoCompiler: Sendable {
         guard let text = load(name) else {
             throw ProtoCompileError(
                 file: importedBy ?? name,
-                message: importedBy == nil ? "file not found" : "import \"\(name)\" was not found")
+                message: importedBy == nil ? "file not found" : "import \"\(name)\" was not found"
+            )
         }
         var parser = try ProtoFileParser(text, name: name)
         return try parser.parse()

@@ -11,7 +11,8 @@ import AemiProtobufCore
 import AemiProtobufSchema
 
 func roundTrip<T: AemiProtoFastEncodable & AemiProtoFastDecodable & Codable & Equatable>(
-    _ type: T.Type, _ bytes: [UInt8]
+    _ type: T.Type,
+    _ bytes: [UInt8]
 ) {
     guard let value = try? ProtobufDecoder().decode(T.self, fromBytes: bytes) else { return }
     guard let encoded = try? ProtobufEncoder().encodeToBytes(value) else {

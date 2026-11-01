@@ -67,8 +67,11 @@ enum ProtoJSONNumber {
         }
         guard bytes.isEmpty else { return nil }
         return NumberParts(
-            negative: negative, integer: String(decoding: integer, as: UTF8.self),
-            fraction: String(decoding: fraction, as: UTF8.self), exponent: exponent)
+            negative: negative,
+            integer: String(decoding: integer, as: UTF8.self),
+            fraction: String(decoding: fraction, as: UTF8.self),
+            exponent: exponent
+        )
     }
     // @fc:enable cut-then-decode
 

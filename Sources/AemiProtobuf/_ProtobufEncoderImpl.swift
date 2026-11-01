@@ -18,8 +18,11 @@ final class _ProtobufEncoderImpl: Encoder {
     private(set) var elementCount = 0
 
     init(
-        state: _ProtobufEncoderState, codingPath: [any CodingKey], userInfo: [CodingUserInfoKey: Any],
-        field: FieldNumber? = nil, writesDefaults: Bool = false
+        state: _ProtobufEncoderState,
+        codingPath: [any CodingKey],
+        userInfo: [CodingUserInfoKey: Any],
+        field: FieldNumber? = nil,
+        writesDefaults: Bool = false
     ) {
         self.state = state
         self.codingPath = codingPath
@@ -54,8 +57,12 @@ final class _ProtobufEncoderImpl: Encoder {
     /// An encoder for the value of `key`'s field.
     func child(_ key: any CodingKey, field: FieldNumber, writesDefaults: Bool) -> _ProtobufEncoderImpl {
         _ProtobufEncoderImpl(
-            state: state, codingPath: codingPath + [key], userInfo: userInfo, field: field,
-            writesDefaults: writesDefaults)
+            state: state,
+            codingPath: codingPath + [key],
+            userInfo: userInfo,
+            field: field,
+            writesDefaults: writesDefaults
+        )
     }
 
     /// Adds a scalar to the packed run of this repeated field.

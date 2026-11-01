@@ -198,8 +198,11 @@ struct ProtoTextParser {
         let value: DynamicValue
         do throws(ProtoValueError) {
             value = try ProtoValueConverter.convert(
-                raw, to: field.type, enumeration: field.typeName.flatMap(schema.enumeration(named:)),
-                textFormat: true)
+                raw,
+                to: field.type,
+                enumeration: field.typeName.flatMap(schema.enumeration(named:)),
+                textFormat: true
+            )
         } catch {
             throw stream.error("\(error.message) for field \"\(field.name)\"", at: token)
         }

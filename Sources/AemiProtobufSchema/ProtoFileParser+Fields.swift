@@ -71,8 +71,12 @@ extension ProtoFileParser {
         descriptor.jsonName = ProtoParser.jsonName(for: descriptor.name)
         if let extendee { descriptor.extendee = extendee }
         var parsed = ParsedField(
-            descriptor: descriptor, namedType: named, scope: extendee == nil ? nil : index,
-            line: start.line, column: start.column)
+            descriptor: descriptor,
+            namedType: named,
+            scope: extendee == nil ? nil : index,
+            line: start.line,
+            column: start.column
+        )
         try fieldOptions(&parsed)
         if isGroup {
             try openGroup(parsed, name: name, in: index, start: start)
@@ -123,8 +127,13 @@ extension ProtoFileParser {
     {
         file.messages.append(
             ParsedMessage(
-                descriptor: MessageDescriptor(name: name), parent: index, fullName: fullName(name, in: index),
-                line: start.line, column: start.column))
+                descriptor: MessageDescriptor(name: name),
+                parent: index,
+                fullName: fullName(name, in: index),
+                line: start.line,
+                column: start.column
+            )
+        )
         store(field, in: index, isExtension: !field.descriptor.extendee.isEmpty)
         try push(.message(file.messages.count - 1))
     }
@@ -156,21 +165,36 @@ extension ProtoFileParser {
             valueField.typeName = valueName
         }
         var entry = ParsedMessage(
-            descriptor: MessageDescriptor(name: entryName), parent: index, fullName: entryFullName, line: start.line,
-            column: start.column)
+            descriptor: MessageDescriptor(name: entryName),
+            parent: index,
+            fullName: entryFullName,
+            line: start.line,
+            column: start.column
+        )
         entry.descriptor.options = [0x38, 0x01]  // map_entry = true
         entry.fields = [
             ParsedField(descriptor: keyField, namedType: false, line: start.line, column: start.column),
             ParsedField(
-                descriptor: valueField, namedType: Self.scalarTypes[valueName] == nil, line: start.line,
-                column: start.column)
+                descriptor: valueField,
+                namedType: Self.scalarTypes[valueName] == nil,
+                line: start.line,
+                column: start.column
+            )
         ]
         file.messages.append(entry)
         var field = ParsedField(
             descriptor: FieldDescriptor(
-                name: name, number: number, label: .repeated, type: .message, typeName: "." + entryFullName,
-                jsonName: ProtoParser.jsonName(for: name)),
-            namedType: true, line: start.line, column: start.column)
+                name: name,
+                number: number,
+                label: .repeated,
+                type: .message,
+                typeName: "." + entryFullName,
+                jsonName: ProtoParser.jsonName(for: name)
+            ),
+            namedType: true,
+            line: start.line,
+            column: start.column
+        )
         try fieldOptions(&field)
         try stream.expect(";")
         file.messages[index].fields.append(field)

@@ -25,7 +25,11 @@ struct _ProtobufDecoderImpl: Decoder {
                 messageDepth = depth
                 index = try indexed { () throws(WireError) in
                     try _ProtobufMessageIndex(
-                        bytes: context.bytes, ranges: ranges, depth: messageDepth, limits: context.limits)
+                        bytes: context.bytes,
+                        ranges: ranges,
+                        depth: messageDepth,
+                        limits: context.limits
+                    )
                 }
             case .field(let occurrences):
                 // A field read as a message is one level deeper than the message that holds it.
@@ -36,17 +40,27 @@ struct _ProtobufDecoderImpl: Decoder {
                     throw DecodingError.typeMismatch(
                         Key.self,
                         .init(
-                            codingPath: codingPath, debugDescription: "a message is length-delimited, found \(mismatch)"
-                        ))
+                            codingPath: codingPath,
+                            debugDescription: "a message is length-delimited, found \(mismatch)"
+                        )
+                    )
                 }
                 // A field's occurrences read as one message: their payloads, merged in order.
                 index = try indexed { () throws(WireError) in
                     try _ProtobufMessageIndex(
-                        bytes: context.bytes, occurrences: occurrences, depth: messageDepth, limits: context.limits)
+                        bytes: context.bytes,
+                        occurrences: occurrences,
+                        depth: messageDepth,
+                        limits: context.limits
+                    )
                 }
         }
         let nested = _ProtobufDecoderImpl(
-            context: context, source: source, depth: messageDepth, codingPath: codingPath)
+            context: context,
+            source: source,
+            depth: messageDepth,
+            codingPath: codingPath
+        )
         return KeyedDecodingContainer(_ProtobufKeyedDecodingContainer<Key>(decoder: nested, index: index))
     }
 
@@ -73,6 +87,10 @@ struct _ProtobufDecoderImpl: Decoder {
     /// A decoder for the occurrences of `key`'s field, one message level below this one.
     func field(_ key: any CodingKey, occurrences: _FieldOccurrences) -> _ProtobufDecoderImpl {
         _ProtobufDecoderImpl(
-            context: context, source: .field(occurrences), depth: depth, codingPath: codingPath + [key])
+            context: context,
+            source: .field(occurrences),
+            depth: depth,
+            codingPath: codingPath + [key]
+        )
     }
 }

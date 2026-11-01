@@ -44,7 +44,9 @@ enum ProtoFieldParser {
     }
 
     private static func field(
-        _ binding: PatternBindingSyntax, _ variable: VariableDeclSyntax, in context: some MacroExpansionContext
+        _ binding: PatternBindingSyntax,
+        _ variable: VariableDeclSyntax,
+        in context: some MacroExpansionContext
     ) -> ProtoFieldSpec? {
         guard let name = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text else {
             error(binding, "a protobuf field needs a plain property name", in: context)
@@ -95,14 +97,18 @@ enum ProtoFieldParser {
     }
 
     static func fits(
-        _ kind: ProtoKind, _ swiftType: String, _ name: String, _ node: some SyntaxProtocol,
+        _ kind: ProtoKind,
+        _ swiftType: String,
+        _ name: String,
+        _ node: some SyntaxProtocol,
         in context: some MacroExpansionContext
     ) -> Bool {
         guard let allowed = kind.swiftTypes, !allowed.contains(swiftType) else { return true }
         error(
             node,
             "'\(name)' is \(swiftType), which cannot be a protobuf \(kind.rawValue); use \(allowed.sorted().joined(separator: ", "))",
-            in: context)
+            in: context
+        )
         return false
     }
 
@@ -115,7 +121,9 @@ enum ProtoFieldParser {
 
     /// `@ProtoOneofField var kind: Kind? = nil`: optional, with no field number of its own.
     private static func oneofField(
-        _ binding: PatternBindingSyntax, _ name: String, in context: some MacroExpansionContext
+        _ binding: PatternBindingSyntax,
+        _ name: String,
+        in context: some MacroExpansionContext
     ) -> ProtoFieldSpec? {
         guard let optional = binding.typeAnnotation?.type.as(OptionalTypeSyntax.self),
             optional.wrappedType.is(IdentifierTypeSyntax.self) || optional.wrappedType.is(MemberTypeSyntax.self)
@@ -124,7 +132,12 @@ enum ProtoFieldParser {
             return nil
         }
         return ProtoFieldSpec(
-            name: name, number: 0, kind: .message, shape: .oneof, swiftType: optional.wrappedType.trimmedDescription)
+            name: name,
+            number: 0,
+            kind: .message,
+            shape: .oneof,
+            swiftType: optional.wrappedType.trimmedDescription
+        )
     }
 
     private static func fieldAttribute(of variable: VariableDeclSyntax) -> AttributeSyntax? {
@@ -154,8 +167,10 @@ enum ProtoFieldParser {
         }
         guard (1 ... 536_870_911).contains(number), !reservedNumbers.contains(number) else {
             error(
-                attribute, "field number \(number) is outside 1...536870911 or in the reserved 19000...19999",
-                in: context)
+                attribute,
+                "field number \(number) is outside 1...536870911 or in the reserved 19000...19999",
+                in: context
+            )
             return nil
         }
         var result = Arguments(number: number)
@@ -188,53 +203,6 @@ enum ProtoFieldParser {
             }
         }
         return result
-    }
-
-    private static func isArray(_ type: TypeSyntax) -> Bool {
-        type.is(ArrayTypeSyntax.self)
-    }
-
-    private static func shapeAndType(
-        of type: TypeSyntax, _ name: String, _ node: some SyntaxProtocol, in context: some MacroExpansionContext
-    ) -> (ProtoFieldShape, String)? {
-        let inner: (type: TypeSyntax, shape: ProtoFieldShape, refusal: String)
-        // `[UInt8]` is bytes, a scalar: as an optional, as a repeated field's element, as a map value.
-        if let optional = type.as(OptionalTypeSyntax.self), isBytes(optional.wrappedType) {
-            return (.optional, "[UInt8]")
-        }
-        if let array = type.as(ArrayTypeSyntax.self), isBytes(array.element) { return (.repeated, "[UInt8]") }
-        if let optional = type.as(OptionalTypeSyntax.self) {
-            inner = (optional.wrappedType, .optional, "an optional array or optional optional has no protobuf form")
-        } else if let array = type.as(ArrayTypeSyntax.self) {
-            if array.element.trimmedDescription == "UInt8" { return (.single, "[UInt8]") }
-            inner = (array.element, .repeated, "nested arrays and arrays of optionals have no protobuf form")
-        } else {
-            guard let text = scalarName(type, name, node, in: context) else { return nil }
-            return (.single, text)
-        }
-        guard !inner.type.is(ArrayTypeSyntax.self), !inner.type.is(OptionalTypeSyntax.self) else {
-            error(node, "'\(name)': \(inner.refusal)", in: context)
-            return nil
-        }
-        guard let text = scalarName(inner.type, name, node, in: context) else { return nil }
-        return (inner.shape, text)
-    }
-
-    static func isBytes(_ type: TypeSyntax) -> Bool { type.trimmedDescription == "[UInt8]" }
-
-    static func scalarName(
-        _ type: TypeSyntax, _ name: String, _ node: some SyntaxProtocol, in context: some MacroExpansionContext
-    ) -> String? {
-        if type.is(DictionaryTypeSyntax.self) || type.trimmedDescription.hasPrefix("Dictionary<") {
-            error(node, "'\(name)': a map must be written [Key: Value], at the top of the property's type", in: context)
-            return nil
-        }
-        if isBytes(type) { return "[UInt8]" }
-        guard type.is(IdentifierTypeSyntax.self) || type.is(MemberTypeSyntax.self) else {
-            error(node, "'\(name)': unsupported type '\(type.trimmedDescription)'", in: context)
-            return nil
-        }
-        return type.trimmedDescription
     }
 
     static func error(_ node: some SyntaxProtocol, _ text: String, in context: some MacroExpansionContext) {

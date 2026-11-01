@@ -7,8 +7,13 @@ extension ProtoFileParser {
         let name = try stream.identifier("a message name")
         file.messages.append(
             ParsedMessage(
-                descriptor: MessageDescriptor(name: name), parent: parent, fullName: fullName(name, in: parent),
-                line: token.line, column: token.column))
+                descriptor: MessageDescriptor(name: name),
+                parent: parent,
+                fullName: fullName(name, in: parent),
+                line: token.line,
+                column: token.column
+            )
+        )
         try push(.message(file.messages.count - 1))
     }
 
@@ -52,7 +57,10 @@ extension ProtoFileParser {
             toMax.append(end == .max)
             ranges.append(
                 DescriptorRange(
-                    start: Int32(start), end: Int32(clamping: end == .max ? Int64(FieldNumber.maximum) : end) &+ 1))
+                    start: Int32(start),
+                    end: Int32(clamping: end == .max ? Int64(FieldNumber.maximum) : end) &+ 1
+                )
+            )
         } while stream.accept(",")
         let options = try bracketOptions()
         try stream.expect(";")

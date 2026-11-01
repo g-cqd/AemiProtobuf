@@ -7,7 +7,8 @@ extension WireReader {
     /// - Throws: ``WireError/endGroupMismatch(expected:found:at:)``, a truncation error, ``WireError/depthExceeded(limit:at:)``,
     ///   or whatever `body` throws.
     public mutating func readGroup<R>(
-        _ tag: FieldTag, _ body: (inout WireReader) throws(WireError) -> R
+        _ tag: FieldTag,
+        _ body: (inout WireReader) throws(WireError) -> R
     ) throws(WireError) -> R {
         guard depth < limits.maxDepth else { throw .depthExceeded(limit: limits.maxDepth, at: tagOffset) }
         let start = offset

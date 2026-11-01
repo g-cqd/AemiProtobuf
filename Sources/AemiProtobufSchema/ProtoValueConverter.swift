@@ -3,7 +3,10 @@
 enum ProtoValueConverter {
     /// - Throws: the reason, as protoc words it, when the constant does not fit the type.
     static func convert(
-        _ value: ProtoOptionValue, to type: FieldType, enumeration: EnumDescriptor?, textFormat: Bool = false
+        _ value: ProtoOptionValue,
+        to type: FieldType,
+        enumeration: EnumDescriptor?,
+        textFormat: Bool = false
     ) throws(ProtoValueError) -> DynamicValue {
         switch type {
             case .int32, .sint32, .sfixed32:

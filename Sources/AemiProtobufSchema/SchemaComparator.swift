@@ -46,67 +46,47 @@ public struct SchemaComparator: Sendable {
                     changes.append(
                         BreakingChange(
                             kind: .fieldRenumbered(
-                                message: message, field: field.name, oldNumber: field.number, newNumber: moved.number)))
+                                message: message,
+                                field: field.name,
+                                oldNumber: field.number,
+                                newNumber: moved.number
+                            )
+                        )
+                    )
                 } else if !Self.isReserved(field.number, new.reservedRanges, endIncluded: false) {
                     changes.append(
-                        BreakingChange(kind: .fieldRemoved(message: message, field: field.name, number: field.number)))
+                        BreakingChange(kind: .fieldRemoved(message: message, field: field.name, number: field.number))
+                    )
                 }
                 continue
             }
-            let (oldOneof, newOneof) = (Self.oneof(of: field, in: old), Self.oneof(of: current, in: new))
-            if oldOneof != newOneof {
-                changes.append(
-                    BreakingChange(
-                        kind: .fieldOneofChanged(
-                            message: message, field: current.name, oldOneof: oldOneof, newOneof: newOneof)))
-            }
-            if !field.jsonName.isEmpty, !current.jsonName.isEmpty, field.jsonName != current.jsonName {
-                changes.append(
-                    BreakingChange(
-                        kind: .fieldJSONNameChanged(
-                            message: message, field: current.name, oldName: field.jsonName, newName: current.jsonName)))
-            }
-            if field.name != current.name {
-                changes.append(
-                    BreakingChange(
-                        kind: .fieldRenamed(
-                            message: message, number: field.number, oldName: field.name, newName: current.name)))
-            }
-            if !Self.isWireCompatible(old: field.type, new: current.type) {
-                changes.append(
-                    BreakingChange(
-                        kind: .fieldTypeIncompatible(
-                            message: message, field: current.name, oldType: field.type, newType: current.type)))
-            } else if field.type == current.type, field.typeName != current.typeName,
-                field.type == .message || field.type == .enum
-            {
-                changes.append(
-                    BreakingChange(
-                        kind: .fieldTypeNameChanged(
-                            message: message, field: current.name, oldTypeName: field.typeName,
-                            newTypeName: current.typeName)))
-            }
-            if field.label != current.label {
-                changes.append(
-                    BreakingChange(
-                        kind: .fieldLabelChanged(
-                            message: message, field: current.name, oldLabel: field.label, newLabel: current.label)))
-            }
+            changes += compareKept(message, field, current, old, new)
         }
         let required = { (m: MessageDescriptor) in m.fields.filter { $0.label == .required }.map(\.name).sorted() }
         if required(old) != required(new) {
             changes.append(
                 BreakingChange(
                     kind: .requiredFieldsChanged(
-                        message: message, oldRequired: required(old), newRequired: required(new))))
+                        message: message,
+                        oldRequired: required(old),
+                        newRequired: required(new)
+                    )
+                )
+            )
         }
         changes += Self.reservedRemoved(
-            message, old.reservedRanges, new.reservedRanges, old.reservedNames, new.reservedNames, isEnum: false)
+            message,
+            old.reservedRanges,
+            new.reservedRanges,
+            old.reservedNames,
+            new.reservedNames,
+            isEnum: false
+        )
         return changes
     }
 
     /// The declared oneof a field is in; a proto3 `optional`'s synthetic oneof is none.
-    private static func oneof(of field: FieldDescriptor, in message: MessageDescriptor) -> String? {
+    static func oneof(of field: FieldDescriptor, in message: MessageDescriptor) -> String? {
         guard let index = field.oneofIndex, !field.proto3Optional, message.oneofs.indices.contains(Int(index)) else {
             return nil
         }
@@ -123,7 +103,11 @@ public struct SchemaComparator: Sendable {
 
     /// Every old reserved range not covered by the new ones (a shrink counts), and every old reserved name the new version drops.
     private static func reservedRemoved(
-        _ scope: String, _ old: [DescriptorRange], _ new: [DescriptorRange], _ oldNames: [String], _ newNames: [String],
+        _ scope: String,
+        _ old: [DescriptorRange],
+        _ new: [DescriptorRange],
+        _ oldNames: [String],
+        _ newNames: [String],
         isEnum: Bool
     ) -> [BreakingChange] {
         // As closed intervals, so a message's and an enumeration's ranges compare the same way.
@@ -142,7 +126,8 @@ public struct SchemaComparator: Sendable {
             if next <= end {
                 changes.append(
                     BreakingChange(
-                        kind: .reservedRangeRemoved(scope: scope, start: Int32(start), end: Int32(end), isEnum: isEnum))
+                        kind: .reservedRangeRemoved(scope: scope, start: Int32(start), end: Int32(end), isEnum: isEnum)
+                    )
                 )
             }
         }
@@ -161,14 +146,27 @@ public struct SchemaComparator: Sendable {
                 changes.append(
                     BreakingChange(
                         kind: .enumValueRenumbered(
-                            enumName: name, value: value.name, oldNumber: value.number, newNumber: moved.number)))
+                            enumName: name,
+                            value: value.name,
+                            oldNumber: value.number,
+                            newNumber: moved.number
+                        )
+                    )
+                )
             } else if !Self.isReserved(value.number, new.reservedRanges, endIncluded: true) {
                 changes.append(
-                    BreakingChange(kind: .enumValueRemoved(enumName: name, value: value.name, number: value.number)))
+                    BreakingChange(kind: .enumValueRemoved(enumName: name, value: value.name, number: value.number))
+                )
             }
         }
         changes += Self.reservedRemoved(
-            name, old.reservedRanges, new.reservedRanges, old.reservedNames, new.reservedNames, isEnum: true)
+            name,
+            old.reservedRanges,
+            new.reservedRanges,
+            old.reservedNames,
+            new.reservedNames,
+            isEnum: true
+        )
         return changes
     }
 

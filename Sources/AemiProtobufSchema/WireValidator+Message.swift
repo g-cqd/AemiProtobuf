@@ -5,8 +5,13 @@ extension WireValidator {
     /// `extensions` are the message's extensions the set declares, by number, checked as its fields; `closedValues` gives the
     /// values of a field's closed enumeration, or `nil` when it is open or unknown.
     func checkMessage(
-        _ bytes: [UInt8], _ range: Range<Int>, _ descriptor: MessageDescriptor, depth: Int, budget: Int,
-        collectNested: Bool, extensions: [Int32: FieldDescriptor] = [:],
+        _ bytes: [UInt8],
+        _ range: Range<Int>,
+        _ descriptor: MessageDescriptor,
+        depth: Int,
+        budget: Int,
+        collectNested: Bool,
+        extensions: [Int32: FieldDescriptor] = [:],
         closedValues: (FieldDescriptor) -> Set<Int32>? = { _ in nil }
     ) -> MessageCheck {
         let lookup: FieldLookup
@@ -42,7 +47,8 @@ extension WireValidator {
                         field.label == .repeated && tag.wireType == .lengthDelimited && Self.isPackable(expected)
                     guard tag.wireType == expected || packed else {
                         check.errors.append(
-                            .unexpectedWireType(field: number, expected: expected, actual: tag.wireType, at: r.offset))
+                            .unexpectedWireType(field: number, expected: expected, actual: tag.wireType, at: r.offset)
+                        )
                         try r.skipField(tag)
                         continue
                     }
@@ -60,8 +66,13 @@ extension WireValidator {
                             check.nested.append(NestedPayload(field: field, range: payload, index: index))
                         }
                     } else if let error = try validatePayload(
-                        tag, field: field, packed: packed, reader: &r, bytes: bytes, depth: depth)
-                    {
+                        tag,
+                        field: field,
+                        packed: packed,
+                        reader: &r,
+                        bytes: bytes,
+                        depth: depth
+                    ) {
                         check.errors.append(error)
                     }
                 }
@@ -84,7 +95,10 @@ extension WireValidator {
 
     /// Reads a closed enumeration's numbers, singular or packed, and reports each one the enumeration has no value for.
     private static func checkEnumValues(
-        _ field: FieldDescriptor, packed: Bool, _ values: Set<Int32>, _ r: inout WireReader,
+        _ field: FieldDescriptor,
+        packed: Bool,
+        _ values: Set<Int32>,
+        _ r: inout WireReader,
         into check: inout MessageCheck
     ) throws(WireError) {
         func read(_ r: inout WireReader) throws(WireError) {

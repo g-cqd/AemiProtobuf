@@ -5,8 +5,13 @@ extension ProtoFileParser {
         let name = try stream.identifier("an enum name")
         file.enums.append(
             ParsedEnum(
-                descriptor: EnumDescriptor(name: name), parent: parent, fullName: fullName(name, in: parent),
-                line: token.line, column: token.column))
+                descriptor: EnumDescriptor(name: name),
+                parent: parent,
+                fullName: fullName(name, in: parent),
+                line: token.line,
+                column: token.column
+            )
+        )
         try push(.enumeration(file.enums.count - 1))
     }
 
@@ -44,7 +49,12 @@ extension ProtoFileParser {
         descriptor.name = name
         file.services.append(
             ParsedService(
-                descriptor: descriptor, fullName: fullName(name, in: nil), line: token.line, column: token.column))
+                descriptor: descriptor,
+                fullName: fullName(name, in: nil),
+                line: token.line,
+                column: token.column
+            )
+        )
         try push(.service(file.services.count - 1))
     }
 

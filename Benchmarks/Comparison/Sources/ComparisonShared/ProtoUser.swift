@@ -20,16 +20,39 @@ public struct ProtoUser: Equatable {
 extension ProtoUser {
     public init(_ r: Record) {
         self.init(
-            id: Int64(r.id), login: r.login, name: r.name, email: r.email, followers: Int64(r.followers),
-            following: Int64(r.following), isAdmin: r.isAdmin, score: r.score, tags: r.tags,
+            id: Int64(r.id),
+            login: r.login,
+            name: r.name,
+            email: r.email,
+            followers: Int64(r.followers),
+            following: Int64(r.following),
+            isAdmin: r.isAdmin,
+            score: r.score,
+            tags: r.tags,
             profile: ProtoProfile(
-                bio: r.bio, company: r.company, publicRepos: Int64(r.publicRepos), location: r.location))
+                bio: r.bio,
+                company: r.company,
+                publicRepos: Int64(r.publicRepos),
+                location: r.location
+            )
+        )
     }
 
     public var record: Record {
         Record(
-            id: Int(id), login: login, name: name, email: email, followers: Int(followers), following: Int(following),
-            isAdmin: isAdmin, score: score, tags: tags, bio: profile.bio, company: profile.company,
-            publicRepos: Int(profile.publicRepos), location: profile.location)
+            id: Int(id),
+            login: login,
+            name: name,
+            email: email,
+            followers: Int(followers),
+            following: Int(following),
+            isAdmin: isAdmin,
+            score: score,
+            tags: tags,
+            bio: profile.bio,
+            company: profile.company,
+            publicRepos: Int(profile.publicRepos),
+            location: profile.location
+        )
     }
 }

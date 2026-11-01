@@ -89,7 +89,11 @@ struct _ProtobufUnkeyedEncodingContainer: UnkeyedEncodingContainer {
             throw ProtobufEncodingError.unsupported("a repeated value needs a field")
         }
         let child = _ProtobufEncoderImpl(
-            state: encoder.state, codingPath: codingPath, userInfo: encoder.userInfo, field: field, writesDefaults: true
+            state: encoder.state,
+            codingPath: codingPath,
+            userInfo: encoder.userInfo,
+            field: field,
+            writesDefaults: true
         )
         try value.encode(to: child)
         try child.finish()
@@ -107,7 +111,8 @@ struct _ProtobufUnkeyedEncodingContainer: UnkeyedEncodingContainer {
         NestedKey
     > {
         encoder.state.fail(
-            ProtobufEncodingError.unsupported("nestedContainer(keyedBy:) in an array; encode the element instead"))
+            ProtobufEncodingError.unsupported("nestedContainer(keyedBy:) in an array; encode the element instead")
+        )
         return KeyedEncodingContainer(_ProtobufKeyedEncodingContainer<NestedKey>(encoder: encoder))
     }
 

@@ -14,12 +14,14 @@ import Testing
             fields: [
                 1: .int32(5), 2: .int64(-9_000_000_000), 4: .uint64(18_000_000_000_000_000_000), 11: .float(1.5),
                 12: .double(.nan), 13: .bool(true), 14: .string("a\"\\\n\u{1}é"), 15: .bytes([0, 255])
-            ])
+            ]
+        )
         #expect(
             try S.write(message)
                 == #"{"optionalInt32":5,"optionalInt64":"-9000000000","optionalUint64":"18000000000000000000","#
                 + #""optionalFloat":1.5,"optionalDouble":"NaN","optionalBool":true,"optionalString":"a\"\\\n\u0001é","#
-                + #""optionalBytes":"AP8="}"#)
+                + #""optionalBytes":"AP8="}"#
+        )
     }
 
     @Test func `defaults are left out, presence fields kept, and the empty message is {}`() throws {
@@ -28,7 +30,8 @@ import Testing
             fields: [
                 1: .int32(0), 14: .string(""),
                 18: .message(.init(typeName: "protobuf_test_messages.proto3.TestAllTypesProto3.NestedMessage"))
-            ])
+            ]
+        )
         #expect(try S.write(zeros) == #"{"optionalNestedMessage":{}}"#)
         let emitted = try S.write(DynamicMessage(typeName: S.proto3), options: .init(emitDefaultValues: true))
         #expect(emitted.contains(#""optionalInt32":0"#) && emitted.contains(#""repeatedInt32":[]"#))
@@ -38,7 +41,8 @@ import Testing
     @Test func `numbers are read from numbers or strings, exactly`() throws {
         let message = try S.read(
             #"{"optionalInt32":"5","optionalInt64":9223372036854775807,"optionalUint32":1e2,"optionalSint64":"-9223372036854775808","#
-                + #""optionalFloat":"Infinity","optionalDouble":-1.25e-3,"optional_fixed64":"18446744073709551615"}"#)
+                + #""optionalFloat":"Infinity","optionalDouble":-1.25e-3,"optional_fixed64":"18446744073709551615"}"#
+        )
         #expect(message.fields[1] == .int32(5))
         #expect(message.fields[2] == .int64(.max))
         #expect(message.fields[3] == .uint32(100))
@@ -65,16 +69,20 @@ import Testing
 
     @Test func `enumerations are names, or numbers when they have none`() throws {
         let message = try S.read(
-            #"{"optionalNestedEnum":"BAZ","optionalForeignEnum":1,"repeatedNestedEnum":["FOO",7]}"#)
+            #"{"optionalNestedEnum":"BAZ","optionalForeignEnum":1,"repeatedNestedEnum":["FOO",7]}"#
+        )
         #expect(message.fields[21] == .enumeration(2))
         #expect(message.fields[22] == .enumeration(1))
         #expect(message.fields[51] == .list([.enumeration(0), .enumeration(7)]))
         #expect(
             try S.write(message)
-                == #"{"optionalNestedEnum":"BAZ","optionalForeignEnum":"FOREIGN_BAR","repeatedNestedEnum":["FOO",7]}"#)
+                == #"{"optionalNestedEnum":"BAZ","optionalForeignEnum":"FOREIGN_BAR","repeatedNestedEnum":["FOO",7]}"#
+        )
         #expect(throws: ProtoJSONError.self) { try S.read(#"{"optionalNestedEnum":"NOPE"}"#) }
         let ignored = try S.read(
-            #"{"optionalNestedEnum":"NOPE","unknownField":[1,{"a":null}]}"#, options: .init(ignoreUnknownFields: true))
+            #"{"optionalNestedEnum":"NOPE","unknownField":[1,{"a":null}]}"#,
+            options: .init(ignoreUnknownFields: true)
+        )
         #expect(ignored.fields.isEmpty)
         #expect(throws: ProtoJSONError.self) { try S.read(#"{"unknownField":1}"#) }
     }
@@ -90,7 +98,8 @@ import Testing
     @Test func `repeated fields and maps`() throws {
         let message = try S.roundTrip(
             #"{"repeatedInt64":["1",2],"repeatedNestedMessage":[{"a":1},{}],"mapInt32Int32":{"-1":2},"mapBoolBool":{"true":false},"#
-                + #""mapStringNestedMessage":{"k":{"a":3}},"mapInt64Int64":{"9223372036854775807":"1"}}"#)
+                + #""mapStringNestedMessage":{"k":{"a":3}},"mapInt64Int64":{"9223372036854775807":"1"}}"#
+        )
         #expect(message.fields[32] == .list([.int64(1), .int64(2)]))
         #expect(message.fields[56] == .map([.int32(-1): .int32(2)]))
         #expect(message.fields[68] == .map([.bool(true): .bool(false)]))

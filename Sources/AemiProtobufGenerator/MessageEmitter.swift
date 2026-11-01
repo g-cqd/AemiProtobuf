@@ -60,7 +60,12 @@ struct MessageEmitter {
         let fields = message.fields + (extensions[fullName] ?? [])
         for field in fields where !isInRealOneof(field) {
             let declaration = try planner.declaration(
-                field, owner: fullName, features: symbol.features, name: name(field.name), access: access)
+                field,
+                owner: fullName,
+                features: symbol.features,
+                name: name(field.name),
+                access: access
+            )
             members.append((field.number, declaration))
         }
         var nested: [[String]] = []
@@ -88,7 +93,10 @@ struct MessageEmitter {
     }
 
     private func oneofEnum(
-        _ typeName: String, _ fields: [FieldDescriptor], owner: String, features: ResolvedFeatures
+        _ typeName: String,
+        _ fields: [FieldDescriptor],
+        owner: String,
+        features: ResolvedFeatures
     ) throws(GeneratorError) -> [String] {
         var cases: [String] = []
         var indirect = false

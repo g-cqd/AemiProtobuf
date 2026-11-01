@@ -9,7 +9,8 @@ import Testing
 @Suite struct Proto2ValidationTests {
     private func set() throws -> FileDescriptorSet {
         let url = try #require(
-            Bundle.module.url(forResource: "proto2-validation", withExtension: "pb", subdirectory: "Resources"))
+            Bundle.module.url(forResource: "proto2-validation", withExtension: "pb", subdirectory: "Resources")
+        )
         return try FileDescriptorSet.decode(from: [UInt8](try Data(contentsOf: url)))
     }
 
@@ -28,7 +29,8 @@ import Testing
         #expect(try findings([0xA2, 0x06, 0x01, 0x78], strict: true).isEmpty)
         let wrong = try findings([0xA0, 0x06, 0x01])
         #expect(
-            wrong.map(\.error) == [.unexpectedWireType(field: 100, expected: .lengthDelimited, actual: .varint, at: 2)])
+            wrong.map(\.error) == [.unexpectedWireType(field: 100, expected: .lengthDelimited, actual: .varint, at: 2)]
+        )
         #expect(try findings([0xB0, 0x09, 0x01], strict: true).isEmpty)
         #expect(try findings([0xE0, 0x12, 0x01], strict: true).map(\.error) == [.unknownField(300, at: 2)])
     }
@@ -39,7 +41,8 @@ import Testing
         #expect(
             try findings([0x2A, 0x02, 0x01, 0x07], strict: true).map(\.error) == [
                 .unknownEnumValue(field: 5, value: 7, at: 3)
-            ])
+            ]
+        )
         #expect(try findings([0x20, 0x01, 0x2A, 0x01, 0x00], strict: true).isEmpty)
     }
 }

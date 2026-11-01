@@ -9,7 +9,8 @@ enum SwiftNaming {
         break case catch continue default defer do else fallthrough for guard if in repeat return throw
         switch where while Any as await false is nil self Self super throws true try Type Protocol some any
         """
-        .split(whereSeparator: \.isWhitespace).map(String.init))
+        .split(whereSeparator: \.isWhitespace).map(String.init)
+    )
 
     /// Names the generated code or the macro uses in a message, which a field must not take.
     static let reservedMembers: Set<String> = ["unknownFields", "CodingKeys"]

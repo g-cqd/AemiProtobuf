@@ -62,7 +62,8 @@ func registerRecordBenchmarks() {
                 blackHole(
                     try WireReader.withReader(over: c.protoFast) { r throws(WireError) in
                         try ProtoUsers.__aepbDecode(from: &r)
-                    })
+                    }
+                )
             }
         }
         Benchmark("decode/\(tag)/pb.AemiProtobuf.codable") { bm in
@@ -90,7 +91,8 @@ func registerRecordBenchmarks() {
         Benchmark("roundtrip/\(tag)/json.Foundation") { bm in
             for _ in bm.scaledIterations {
                 blackHole(
-                    try foundationDecoder.decode([JSONUser].self, from: try foundationEncoder.encode(c.jsonUsers)))
+                    try foundationDecoder.decode([JSONUser].self, from: try foundationEncoder.encode(c.jsonUsers))
+                )
             }
         }
         Benchmark("roundtrip/\(tag)/pb.AemiProtobuf.fast") { bm in
@@ -108,7 +110,10 @@ func registerRecordBenchmarks() {
             for _ in bm.scaledIterations {
                 blackHole(
                     try pbDecoder.decode(
-                        CodableProtoUsers.self, fromBytes: try pbEncoder.encodeToBytes(c.codableProtoUsers)))
+                        CodableProtoUsers.self,
+                        fromBytes: try pbEncoder.encodeToBytes(c.codableProtoUsers)
+                    )
+                )
             }
         }
     }

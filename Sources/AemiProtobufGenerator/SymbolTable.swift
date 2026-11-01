@@ -28,13 +28,22 @@ struct SymbolTable {
             }
             for enumeration in file.enums {
                 addEnumeration(
-                    enumeration, scope: scope, swift: prefix + enumeration.name, file: file, features: features)
+                    enumeration,
+                    scope: scope,
+                    swift: prefix + enumeration.name,
+                    file: file,
+                    features: features
+                )
             }
         }
     }
 
     private mutating func addMessage(
-        _ message: MessageDescriptor, scope: String, swift: String, file: FileDescriptor, features: ResolvedFeatures
+        _ message: MessageDescriptor,
+        scope: String,
+        swift: String,
+        file: FileDescriptor,
+        features: ResolvedFeatures
     ) {
         // Iterative, as the repository allows no recursion (ADR-0003).
         var pending = [(message, scope, swift, features)]
@@ -42,24 +51,42 @@ struct SymbolTable {
             let fullName = scope + "." + message.name
             let features = inherited.merged(message.features)
             symbols[fullName] = Symbol(
-                fullName: fullName, swiftName: swift, declaration: .message(message), file: file, features: features)
+                fullName: fullName,
+                swiftName: swift,
+                declaration: .message(message),
+                file: file,
+                features: features
+            )
             for nested in message.nestedMessages {
                 pending.append((nested, fullName, swift + "." + nested.name, features))
             }
             for enumeration in message.nestedEnums {
                 addEnumeration(
-                    enumeration, scope: fullName, swift: swift + "." + enumeration.name, file: file, features: features)
+                    enumeration,
+                    scope: fullName,
+                    swift: swift + "." + enumeration.name,
+                    file: file,
+                    features: features
+                )
             }
         }
     }
 
     private mutating func addEnumeration(
-        _ enumeration: EnumDescriptor, scope: String, swift: String, file: FileDescriptor, features: ResolvedFeatures
+        _ enumeration: EnumDescriptor,
+        scope: String,
+        swift: String,
+        file: FileDescriptor,
+        features: ResolvedFeatures
     ) {
         let fullName = scope + "." + enumeration.name
         symbols[fullName] = Symbol(
-            fullName: fullName, swiftName: swift, declaration: .enumeration(enumeration), file: file,
-            features: features.merged(enumeration.features))
+            fullName: fullName,
+            swiftName: swift,
+            declaration: .enumeration(enumeration),
+            file: file,
+            features: features.merged(enumeration.features)
+        )
     }
 
     subscript(_ fullName: String) -> Symbol? { symbols[fullName] }

@@ -10,36 +10,62 @@ struct ProtoResolver {
             try symbols.add(message.fullName, .message, file: name, line: message.line, column: message.column)
             for field in message.fields {
                 try symbols.add(
-                    message.fullName + "." + field.descriptor.name, .field, file: name, line: field.line,
-                    column: field.column)
+                    message.fullName + "." + field.descriptor.name,
+                    .field,
+                    file: name,
+                    line: field.line,
+                    column: field.column
+                )
             }
             for oneof in message.descriptor.oneofs {
                 try symbols.add(
-                    message.fullName + "." + oneof.name, .oneof, file: name, line: message.line, column: message.column)
+                    message.fullName + "." + oneof.name,
+                    .oneof,
+                    file: name,
+                    line: message.line,
+                    column: message.column
+                )
             }
         }
         for enumeration in file.enums {
             try symbols.add(
-                enumeration.fullName, .enumeration, file: name, line: enumeration.line, column: enumeration.column)
+                enumeration.fullName,
+                .enumeration,
+                file: name,
+                line: enumeration.line,
+                column: enumeration.column
+            )
             let scope = file.scope(of: enumeration.parent)
             for value in enumeration.descriptor.values {
                 try symbols.add(
-                    scope.isEmpty ? value.name : scope + "." + value.name, .enumValue, file: name,
-                    line: enumeration.line, column: enumeration.column)
+                    scope.isEmpty ? value.name : scope + "." + value.name,
+                    .enumValue,
+                    file: name,
+                    line: enumeration.line,
+                    column: enumeration.column
+                )
             }
         }
         for field in file.extensions {
             let scope = file.scope(of: field.scope)
             try symbols.add(
-                scope.isEmpty ? field.descriptor.name : scope + "." + field.descriptor.name, .extension,
-                file: name, line: field.line, column: field.column)
+                scope.isEmpty ? field.descriptor.name : scope + "." + field.descriptor.name,
+                .extension,
+                file: name,
+                line: field.line,
+                column: field.column
+            )
         }
         for service in file.services {
             try symbols.add(service.fullName, .service, file: name, line: service.line, column: service.column)
             for method in service.descriptor.methods {
                 try symbols.add(
-                    service.fullName + "." + method.name, .method, file: name, line: service.line,
-                    column: service.column)
+                    service.fullName + "." + method.name,
+                    .method,
+                    file: name,
+                    line: service.line,
+                    column: service.column
+                )
             }
         }
     }
@@ -68,8 +94,11 @@ struct ProtoResolver {
                 for (written, isInput) in [(method.inputType, true), (method.outputType, false)] {
                     guard let found = symbols.resolve(written, in: file.package, accept: { $0 == .message }) else {
                         throw ProtoCompileError(
-                            file: file.name, line: service.line, column: service.column,
-                            message: "\"\(written)\" is not defined.")
+                            file: file.name,
+                            line: service.line,
+                            column: service.column,
+                            message: "\"\(written)\" is not defined."
+                        )
                     }
                     if isInput {
                         file.services[index].descriptor.methods[position].inputType = "." + found

@@ -5,13 +5,17 @@ import AemiProtobufCore
 /// mismatch.
 enum _ScalarDecoding {
     private static func mismatch(
-        _ type: any Any.Type, _ expected: String, _ entry: _ProtobufFieldEntry,
+        _ type: any Any.Type,
+        _ expected: String,
+        _ entry: _ProtobufFieldEntry,
         _ path: @autoclosure () -> [any CodingKey]
     ) -> DecodingError {
         .typeMismatch(
             type,
             .init(
-                codingPath: path(), debugDescription: "expected a \(expected) value, found wire type \(entry.wireType)")
+                codingPath: path(),
+                debugDescription: "expected a \(expected) value, found wire type \(entry.wireType)"
+            )
         )
     }
 

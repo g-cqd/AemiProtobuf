@@ -38,7 +38,11 @@ extension ProtoJSONParser {
             try readList(field, json, shape, node)
         } else if field.type == .message || field.type == .group {
             try spawn(
-                field.typeName, json, Link(parent: node, field: field.number, slot: .place(.single)), name: field.name)
+                field.typeName,
+                json,
+                Link(parent: node, field: field.number, slot: .place(.single)),
+                name: field.name
+            )
         } else if let value = try element(shape, field.type, field.typeName) {
             if field.hasPresence || !value.isImplicitDefault { nodes[node].fields.values[field.number] = value }
         }
@@ -83,7 +87,11 @@ extension ProtoJSONParser {
     }
 
     private mutating func readMap(
-        _ field: DynamicField, _ entry: DynamicField.MapEntry, _ json: JSON, _ shape: JSONShape, _ node: Int
+        _ field: DynamicField,
+        _ entry: DynamicField.MapEntry,
+        _ json: JSON,
+        _ shape: JSONShape,
+        _ node: Int
     ) throws(ProtoJSONError) {
         guard case .object = shape else { throw .invalid("not an object", path: "") }
         var map: [DynamicValue: DynamicValue] = [:]

@@ -127,7 +127,8 @@ struct _ProtobufKeyedDecodingContainer<K: CodingKey>: KeyedDecodingContainerProt
     // MARK: Unsupported
 
     func nestedContainer<NestedKey: CodingKey>(
-        keyedBy type: NestedKey.Type, forKey key: K
+        keyedBy type: NestedKey.Type,
+        forKey key: K
     ) throws -> KeyedDecodingContainer<NestedKey> {
         try decoder.field(key, occurrences: _FieldOccurrences(index, number: number(key))).container(keyedBy: type)
     }

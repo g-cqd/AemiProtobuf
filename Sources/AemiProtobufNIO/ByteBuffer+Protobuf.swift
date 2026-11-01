@@ -5,7 +5,8 @@ extension ByteBuffer {
     /// - Returns: the number of bytes written.
     @discardableResult
     public mutating func writeProtobuf<T: AemiProtoFastEncodable>(
-        _ value: T, encoder: ProtobufEncoder = ProtobufEncoder()
+        _ value: T,
+        encoder: ProtobufEncoder = ProtobufEncoder()
     ) throws -> Int {
         writeBytes(try encoder.encodeToBytes(value))
     }
@@ -13,7 +14,9 @@ extension ByteBuffer {
     /// Appends `value` in a frame of `format` (a varint length, or gRPC's flag and big-endian length).
     @discardableResult
     public mutating func writeProtobufFrame<T: AemiProtoFastEncodable>(
-        _ value: T, format: FrameFormat, encoder: ProtobufEncoder = ProtobufEncoder()
+        _ value: T,
+        format: FrameFormat,
+        encoder: ProtobufEncoder = ProtobufEncoder()
     ) throws -> Int {
         writeBytes(FrameEncoder.frame(try encoder.encodeToBytes(value), format: format))
     }
@@ -23,7 +26,8 @@ extension ByteBuffer {
     /// - Throws: ``FrameError/lengthExceedsLimit(declared:limit:at:)`` once a header declares more than `maxFrameBytes`,
     ///   ``FrameError/invalidFlag(_:at:)``, or ``FrameError/malformedLength(at:)``.
     public mutating func readProtobufFrame(
-        format: FrameFormat, maxFrameBytes: Int = 4 * 1_024 * 1_024
+        format: FrameFormat,
+        maxFrameBytes: Int = 4 * 1_024 * 1_024
     ) throws(FrameError) -> (payload: ByteBuffer, isCompressed: Bool)? {
         let start = readerIndex
         let header: (length: UInt64, size: Int, compressed: Bool)
@@ -49,13 +53,16 @@ extension ByteBuffer {
     /// Reads the next whole frame of `format` and decodes its message; `nil`, with nothing read, until it has arrived.
     /// - Throws: a ``FrameError``, ``ProtobufDecodingError/unsupported(_:)`` for a compressed frame, or a decoding error.
     public mutating func readProtobuf<T: AemiProtoFastDecodable>(
-        _ type: T.Type, format: FrameFormat, decoder: ProtobufDecoder = ProtobufDecoder(),
+        _ type: T.Type,
+        format: FrameFormat,
+        decoder: ProtobufDecoder = ProtobufDecoder(),
         maxFrameBytes: Int = 4 * 1_024 * 1_024
     ) throws -> T? {
         guard let frame = try readProtobufFrame(format: format, maxFrameBytes: maxFrameBytes) else { return nil }
         guard !frame.isCompressed else {
             throw ProtobufDecodingError.unsupported(
-                "the frame is compressed; read it with readProtobufFrame and decompress it")
+                "the frame is compressed; read it with readProtobufFrame and decompress it"
+            )
         }
         return try decoder.decode(type, from: frame.payload)
     }

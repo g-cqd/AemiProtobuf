@@ -21,7 +21,8 @@ import Testing
 
     @Test(arguments: strings, [FieldNumber(1), 16])
     func `repeated bytes are written as one record per element, after what is already written`(
-        values: [String], field: FieldNumber
+        values: [String],
+        field: FieldNumber
     ) {
         let payloads = values.map { Array($0.utf8) }
         var bulk = WireWriter()

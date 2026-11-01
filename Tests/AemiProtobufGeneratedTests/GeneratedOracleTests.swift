@@ -10,7 +10,8 @@ import Testing
     }
 
     private func roundTrip<T: AemiProtoFastEncodable & AemiProtoFastDecodable & Codable & Equatable>(
-        _ name: String, _ value: T
+        _ name: String,
+        _ value: T
     ) throws {
         let protoc = try bytes(name)
         #expect(try ProtobufDecoder().decode(T.self, fromBytes: protoc) == value)
@@ -74,7 +75,8 @@ import Testing
         try roundTrip("groups", groups)
         try roundTrip(
             "required",
-            Gen_Proto2_Required(a: 0, child: Gen_Proto2_Required(a: 1), many: [Gen_Proto2_Required(a: 2)]))
+            Gen_Proto2_Required(a: 0, child: Gen_Proto2_Required(a: 1), many: [Gen_Proto2_Required(a: 2)])
+        )
         #expect(throws: (any Error).self) { try ProtobufDecoder().decode(Gen_Proto2_Required.self, fromBytes: []) }
     }
 

@@ -54,7 +54,8 @@ struct SchemaMutationFuzzTests {
                 FieldDescriptor(name: "c", number: 3, label: .repeated, type: .int32),
                 FieldDescriptor(name: "d", number: 4, label: .repeated, type: .double),
                 FieldDescriptor(name: "e", number: 5, label: .required, type: .message)
-            ])
+            ]
+        )
         var w = WireWriter()
         w.appendTag(1, .varint)
         w.appendVarint(150)

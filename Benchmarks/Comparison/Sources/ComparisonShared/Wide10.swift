@@ -19,7 +19,16 @@ extension Wide10 {
     /// Every field set, so every field is written and read.
     public static var filled: Wide10 {
         Wide10(
-            f1: Int32(1), f2: Int32(2), f3: Int32(3), f4: Int32(4), f5: Int32(5), f6: Int32(6), f7: Int32(7),
-            f8: Int32(8), f9: Int32(9), f10: Int32(10))
+            f1: Int32(1),
+            f2: Int32(2),
+            f3: Int32(3),
+            f4: Int32(4),
+            f5: Int32(5),
+            f6: Int32(6),
+            f7: Int32(7),
+            f8: Int32(8),
+            f9: Int32(9),
+            f10: Int32(10)
+        )
     }
 }

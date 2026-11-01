@@ -21,7 +21,9 @@ enum OptionsReader {
 
     /// Folds every occurrence of field `number` with wire type `type` through `read`, skipping the rest.
     private static func scan<T>(
-        _ options: [UInt8]?, _ number: FieldNumber, _ type: WireType,
+        _ options: [UInt8]?,
+        _ number: FieldNumber,
+        _ type: WireType,
         _ read: (T?, inout WireReader) throws(WireError) -> T
     ) -> T? {
         guard let options else { return nil }

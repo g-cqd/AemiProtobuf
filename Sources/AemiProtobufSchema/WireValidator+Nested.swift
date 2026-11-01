@@ -37,11 +37,17 @@ extension WireValidator {
             for field in index.extensions(of: job.scope) { extensions[field.number] = field }
             let scope = job.scope
             let check = checkMessage(
-                bytes, job.range, job.descriptor, depth: job.depth, budget: maxFindings - findings.count,
-                collectNested: true, extensions: extensions,
+                bytes,
+                job.range,
+                job.descriptor,
+                depth: job.depth,
+                budget: maxFindings - findings.count,
+                collectNested: true,
+                extensions: extensions,
                 closedValues: { field in
                     index.resolve(field.typeName, in: scope).flatMap(index.closedEnumValues(named:))
-                })
+                }
+            )
             findings += check.errors.map { WireFinding(path: job.path, error: $0) }
             if check.stopped || findings.count >= maxFindings {
                 findings.append(WireFinding(path: job.path, error: .findingLimitReached))
@@ -53,7 +59,9 @@ extension WireValidator {
                     findings.append(
                         WireFinding(
                             path: path,
-                            error: .wireCorrupted(.depthExceeded(limit: limits.maxDepth, at: nested.range.lowerBound))))
+                            error: .wireCorrupted(.depthExceeded(limit: limits.maxDepth, at: nested.range.lowerBound))
+                        )
+                    )
                     continue
                 }
                 guard let name = index.resolve(nested.field.typeName, in: job.scope),
@@ -62,11 +70,14 @@ extension WireValidator {
                     findings.append(
                         WireFinding(
                             path: path,
-                            error: .unresolvedType(field: nested.field.number, typeName: nested.field.typeName)))
+                            error: .unresolvedType(field: nested.field.number, typeName: nested.field.typeName)
+                        )
+                    )
                     continue
                 }
                 queue.append(
-                    Job(range: nested.range, scope: name, descriptor: descriptor, path: path, depth: job.depth + 1))
+                    Job(range: nested.range, scope: name, descriptor: descriptor, path: path, depth: job.depth + 1)
+                )
             }
         }
         return findings

@@ -36,7 +36,12 @@ extension WireReader {
     private mutating func packedVarints<T>(_ convert: (UInt64) -> T) throws(WireError) -> [T] {
         let range = try takePayload()
         var scoped = unsafe WireReader(
-            buffer: buffer, offset: range.lowerBound, end: range.upperBound, depth: depth, limits: limits)
+            buffer: buffer,
+            offset: range.lowerBound,
+            end: range.upperBound,
+            depth: depth,
+            limits: limits
+        )
         var out: [T] = []
         out.reserveCapacity(scoped.remainingVarintCount)
         while !scoped.isAtEnd { out.append(convert(try scoped.readVarint())) }

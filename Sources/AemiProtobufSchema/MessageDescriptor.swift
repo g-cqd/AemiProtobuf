@@ -16,8 +16,10 @@ public struct MessageDescriptor: Sendable, Equatable {
     public var unknownFields = UnknownFields()
 
     public init(
-        name: String = "", fields: [FieldDescriptor] = [],
-        nestedMessages: [MessageDescriptor] = [], nestedEnums: [EnumDescriptor] = [],
+        name: String = "",
+        fields: [FieldDescriptor] = [],
+        nestedMessages: [MessageDescriptor] = [],
+        nestedEnums: [EnumDescriptor] = [],
         oneofs: [OneofDescriptor] = []
     ) {
         self.name = name

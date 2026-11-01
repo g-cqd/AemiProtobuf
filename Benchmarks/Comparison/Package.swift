@@ -31,7 +31,8 @@ let package = Package(
                 .product(name: "SwiftProtobuf", package: "swift-protobuf")
             ],
             // The generated file is not ours to hold to warnings-as-errors.
-            swiftSettings: [.swiftLanguageMode(.v6)]),
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
         .executableTarget(
             name: "ComparisonSuite",
             dependencies: [
@@ -44,7 +45,8 @@ let package = Package(
             ],
             path: "Benchmarks/ComparisonSuite",
             swiftSettings: settings,
-            plugins: [.plugin(name: "BenchmarkPlugin", package: "benchmark")]),
+            plugins: [.plugin(name: "BenchmarkPlugin", package: "benchmark")]
+        ),
         // Peak and retained memory of one decode per process, because a benchmark process has one peak for all its benchmarks.
         .executableTarget(
             name: "ComparisonMemory",
@@ -54,7 +56,8 @@ let package = Package(
                 .product(name: "AemiProtobuf", package: "AemiProtobuf"),
                 .product(name: "SwiftProtobuf", package: "swift-protobuf")
             ],
-            swiftSettings: settings),
+            swiftSettings: settings
+        ),
         .executableTarget(
             name: "ComparisonSizes",
             dependencies: [
@@ -62,6 +65,7 @@ let package = Package(
                 .product(name: "AemiJSON", package: "AemiJSON"),
                 .product(name: "AemiProtobuf", package: "AemiProtobuf")
             ],
-            swiftSettings: settings)
+            swiftSettings: settings
+        )
     ]
 )

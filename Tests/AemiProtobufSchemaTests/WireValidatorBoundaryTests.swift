@@ -8,7 +8,8 @@ struct WireValidatorBoundaryTests {
             name: "Duplicate",
             fields: [
                 FieldDescriptor(name: "first", number: 1), FieldDescriptor(name: "second", number: 1)
-            ])
+            ]
+        )
         #expect(WireValidator().validate(bytes: [], against: descriptor) == [.invalidDescriptorNumber(1)])
     }
 
@@ -28,7 +29,8 @@ struct WireValidatorBoundaryTests {
         #expect(
             WireValidator(maxFindings: 1).validate(bytes: [], against: descriptor) == [
                 .requiredFieldMissing(field: 1, name: "first"), .findingLimitReached
-            ])
+            ]
+        )
     }
 
     @Test func `a wire mismatch does not satisfy a required field`() {

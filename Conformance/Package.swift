@@ -16,6 +16,7 @@ let package = Package(
                 .product(name: "AemiProtobufSchema", package: "AemiProtobuf"),
                 .product(name: "AemiProtobufJSON", package: "AemiProtobuf")
             ],
-            swiftSettings: [.swiftLanguageMode(.v6), .treatAllWarnings(as: .error)])
+            swiftSettings: [.swiftLanguageMode(.v6), .treatAllWarnings(as: .error)]
+        )
     ]
 )

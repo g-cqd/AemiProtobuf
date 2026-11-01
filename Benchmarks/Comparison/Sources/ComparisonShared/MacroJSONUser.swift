@@ -31,9 +31,19 @@ extension MacroJSONUser {
 
     public var record: Record {
         Record(
-            id: id, login: login, name: name, email: email, followers: followers, following: following,
+            id: id,
+            login: login,
+            name: name,
+            email: email,
+            followers: followers,
+            following: following,
             isAdmin: isAdmin,
-            score: score, tags: tags, bio: profile.bio, company: profile.company, publicRepos: profile.publicRepos,
-            location: profile.location)
+            score: score,
+            tags: tags,
+            bio: profile.bio,
+            company: profile.company,
+            publicRepos: profile.publicRepos,
+            location: profile.location
+        )
     }
 }

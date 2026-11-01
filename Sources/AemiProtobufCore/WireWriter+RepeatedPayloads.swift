@@ -21,7 +21,9 @@ extension WireWriter {
     }
 
     private mutating func appendRepeatedPayloads<Element>(
-        _ field: FieldNumber, _ values: [Element], count: (Element) -> Int,
+        _ field: FieldNumber,
+        _ values: [Element],
+        count: (Element) -> Int,
         copy: (Element, UnsafeMutableRawBufferPointer) -> Void
     ) {
         guard !values.isEmpty else { return }

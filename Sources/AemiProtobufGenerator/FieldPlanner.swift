@@ -41,7 +41,11 @@ struct FieldPlanner {
 
     /// The property declaration of a field that is not in a oneof.
     func declaration(
-        _ field: FieldDescriptor, owner: String, features inherited: ResolvedFeatures, name: String, access: String
+        _ field: FieldDescriptor,
+        owner: String,
+        features inherited: ResolvedFeatures,
+        name: String,
+        access: String
     ) throws(GeneratorError) -> String {
         let features = inherited.merged(field.features)
         if field.label == .repeated, let entry = symbols.message(field.typeName), entry.isMapEntry {
@@ -68,7 +72,10 @@ struct FieldPlanner {
     }
 
     private func map(
-        _ field: FieldDescriptor, _ entry: MessageDescriptor, name: String, access: String
+        _ field: FieldDescriptor,
+        _ entry: MessageDescriptor,
+        name: String,
+        access: String
     ) throws(GeneratorError) -> String {
         guard let keyField = entry.fields.first(where: { $0.number == 1 }),
             let valueField = entry.fields.first(where: { $0.number == 2 })

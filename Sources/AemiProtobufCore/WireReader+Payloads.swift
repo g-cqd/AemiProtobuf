@@ -32,7 +32,12 @@ extension WireReader {
     public mutating func readPayload<R>(_ body: (inout WireReader) throws(WireError) -> R) throws(WireError) -> R {
         let range = try takePayload()
         var scoped = unsafe WireReader(
-            buffer: buffer, offset: range.lowerBound, end: range.upperBound, depth: depth, limits: limits)
+            buffer: buffer,
+            offset: range.lowerBound,
+            end: range.upperBound,
+            depth: depth,
+            limits: limits
+        )
         return try body(&scoped)
     }
 

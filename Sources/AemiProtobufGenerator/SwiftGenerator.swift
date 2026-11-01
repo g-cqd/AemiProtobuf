@@ -10,14 +10,19 @@ public import AemiProtobufSchema
 /// fields. Fields are declared in number order, so a message writes the bytes C++ writes.
 public enum SwiftGenerator {
     public static func generate(
-        _ set: FileDescriptorSet, files: [String], options: GeneratorOptions = GeneratorOptions()
+        _ set: FileDescriptorSet,
+        files: [String],
+        options: GeneratorOptions = GeneratorOptions()
     ) throws(GeneratorError) -> [GeneratedFile] {
         let symbols = SymbolTable(set)
         let extensions = sameFileExtensions(set, symbols)
         let recursion = RecursionAnalysis(edges: valueEdges(symbols, extensions))
         let emitter = MessageEmitter(
-            symbols: symbols, planner: FieldPlanner(symbols: symbols, recursion: recursion), extensions: extensions,
-            options: options)
+            symbols: symbols,
+            planner: FieldPlanner(symbols: symbols, recursion: recursion),
+            extensions: extensions,
+            options: options
+        )
         var output: [GeneratedFile] = []
         for name in files {
             guard let file = set.files.first(where: { $0.name == name }) else { throw .unknownFile(name) }

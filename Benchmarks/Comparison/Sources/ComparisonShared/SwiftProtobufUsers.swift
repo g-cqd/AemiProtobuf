@@ -27,10 +27,20 @@ public enum SwiftProtobufUsers {
     public static func records(_ users: Users) -> [Record] {
         users.users.map { u in
             Record(
-                id: Int(u.id), login: u.login, name: u.hasName ? u.name : nil, email: u.hasEmail ? u.email : nil,
-                followers: Int(u.followers), following: Int(u.following), isAdmin: u.isAdmin, score: u.score,
-                tags: u.tags, bio: u.profile.bio, company: u.profile.hasCompany ? u.profile.company : nil,
-                publicRepos: Int(u.profile.publicRepos), location: u.profile.hasLocation ? u.profile.location : nil)
+                id: Int(u.id),
+                login: u.login,
+                name: u.hasName ? u.name : nil,
+                email: u.hasEmail ? u.email : nil,
+                followers: Int(u.followers),
+                following: Int(u.following),
+                isAdmin: u.isAdmin,
+                score: u.score,
+                tags: u.tags,
+                bio: u.profile.bio,
+                company: u.profile.hasCompany ? u.profile.company : nil,
+                publicRepos: Int(u.profile.publicRepos),
+                location: u.profile.hasLocation ? u.profile.location : nil
+            )
         }
     }
 }

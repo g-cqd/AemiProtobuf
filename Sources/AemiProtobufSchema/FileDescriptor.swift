@@ -22,8 +22,11 @@ public struct FileDescriptor: Sendable, Equatable {
     public var unknownFields = UnknownFields()
 
     public init(
-        name: String = "", package: String = "", syntax: String = "proto3",
-        messages: [MessageDescriptor] = [], enums: [EnumDescriptor] = []
+        name: String = "",
+        package: String = "",
+        syntax: String = "proto3",
+        messages: [MessageDescriptor] = [],
+        enums: [EnumDescriptor] = []
     ) {
         self.name = name
         self.package = package

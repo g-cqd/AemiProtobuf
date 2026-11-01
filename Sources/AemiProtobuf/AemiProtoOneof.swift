@@ -10,7 +10,10 @@ public protocol AemiProtoOneof: AemiProtoRequiredFields {
     /// nothing and returns `false`. The last member wins; a message member given again merges. A closed enumeration member's
     /// number with no case goes to `unknown`.
     static func __aepbDecodeField(
-        _ tag: FieldTag, from reader: inout WireReader, into value: inout Self?, unknown: inout UnknownFields
+        _ tag: FieldTag,
+        from reader: inout WireReader,
+        into value: inout Self?,
+        unknown: inout UnknownFields
     ) throws(WireError) -> Bool
 
     /// The members' field lines, for the message's definition (``AemiProtoDefined``).

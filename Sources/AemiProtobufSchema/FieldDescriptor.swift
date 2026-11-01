@@ -21,9 +21,14 @@ public struct FieldDescriptor: Sendable, Equatable {
     public var unknownFields = UnknownFields()
 
     public init(
-        name: String = "", number: Int32 = 0, label: FieldLabel = .optional,
-        type: FieldType = .int32, typeName: String = "", jsonName: String = "",
-        oneofIndex: Int32? = nil, proto3Optional: Bool = false
+        name: String = "",
+        number: Int32 = 0,
+        label: FieldLabel = .optional,
+        type: FieldType = .int32,
+        typeName: String = "",
+        jsonName: String = "",
+        oneofIndex: Int32? = nil,
+        proto3Optional: Bool = false
     ) {
         self.name = name
         self.number = number

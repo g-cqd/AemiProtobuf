@@ -18,8 +18,11 @@ public struct ProtoTextFormat: Sendable {
         do throws(ProtoCompileError) {
             let tokens = try ProtoTokenizer.tokens(text, file: "", hashComments: true)
             var parser = ProtoTextParser(
-                schema: schema, resolveExtension: { $0.hasPrefix(".") ? String($0.dropFirst()) : $0 },
-                stream: ProtoTokenStream(tokens, file: ""), maxDepth: maxDepth)
+                schema: schema,
+                resolveExtension: { $0.hasPrefix(".") ? String($0.dropFirst()) : $0 },
+                stream: ProtoTokenStream(tokens, file: ""),
+                maxDepth: maxDepth
+            )
             message = try parser.parse(as: type)
         } catch {
             throw ProtoTextFormatError(line: error.line, column: error.column, message: error.message)

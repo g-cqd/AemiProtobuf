@@ -11,7 +11,8 @@ func registerWideBenchmarks() {
 }
 
 private func registerWide<M: Codable & AemiProtoFastEncodable & AemiProtoFastDecodable & Equatable>(
-    _ name: String, _ value: M
+    _ name: String,
+    _ value: M
 ) {
     let encoder = ProtobufEncoder()
     let decoder = ProtobufDecoder()

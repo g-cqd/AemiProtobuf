@@ -17,7 +17,8 @@ struct WireReaderMalformedTests {
             // protoc truncates a tenth byte above 1; we refuse (ADR-0003)
             ([UInt8](repeating: 0xFF, count: 9) + [0x02], .malformedVarint(at: 0)),
             ([UInt8](repeating: 0x80, count: 10) + [0x00], .malformedVarint(at: 0))  // an eleventh byte is never valid
-        ] as [([UInt8], WireError)])
+        ] as [([UInt8], WireError)]
+    )
     func `a bad varint is refused`(bytes: [UInt8], expected: WireError) {
         #expect(throws: expected) { _ = try read(bytes) { r throws(WireError) in try r.readVarint() } }
     }

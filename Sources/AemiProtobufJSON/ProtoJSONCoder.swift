@@ -27,7 +27,9 @@ public struct ProtoJSONCoder: Sendable {
         public var maxDepth: Int
 
         public init(
-            ignoreUnknownFields: Bool = false, emitDefaultValues: Bool = false, useProtoFieldNames: Bool = false,
+            ignoreUnknownFields: Bool = false,
+            emitDefaultValues: Bool = false,
+            useProtoFieldNames: Bool = false,
             maxDepth: Int = 100
         ) {
             self.ignoreUnknownFields = ignoreUnknownFields

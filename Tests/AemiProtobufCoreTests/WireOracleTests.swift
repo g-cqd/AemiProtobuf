@@ -29,7 +29,8 @@ struct WireOracleTests {
             lines == [
                 "1: 150", "2: 3 bytes", "3: 5 bytes", "4: 1", "5: 0x3ff8000000000000", "6: 1 bytes", "6: 1 bytes",
                 "7: 13 bytes", "8: 8 bytes", "9: 5", "10: 0x9"
-            ])
+            ]
+        )
     }
 
     @Test func `the packed field decodes to 1, 300 and -1`() throws {

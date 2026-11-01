@@ -17,12 +17,21 @@ public enum Corpus {
             let tags = (0 ..< r.int(5)).map { _ in word() }
             out.append(
                 Record(
-                    id: k, login: word() + String(k), name: r.int(10) > 2 ? sentence(2) : nil,
-                    email: r.int(10) > 3 ? word() + "@" + word() + ".com" : nil, followers: r.int(100_000),
-                    following: r.int(2_000), isAdmin: r.int(10) == 0, score: Double(r.int(1_000_000)) / 1000.0,
+                    id: k,
+                    login: word() + String(k),
+                    name: r.int(10) > 2 ? sentence(2) : nil,
+                    email: r.int(10) > 3 ? word() + "@" + word() + ".com" : nil,
+                    followers: r.int(100_000),
+                    following: r.int(2_000),
+                    isAdmin: r.int(10) == 0,
+                    score: Double(r.int(1_000_000)) / 1000.0,
                     tags: tags,
-                    bio: sentence(6), company: r.int(10) > 4 ? word() : nil, publicRepos: r.int(500),
-                    location: r.int(10) > 3 ? word() : nil))
+                    bio: sentence(6),
+                    company: r.int(10) > 4 ? word() : nil,
+                    publicRepos: r.int(500),
+                    location: r.int(10) > 3 ? word() : nil
+                )
+            )
         }
         return out
     }

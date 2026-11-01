@@ -43,9 +43,11 @@ import Testing
     @Test func `the handlers carry messages through a channel`() throws {
         let channel = EmbeddedChannel()
         try channel.pipeline.syncOperations.addHandler(
-            ByteToMessageHandler(ProtobufFrameDecoder<NIOPerson>(format: .grpc)))
+            ByteToMessageHandler(ProtobufFrameDecoder<NIOPerson>(format: .grpc))
+        )
         try channel.pipeline.syncOperations.addHandler(
-            MessageToByteHandler(ProtobufFrameEncoder<NIOPerson>(format: .grpc)))
+            MessageToByteHandler(ProtobufFrameEncoder<NIOPerson>(format: .grpc))
+        )
         try channel.writeOutbound(sample)
         let framed = try #require(try channel.readOutbound(as: ByteBuffer.self))
         try channel.writeInbound(framed)

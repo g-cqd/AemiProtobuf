@@ -32,7 +32,9 @@ struct _ProtobufUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     private mutating func nextPosition() throws -> Int {
         guard cursor < occurrences.upper else {
             throw DecodingError.valueNotFound(
-                Any.self, .init(codingPath: codingPath, debugDescription: "no more elements in the repeated field"))
+                Any.self,
+                .init(codingPath: codingPath, debugDescription: "no more elements in the repeated field")
+            )
         }
         defer {
             cursor = occurrences.next(from: cursor + 1)
@@ -63,22 +65,35 @@ struct _ProtobufUnkeyedDecodingContainer: UnkeyedDecodingContainer {
         var values: [_ProtobufFieldEntry] = []
         do throws(WireError) {
             try WireReader.withReader(
-                over: decoder.context.bytes, in: record.range, depth: decoder.depth, limits: decoder.context.limits
+                over: decoder.context.bytes,
+                in: record.range,
+                depth: decoder.depth,
+                limits: decoder.context.limits
             ) { r throws(WireError) in
                 while !r.isAtEnd {
                     switch wire {
                         case .fixed32:
                             values.append(
                                 .init(
-                                    number: record.number, wireType: .fixed32, payload: UInt64(try r.readFixed32()),
-                                    length: 0))
+                                    number: record.number,
+                                    wireType: .fixed32,
+                                    payload: UInt64(try r.readFixed32()),
+                                    length: 0
+                                )
+                            )
                         case .fixed64:
                             values.append(
                                 .init(
-                                    number: record.number, wireType: .fixed64, payload: try r.readFixed64(), length: 0))
+                                    number: record.number,
+                                    wireType: .fixed64,
+                                    payload: try r.readFixed64(),
+                                    length: 0
+                                )
+                            )
                         default:
                             values.append(
-                                .init(number: record.number, wireType: .varint, payload: try r.readVarint(), length: 0))
+                                .init(number: record.number, wireType: .varint, payload: try r.readVarint(), length: 0)
+                            )
                     }
                 }
             }
@@ -163,8 +178,12 @@ struct _ProtobufUnkeyedDecodingContainer: UnkeyedDecodingContainer {
         }
         return try T(
             from: _ProtobufDecoderImpl(
-                context: decoder.context, source: .field(_FieldOccurrences(occurrences.storage, at: position)),
-                depth: decoder.depth, codingPath: codingPath))
+                context: decoder.context,
+                source: .field(_FieldOccurrences(occurrences.storage, at: position)),
+                depth: decoder.depth,
+                codingPath: codingPath
+            )
+        )
     }
 
     mutating func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<
@@ -172,8 +191,10 @@ struct _ProtobufUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     > {
         let position = try nextPosition()
         return try _ProtobufDecoderImpl(
-            context: decoder.context, source: .field(_FieldOccurrences(occurrences.storage, at: position)),
-            depth: decoder.depth, codingPath: codingPath
+            context: decoder.context,
+            source: .field(_FieldOccurrences(occurrences.storage, at: position)),
+            depth: decoder.depth,
+            codingPath: codingPath
         )
         .container(keyedBy: type)
     }

@@ -73,7 +73,8 @@ func registerCoderBenchmarks() {
         .map { m in
             MessageDescriptor(
                 name: "M\(m)",
-                fields: (1 ... 10).map { FieldDescriptor(name: "f\($0)", number: Int32($0), type: .int64) })
+                fields: (1 ... 10).map { FieldDescriptor(name: "f\($0)", number: Int32($0), type: .int64) }
+            )
         }
     let set = FileDescriptorSet(files: [FileDescriptor(name: "bench.proto", package: "bench", messages: messages)])
     guard let setBytes = try? set.encode(), (try? FileDescriptorSet.decode(from: setBytes)) == set else {

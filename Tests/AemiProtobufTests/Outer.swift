@@ -31,7 +31,17 @@ struct Outer: Codable, Equatable {
 
     /// The value `Resources/outer.txt` describes.
     static let sample = Outer(
-        id: 150, name: "Ann", ratio: 0.5, tags: ["a", "b"], samples: [1, -2, 300], inner: Inner(label: "in", count: 5),
-        items: [Inner(label: "x", count: 1), Inner(label: "y")], blob: Data([1, 2, 255]), level: .high, maybeZero: 0,
-        ok: true, small: 7)
+        id: 150,
+        name: "Ann",
+        ratio: 0.5,
+        tags: ["a", "b"],
+        samples: [1, -2, 300],
+        inner: Inner(label: "in", count: 5),
+        items: [Inner(label: "x", count: 1), Inner(label: "y")],
+        blob: Data([1, 2, 255]),
+        level: .high,
+        maybeZero: 0,
+        ok: true,
+        small: 7
+    )
 }

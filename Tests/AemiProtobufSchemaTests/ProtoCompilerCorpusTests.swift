@@ -30,7 +30,8 @@ import Testing
     static func expected(_ root: String) throws -> FileDescriptorSet {
         let name = String(root.replacingOccurrences(of: "/", with: "_").dropLast(".proto".count))
         let url = try #require(
-            Bundle.module.url(forResource: name, withExtension: "pb", subdirectory: "Resources/parser/expected"))
+            Bundle.module.url(forResource: name, withExtension: "pb", subdirectory: "Resources/parser/expected")
+        )
         return try FileDescriptorSet.decode(from: [UInt8](Data(contentsOf: url)))
     }
 

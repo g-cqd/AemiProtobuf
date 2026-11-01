@@ -11,7 +11,9 @@ extension WireReader {
     /// moved.
     /// - Throws: whatever `body` throws, or ``WireError/messageTooLarge(limit:)``.
     public static func withReader<R>(
-        over buffer: ByteBuffer, limits: WireLimits = .default, _ body: (inout WireReader) throws(WireError) -> R
+        over buffer: ByteBuffer,
+        limits: WireLimits = .default,
+        _ body: (inout WireReader) throws(WireError) -> R
     ) throws(WireError) -> R {
         let result: Result<R, WireError> = buffer.withUnsafeReadableBytes { raw in
             do throws(WireError) {

@@ -78,8 +78,12 @@ public final class DynamicField: Sendable {
 
     /// For an extension, `extensionName` is its fully qualified name and `message` the scope it was declared in.
     init(
-        _ descriptor: FieldDescriptor, in message: String, features enclosing: ResolvedFeatures, schema: FlatSchema,
-        index: SchemaIndex, extensionName: String? = nil
+        _ descriptor: FieldDescriptor,
+        in message: String,
+        features enclosing: ResolvedFeatures,
+        schema: FlatSchema,
+        index: SchemaIndex,
+        extensionName: String? = nil
     ) {
         let features = enclosing.merged(descriptor.features)
         let resolved = descriptor.typeName.isEmpty ? nil : index.resolve(descriptor.typeName, in: message)
@@ -108,9 +112,13 @@ public final class DynamicField: Sendable {
             else { return nil }
             let valueType = value.typeName.isEmpty ? nil : index.resolve(value.typeName, in: entryName)
             return MapEntry(
-                key: key, value: value, valueTypeName: valueType,
+                key: key,
+                value: value,
+                valueTypeName: valueType,
                 valueClosedEnumValues: value.type == .enum ? valueType.flatMap { schema.closedEnumValues[$0] } : nil,
-                keyValidatesUTF8: verify && key.type == .string, valueValidatesUTF8: verify && value.type == .string)
+                keyValidatesUTF8: verify && key.type == .string,
+                valueValidatesUTF8: verify && value.type == .string
+            )
         }
         closedEnumValues = descriptor.type == .enum ? resolved.flatMap { schema.closedEnumValues[$0] } : nil
         validatesUTF8 = descriptor.type == .string && features.utf8Validation == 2

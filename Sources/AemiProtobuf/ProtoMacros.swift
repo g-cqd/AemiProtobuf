@@ -32,10 +32,20 @@
 /// diagnosed; a message that holds itself does so through ``Indirect``.
 @attached(member, names: named(unknownFields))
 @attached(
-    extension, conformances: AemiProtoFastEncodable, AemiProtoFastDecodable, Codable, AemiProtoDefined,
-    names: named(__aepbEncode), named(__aepbDecode), named(__aepbMerge), named(__aepbMissingRequired),
+    extension,
+    conformances: AemiProtoFastEncodable,
+    AemiProtoFastDecodable,
+    Codable,
+    AemiProtoDefined,
+    names: named(__aepbEncode),
+    named(__aepbDecode),
+    named(__aepbMerge),
+    named(__aepbMissingRequired),
     named(CodingKeys),
-    named(protoName), named(protoDefinition), named(protoDependencies))
+    named(protoName),
+    named(protoDefinition),
+    named(protoDependencies)
+)
 public macro ProtoMessage(unknownFields: ProtoUnknownFields = .preserve) =
     #externalMacro(module: "AemiProtobufMacros", type: "ProtoMessageMacro")
 
@@ -50,8 +60,12 @@ public macro ProtoMessage(unknownFields: ProtoUnknownFields = .preserve) =
 ///     both forms are read either way.
 @attached(peer)
 public macro ProtoField(
-    _ number: Int, _ kind: ProtoKind = .automatic, key: ProtoKind = .automatic, value: ProtoKind = .automatic,
-    required: Bool = false, packed: Bool = true
+    _ number: Int,
+    _ kind: ProtoKind = .automatic,
+    key: ProtoKind = .automatic,
+    value: ProtoKind = .automatic,
+    required: Bool = false,
+    packed: Bool = true
 ) =
     #externalMacro(module: "AemiProtobufMacros", type: "ProtoFieldMacro")
 
@@ -69,8 +83,15 @@ public macro ProtoField(
 /// }
 /// ```
 @attached(
-    extension, conformances: AemiProtoOneof, Codable, names: named(__aepbEncode), named(__aepbDecodeField),
-    named(__aepbMissingRequired), named(__aepbOneofDefinition), named(__aepbOneofDependencies))
+    extension,
+    conformances: AemiProtoOneof,
+    Codable,
+    names: named(__aepbEncode),
+    named(__aepbDecodeField),
+    named(__aepbMissingRequired),
+    named(__aepbOneofDefinition),
+    named(__aepbOneofDependencies)
+)
 public macro ProtoOneof() = #externalMacro(module: "AemiProtobufMacros", type: "ProtoOneofMacro")
 
 /// Marks the property of a ``ProtoMessage(unknownFields:)`` that holds a ``ProtoOneof()`` enumeration:

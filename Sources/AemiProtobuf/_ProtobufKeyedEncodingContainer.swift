@@ -126,16 +126,19 @@ struct _ProtobufKeyedEncodingContainer<K: CodingKey>: KeyedEncodingContainerProt
     // MARK: Unsupported: they would interleave a second message with this one
 
     mutating func nestedContainer<NestedKey: CodingKey>(
-        keyedBy keyType: NestedKey.Type, forKey key: K
+        keyedBy keyType: NestedKey.Type,
+        forKey key: K
     ) -> KeyedEncodingContainer<NestedKey> {
         encoder.state.fail(
-            ProtobufEncodingError.unsupported("nestedContainer(keyedBy:forKey:); encode the nested value instead"))
+            ProtobufEncodingError.unsupported("nestedContainer(keyedBy:forKey:); encode the nested value instead")
+        )
         return KeyedEncodingContainer(_ProtobufKeyedEncodingContainer<NestedKey>(encoder: encoder))
     }
 
     mutating func nestedUnkeyedContainer(forKey key: K) -> any UnkeyedEncodingContainer {
         encoder.state.fail(
-            ProtobufEncodingError.unsupported("nestedUnkeyedContainer(forKey:); encode the array instead"))
+            ProtobufEncodingError.unsupported("nestedUnkeyedContainer(forKey:); encode the array instead")
+        )
         return _ProtobufUnkeyedEncodingContainer(encoder: encoder)
     }
 

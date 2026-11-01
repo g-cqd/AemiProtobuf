@@ -13,8 +13,10 @@ struct ProtoOneofMacro: ExtensionMacro {
     ) throws -> [ExtensionDeclSyntax] {
         guard let decl = declaration.as(EnumDeclSyntax.self) else {
             ProtoFieldParser.error(
-                node, "@ProtoOneof applies to an enumeration; mark the message property holding it @ProtoOneofField",
-                in: context)
+                node,
+                "@ProtoOneof applies to an enumeration; mark the message property holding it @ProtoOneofField",
+                in: context
+            )
             return []
         }
         guard let members = members(of: decl, in: context) else { return [] }
@@ -24,7 +26,11 @@ struct ProtoOneofMacro: ExtensionMacro {
         generated += ProtoDefinitionCodegen.oneof(members).map { access + $0 }
         return [
             try ProtoExtension.make(
-                type, inheritance: decl.inheritanceClause, wanted: ["AemiProtoOneof", "Codable"], members: generated)
+                type,
+                inheritance: decl.inheritanceClause,
+                wanted: ["AemiProtoOneof", "Codable"],
+                members: generated
+            )
         ]
     }
 
@@ -41,7 +47,10 @@ struct ProtoOneofMacro: ExtensionMacro {
             }
             if let first = ProtoExtension.isTaken(spec.number, by: spec.name, in: &seen) {
                 ProtoFieldParser.error(
-                    cases, "field number \(spec.number) is used by '\(first)' and '\(spec.name)'", in: context)
+                    cases,
+                    "field number \(spec.number) is used by '\(first)' and '\(spec.name)'",
+                    in: context
+                )
                 failed = true
             }
             specs.append(spec)
@@ -52,7 +61,10 @@ struct ProtoOneofMacro: ExtensionMacro {
     private static func member(_ cases: EnumCaseDeclSyntax, in context: some MacroExpansionContext) -> ProtoFieldSpec? {
         guard cases.elements.count == 1, let element = cases.elements.first else {
             ProtoFieldParser.error(
-                cases, "a oneof member is one case per declaration, with its own @ProtoField", in: context)
+                cases,
+                "a oneof member is one case per declaration, with its own @ProtoField",
+                in: context
+            )
             return nil
         }
         let name = element.name.text
@@ -83,7 +95,10 @@ struct ProtoOneofMacro: ExtensionMacro {
             guard !type.is(ArrayTypeSyntax.self), !type.is(OptionalTypeSyntax.self), !type.is(DictionaryTypeSyntax.self)
             else {
                 ProtoFieldParser.error(
-                    cases, "'\(name)': a oneof member cannot be repeated, optional or a map", in: context)
+                    cases,
+                    "'\(name)': a oneof member cannot be repeated, optional or a map",
+                    in: context
+                )
                 return nil
             }
             guard let text = ProtoFieldParser.scalarName(type, name, cases, in: context) else { return nil }
