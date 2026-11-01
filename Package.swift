@@ -46,7 +46,7 @@ let package = Package(
         // SwiftPM rejects one package identity at two revisions in a graph, so the siblings move together.
         .package(
             url: "https://github.com/Aemi-Studio/aemi.git",
-            revision: "2a0ce71b93918ffdcc961ba4db8d01b66e5915f1"
+            revision: "a7080352737ffd2aa7ff405648588c2c5d4baeed"
         ),
         // The JSON parser under AemiProtobufJSON. This revision pins the same aemi as above.
         .package(url: "https://github.com/g-cqd/AemiJSON.git", revision: "e42298a5fd81cbb3f279d1de1f4a2db7556f4f2d"),

@@ -142,7 +142,7 @@ import Testing
         #expect(CFloatFormat.simple(Float(-1.5e-7)) == "-1.5e-07")
         #expect(CFloatFormat.simple(123_456.0) == "123456")
         #expect(CFloatFormat.simple(Double.greatestFiniteMagnitude) == "1.7976931348623157e+308")
-        #expect(CFloatFormat.simple(5e-324) == "4.94065645841247e-324")
+        #expect(CFloatFormat.simple(Double.leastNonzeroMagnitude) == "4.94065645841247e-324")
         #expect(CFloatFormat.simple(-Double.nan) == "nan" && CFloatFormat.simple(-Double.infinity) == "-inf")
         #expect(CFloatFormat.g(0.0001, precision: 6) == "0.0001" && CFloatFormat.g(9.9999995, precision: 6) == "10")
     }
