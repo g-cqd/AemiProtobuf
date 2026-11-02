@@ -94,7 +94,9 @@ let package = Package(
             dependencies: [
                 "AemiProtobufCore",
                 "AemiProtobufSchema",
-                .product(name: "AemiJSONCore", package: "AemiJSON")
+                .product(name: "AemiJSONCore", package: "AemiJSON"),
+                // `Base64`: bytes fields, on the SIMD block kernels where the pinned aemi has them.
+                .product(name: "AemiKernel", package: "aemi")
             ],
             swiftSettings: strictSettings
         ),
