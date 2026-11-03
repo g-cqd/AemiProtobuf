@@ -43,5 +43,6 @@
         "tag"
       ]
     }
-  ]
+  ],
+  "scheduledMaxCommitAgeHours": 168
 }
