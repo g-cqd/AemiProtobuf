@@ -4,7 +4,10 @@
 set -eu
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
-swift test --enable-code-coverage >/dev/null
+# CI calls this after swift-ci's coverage-enabled macOS tests, so reuse that run.
+if [ "${AEMIPROTOBUF_COVERAGE_REUSE:-0}" != 1 ]; then
+    swift test --enable-code-coverage >/dev/null
+fi
 PRODUCTS=$(dirname "$(dirname "$(swift test --show-codecov-path)")")
 set --
 for bundle in "$PRODUCTS"/*.xctest; do

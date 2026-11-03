@@ -21,7 +21,11 @@ import Testing
     ]
 
     static func source(_ path: String) -> String? {
-        guard let base = Bundle.module.resourceURL?.appending(path: "Resources/parser/src") else { return nil }
+        // resourceURL can already point inside Resources on Linux; resource lookup handles both layouts.
+        guard let base = Bundle.module.url(forResource: "src", withExtension: nil, subdirectory: "Resources/parser")
+        else {
+            return nil
+        }
         return try? String(contentsOf: base.appending(path: path), encoding: .utf8)
     }
 

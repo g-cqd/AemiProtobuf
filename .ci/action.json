@@ -1,0 +1,47 @@
+{
+  "swift": {
+    "sanitizerSkips": {
+      "address": [
+        "deeply nested input is refused at the limit"
+      ]
+    }
+  },
+  "quality": {
+    "include": [
+      "Package.swift",
+      "Sources/**",
+      "Tests/**",
+      "Plugins/**",
+      "Benchmarks/**",
+      "Conformance/**"
+    ],
+    "analyzers": [
+      "deadwood",
+      "dolly",
+      "arcleak",
+      "fcheck"
+    ]
+  },
+  "commands": [
+    {
+      "id": "coverage-floor",
+      "run": "AEMIPROTOBUF_COVERAGE_REUSE=1 Scripts/quality.sh coverage",
+      "after": "macos-debug"
+    },
+    {
+      "id": "nio",
+      "run": "AEMIPROTOBUF_NIO=1 swift test --filter AemiProtobufNIOTests",
+      "after": "macos-debug"
+    },
+    {
+      "id": "docs",
+      "run": "Scripts/quality.sh docs",
+      "os": "macOS",
+      "cadence": [
+        "nightly",
+        "dispatch",
+        "tag"
+      ]
+    }
+  ]
+}

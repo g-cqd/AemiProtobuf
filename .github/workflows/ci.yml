@@ -1,101 +1,45 @@
-# Standalone: every job calls Scripts/quality.sh, the same entry point the git hooks use, so a gate cannot differ between a developer
-# machine and CI. No reusable workflow from another repository.
-#
-# Every job installs the toolchain .swift-version names: the runner image's Swift lags the tools version (its first runs failed on
-# 6.3.3 against 6.4). setup-swift is pinned by SHA to the commit aemi's shared workflow uses.
 name: CI
 
 on:
   push:
     branches: [main]
-    paths-ignore: ["README.md", "docs/**", ".gitignore", ".githooks/**"]
   pull_request:
-    paths-ignore: ["README.md", "docs/**", ".gitignore", ".githooks/**"]
-  workflow_dispatch:
+  merge_group:
   schedule:
-    - cron: "17 3 * * 1"   # Mondays: the mutation job
+    - cron: "17 3 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
+
+env:
+  AD_TYPECHECK_BUDGET_MS: "250"
+  AEMI_TYPECHECK_BUDGET_MS: "250"
 
 jobs:
-  static:
-    name: Format, lint, analyzers
-    runs-on: macos-26
-    steps:
-      - uses: actions/checkout@v5
-      - name: Toolchain version
-        id: toolchain
-        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
-      - name: Install Swift ${{ steps.toolchain.outputs.version }}
-        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
-        with:
-          swift-version: ${{ steps.toolchain.outputs.version }}
-      - run: brew install swiftlint
-      - name: Cache tools
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Caches/aemiprotobuf/tools
-          key: tools-${{ runner.os }}-${{ hashFiles('Scripts/tools.lock') }}
-      - run: Scripts/quality.sh fast
-      - run: Scripts/quality.sh docs
-
-  test:
-    name: Tests (debug and release)
-    runs-on: macos-26
-    steps:
-      - uses: actions/checkout@v5
-      - name: Toolchain version
-        id: toolchain
-        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
-      - name: Install Swift ${{ steps.toolchain.outputs.version }}
-        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
-        with:
-          swift-version: ${{ steps.toolchain.outputs.version }}
-      - run: Scripts/quality.sh test
-      - run: Scripts/quality.sh coverage
-      - name: The swift-nio adapter (roadmap 0014)
-        run: AEMIPROTOBUF_NIO=1 swift test --filter AemiProtobufNIOTests
-
-  sanitizers:
-    name: AddressSanitizer, ThreadSanitizer
-    runs-on: macos-26
-    steps:
-      - uses: actions/checkout@v5
-      - name: Toolchain version
-        id: toolchain
-        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
-      - name: Install Swift ${{ steps.toolchain.outputs.version }}
-        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
-        with:
-          swift-version: ${{ steps.toolchain.outputs.version }}
-      - run: Scripts/quality.sh sanitizers
-
-  linux:
-    name: Tests on Linux (debug and release)
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v5
-      - name: Toolchain version
-        id: toolchain
-        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
-      - name: Install Swift ${{ steps.toolchain.outputs.version }}
-        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
-        with:
-          swift-version: ${{ steps.toolchain.outputs.version }}
-      - run: Scripts/quality.sh test
+  ci:
+    uses: g-cqd/swift-ci/.github/workflows/swift-ci.yml@e79543fb62f7494b8a5c2d8898b11005e81ae4b8 # swift-ci e79543f
+    permissions:
+      contents: write # reusable publish permission; no archives are configured for this library
 
   conformance:
     name: Conformance (protobuf ${{ vars.PROTOBUF_VERSION || '36.2' }})
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: macos-26
     env:
       PROTOBUF_VERSION: ${{ vars.PROTOBUF_VERSION || '36.2' }}
     steps:
       - uses: actions/checkout@v5
+      - name: Cache SwiftPM tree
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build
+          key: spm-conformance-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-${{ github.sha }}
+          restore-keys: spm-conformance-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-
       - name: Toolchain version
         id: toolchain
         run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
@@ -126,9 +70,16 @@ jobs:
 
   models:
     name: Lean, TLA+ (TLC), modeler
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
+      - name: Cache SwiftPM tree
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build
+          key: spm-models-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-${{ github.sha }}
+          restore-keys: spm-models-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-
       - name: Toolchain version
         id: toolchain
         run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
@@ -150,9 +101,16 @@ jobs:
 
   bench:
     name: Allocation thresholds
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
+      - name: Cache SwiftPM tree
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build
+          key: spm-bench-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-${{ github.sha }}
+          restore-keys: spm-bench-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-
       - name: Toolchain version
         id: toolchain
         run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
@@ -169,6 +127,12 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v5
+      - name: Cache SwiftPM tree
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build
+          key: spm-mutation-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-${{ github.sha }}
+          restore-keys: spm-mutation-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-
       - name: Toolchain version
         id: toolchain
         run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
