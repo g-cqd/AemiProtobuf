@@ -26,12 +26,14 @@
     {
       "id": "coverage-floor",
       "run": "AEMIPROTOBUF_COVERAGE_REUSE=1 Scripts/quality.sh coverage",
-      "after": "macos-debug"
+      "after": "macos-debug",
+      "title": "Coverage \u00b7 Enforce Floors"
     },
     {
       "id": "nio",
       "run": "AEMIPROTOBUF_NIO=1 swift test --filter AemiProtobufNIOTests",
-      "after": "macos-debug"
+      "after": "macos-debug",
+      "title": "Integration \u00b7 SwiftNIO"
     },
     {
       "id": "docs",
@@ -41,7 +43,8 @@
         "nightly",
         "dispatch",
         "tag"
-      ]
+      ],
+      "title": "Documentation \u00b7 Build & Validate"
     }
   ],
   "scheduledMaxCommitAgeHours": 168
