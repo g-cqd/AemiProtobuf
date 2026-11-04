@@ -4,7 +4,7 @@
 #   Scripts/tools.sh install [tool...]   install the named tools, or all that this platform can run
 #   Scripts/tools.sh path <tool>         print the executable (or jar) of an installed tool; exit 2 if it is not installed
 #
-# Tools: modeler tla2tools mutation (the analyzers are swift-ci's, from its tool lock)
+# Tools: mutation (the analyzers, modeler included, and TLC are swift-ci's, from its tool lock)
 # Exit: 0 ok, 2 a tool could not be installed or is not available on this platform.
 set -eu
 
@@ -13,9 +13,9 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 . "$ROOT/Scripts/tools.lock"
 
 case "$(uname -s)-$(uname -m)" in
-    Darwin-arm64) PLATFORM=macos_arm64 ARCHIVE=macos-arm64 CACHE_ROOT="$HOME/Library/Caches" ;;
-    Linux-x86_64) PLATFORM=linux_x86_64 ARCHIVE=linux-x86_64 CACHE_ROOT="${XDG_CACHE_HOME:-$HOME/.cache}" ;;
-    *) PLATFORM=unsupported ARCHIVE=unsupported CACHE_ROOT="${XDG_CACHE_HOME:-$HOME/.cache}" ;;
+    Darwin-arm64) PLATFORM=macos_arm64 CACHE_ROOT="$HOME/Library/Caches" ;;
+    Linux-x86_64) PLATFORM=linux_x86_64 CACHE_ROOT="${XDG_CACHE_HOME:-$HOME/.cache}" ;;
+    *) PLATFORM=unsupported CACHE_ROOT="${XDG_CACHE_HOME:-$HOME/.cache}" ;;
 esac
 CACHE="${AEMIPROTOBUF_TOOLS_DIR:-$CACHE_ROOT/aemiprotobuf/tools}"
 
@@ -38,35 +38,6 @@ scratch=""
 cleanup() { [ -n "$scratch" ] && rm -rf "$scratch"; return 0; }
 trap cleanup EXIT
 
-install_release() { # tool VERSION-variable-prefix
-    tool=$1 upper=$2
-    version=$(pinned "${upper}_VERSION")
-    sha=$(pinned "${upper}_SHA_$PLATFORM")
-    [ -n "$sha" ] || fail "$tool: no archive is pinned for $(uname -s)-$(uname -m)"
-    dir="$CACHE/$tool-$version"
-    [ -x "$dir/$tool" ] && return 0
-    scratch=$(mktemp -d)
-    name="$tool-$version-$ARCHIVE"
-    printf '==> installing %s %s\n' "$tool" "$version"
-    download "https://github.com/g-cqd/$tool/releases/download/v$version/$name.tar.gz" "$scratch/$name.tar.gz" "$sha"
-    tar -xzf "$scratch/$name.tar.gz" -C "$scratch"
-    mkdir -p "$dir"
-    cp -R "$scratch/$name/." "$dir/"   # the whole directory: the Linux archive carries Swift runtime libraries beside the binary
-    reported=$("$dir/$tool" --version 2>/dev/null || true)
-    [ "$reported" = "$version" ] || { rm -rf "$dir"; fail "$tool reports '$reported', not $version"; }
-}
-
-install_tla() {
-    jar="$CACHE/tla2tools-$TLA2TOOLS_VERSION.jar"
-    [ -f "$jar" ] && return 0
-    scratch=$(mktemp -d)
-    printf '==> installing tla2tools %s\n' "$TLA2TOOLS_VERSION"
-    download "https://github.com/tlaplus/tlaplus/releases/download/v$TLA2TOOLS_VERSION/tla2tools.jar" \
-        "$scratch/tla2tools.jar" "$TLA2TOOLS_SHA"
-    mkdir -p "$CACHE"
-    mv "$scratch/tla2tools.jar" "$jar"
-}
-
 install_mutation() {
     sha=$(pinned "MUTATION_SHA_$PLATFORM")
     [ -n "$sha" ] || fail "swift-mutation-testing is pinned for macOS arm64 only"
@@ -88,8 +59,6 @@ install_mutation() {
 
 install_one() {
     case "$1" in
-        modeler) install_release modeler MODELER ;;
-        tla2tools) install_tla ;;
         mutation) install_mutation ;;
         *) fail "unknown tool: $1" ;;
     esac
@@ -97,8 +66,6 @@ install_one() {
 
 tool_path() {
     case "$1" in
-        modeler) echo "$CACHE/modeler-$MODELER_VERSION/modeler" ;;
-        tla2tools) echo "$CACHE/tla2tools-$TLA2TOOLS_VERSION.jar" ;;
         mutation) echo "$CACHE/swift-mutation-testing-$MUTATION_VERSION/swift-mutation-testing" ;;
         *) fail "unknown tool: $1" ;;
     esac
@@ -108,8 +75,8 @@ case "${1:-}" in
     install)
         shift
         if [ "$#" -eq 0 ]; then
-            set -- modeler tla2tools
-            [ "$PLATFORM" = macos_arm64 ] && set -- "$@" mutation
+            [ "$PLATFORM" = macos_arm64 ] || fail "swift-mutation-testing is pinned for macOS arm64 only"
+            set -- mutation
         fi
         for tool in "$@"; do install_one "$tool"; done
         ;;

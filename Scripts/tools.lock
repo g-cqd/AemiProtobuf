@@ -2,16 +2,7 @@
 #
 # Release archives are pinned by version and SHA-256 per platform and checked before anything runs. Baseline fingerprints move
 # between tool versions, so an unpinned tool would turn a gate red with no change of ours. To upgrade: change the version and the
-# hashes together, run `Scripts/model.sh modeler`, and read the findings diff. The analyzers are swift-ci's: its tool lock pins them.
-
-# github.com/g-cqd/<tool>/releases
-MODELER_VERSION=0.4.5
-MODELER_SHA_macos_arm64=64f2f749fddb145e3e45360570e1a4f9a2922036dc9ad13b5a03a42c6f3a3481
-MODELER_SHA_linux_x86_64=7bc5aafe72e21d37f9cb2acd830c53877b0146d3c4cc3ae1e20f0fcc3dc8588d
-
-# github.com/tlaplus/tlaplus/releases: the TLC model checker.
-TLA2TOOLS_VERSION=1.7.4
-TLA2TOOLS_SHA=936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88
+# hashes together, and read the findings diff. The analyzers (modeler included) and TLC are swift-ci's: its tool lock pins them.
 
 # github.com/ericodx/swift-mutation-testing/releases: macOS only.
 MUTATION_VERSION=1.6.3

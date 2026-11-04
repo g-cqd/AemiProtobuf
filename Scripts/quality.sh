@@ -4,7 +4,7 @@
 #   Scripts/quality.sh quality     the quality gate CI runs, from the swift-ci commit CI pins (.ci/swift-ci): swift-format,
 #                                  SwiftLint metrics and deadwood, dolly, arcleak, fcheck against .ci/baselines
 #   Scripts/quality.sh test        the suite in debug (bounds checks live), then in release (what ships)
-#   Scripts/quality.sh model       Lean proofs, TLA+ models under TLC, modeler (Scripts/model.sh)
+#   Scripts/quality.sh model       Lean proofs and TLA+ models under TLC (Scripts/model.sh)
 #   Scripts/quality.sh bench       allocation thresholds, then the benchmark report (release)
 #   Scripts/quality.sh mutation    swift-mutation-testing on the wire core, with the wire core's tests (about 10 minutes)
 #   Scripts/quality.sh fast        quality                   (the pre-commit hook)

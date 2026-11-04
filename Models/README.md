@@ -16,8 +16,9 @@ holds and code that disagrees cannot both pass.
 1. Write the property as an invariant or a theorem, and name the Swift code it is about in the header.
 2. Break it on purpose (a one-character mutation) and watch the tool reject it, before trusting a pass.
 3. Pair it with a test that runs the code against the same oracle.
-4. For a type with an `await` or a lock, `modeler check Sources` finds the gap, and
+4. For a type with an `await` or a lock, `modeler check Sources` (part of quality) finds the gap, and
    `modeler tla Sources --type T --output Models/tla/generated` writes a module and configuration for TLC. The model is an
    over-approximation: a trace shows a schedule the code can follow, and a pass does not prove the code correct.
 
-TLC needs Java and the jar that `Scripts/tools.sh install tla2tools` fetches. Lean needs elan, installed separately (`lean-toolchain` pins 4.35.0).
+TLC runs through swift-ci (`.ci/swift-ci run tla-models`), which fetches its pinned jar; it needs Java. A `<Module>.buggy.cfg` beside a
+model is a control that must be refuted. Lean needs elan, installed separately (`lean-toolchain` pins 4.35.0).

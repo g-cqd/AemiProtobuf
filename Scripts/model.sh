@@ -1,14 +1,13 @@
 #!/bin/sh
-# The formal models: Lean 4 proofs, TLA+ specifications checked by TLC, and the modeler concurrency check.
+# The formal models: Lean 4 proofs and TLA+ specifications checked by TLC.
 #
-#   Scripts/model.sh          run all three
-#   Scripts/model.sh lean | tla | modeler
+#   Scripts/model.sh          run both
+#   Scripts/model.sh lean | tla
 #
-# Lean:    `lake build --wfail` in Models/lean, and no `sorry` anywhere: an unfinished proof is a failure, not a warning.
-# TLA+:    every Models/tla/*.cfg is run with TLC; the run must say "No error has been found".
-# modeler: `modeler check --strict Sources` reports an `await` or lock gap between a check and the write it guards. The wire core
-#          has no actor, lock or `await`, so it finds nothing today; the gate is there for the types roadmap 0003 and 0009 add.
-#          When it reports, `modeler tla --type T` writes a model for TLC (see Models/README.md).
+# Lean: `lake build --wfail` in Models/lean, and no `sorry` anywhere: an unfinished proof is a failure, not a warning.
+# TLA+: swift-ci's `tla-models` command (.ci/action.json): every Models/tla/*.cfg with the pinned TLC, each run in a state
+#       directory of its own; a `.buggy.cfg` must be refuted.
+# The modeler concurrency check is in quality (`.ci/swift-ci run quality`), with swift-ci's pinned modeler.
 # Exit: 0 all hold, 1 a model or proof failed, 2 a tool is missing.
 set -eu
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -28,34 +27,13 @@ run_lean() {
 }
 
 run_tla() {
-    command -v java >/dev/null 2>&1 || fail "java is needed to run TLC" 2
-    jar=$(Scripts/tools.sh path tla2tools) || exit 2
-    for cfg in Models/tla/*.cfg; do
-        module="${cfg%.cfg}"
-        printf '==> tlc: %s\n' "$(basename "$module")"
-        out=$(mktemp)
-        # `-metadir` keeps TLC's state files out of the repository.
-        if ! (cd Models/tla && java -XX:+UseParallelGC -cp "$jar" tlc2.TLC -workers auto \
-                -metadir "${TMPDIR:-/tmp}/aemiprotobuf-tlc" -config "$(basename "$cfg")" "$(basename "$module").tla") >"$out" 2>&1; then
-            cat "$out" >&2; rm -f "$out"; fail "TLC found a violation in $module"
-        fi
-        grep -q 'No error has been found' "$out" || { cat "$out" >&2; rm -f "$out"; fail "TLC did not finish cleanly on $module"; }
-        grep -E 'distinct states found|Finished in' "$out" | tail -2
-        rm -f "$out"
-    done
-}
-
-run_modeler() {
-    modeler=$(Scripts/tools.sh path modeler) || exit 2
-    printf '==> modeler check --strict Sources\n'
-    "$modeler" check --strict Sources || fail "modeler found a check-then-write gap"
+    "$ROOT/.ci/swift-ci" run tla-models || fail "TLC found a violation, or could not run"
 }
 
 case "${1:-all}" in
     lean) run_lean ;;
     tla) run_tla ;;
-    modeler) run_modeler ;;
-    all) run_lean; run_tla; run_modeler ;;
-    *) fail "usage: model.sh [lean|tla|modeler]" 2 ;;
+    all) run_lean; run_tla ;;
+    *) fail "usage: model.sh [lean|tla]" 2 ;;
 esac
 printf '[OK] models hold\n'

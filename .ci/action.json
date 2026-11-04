@@ -19,10 +19,23 @@
       "deadwood",
       "dolly",
       "arcleak",
-      "fcheck"
+      "fcheck",
+      "modeler"
     ]
   },
   "commands": [
+    {
+      "id": "tla-models",
+      "tla": {
+        "models": "Models/tla"
+      },
+      "os": "macOS",
+      "cadence": [
+        "nightly",
+        "dispatch"
+      ],
+      "title": "Verification · TLA+ Models"
+    },
     {
       "id": "coverage-floor",
       "run": "AEMIPROTOBUF_COVERAGE_REUSE=1 Scripts/quality.sh coverage",

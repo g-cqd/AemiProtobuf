@@ -23,7 +23,7 @@ env:
 jobs:
   ci:
     name: Checks
-    uses: g-cqd/swift-ci/.github/workflows/swift-ci.yml@27f96f088df78b2a7c988356107c34e25c3d59d2 # swift-ci 27f96f0
+    uses: g-cqd/swift-ci/.github/workflows/swift-ci.yml@e33bcf9ab71a43f4decd5a100c8a78b96c02a87a # swift-ci e33bcf9
     permissions:
       contents: write # reusable publish permission; no archives are configured for this library
 
@@ -71,36 +71,17 @@ jobs:
         run: PROTOBUF_SOURCE="$RUNNER_TEMP/protobuf" PROTOC="$RUNNER_TEMP/protobuf/build/protoc" Scripts/conformance.sh
 
   models:
-    name: Verification · Lean, TLA+ & Modeler
+    name: Verification · Lean
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: macos-26
     steps:
       - name: Setup · Check Out Sources
         uses: actions/checkout@v5
-      - name: Cache · Restore SwiftPM
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .build
-          key: spm-models-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-${{ github.sha }}
-          restore-keys: spm-models-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-
-      - name: Setup · Read Swift Version
-        id: toolchain
-        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
-      - name: Setup · Install Swift ${{ steps.toolchain.outputs.version }}
-        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
-        with:
-          swift-version: ${{ steps.toolchain.outputs.version }}
       - name: Install Lean
         run: |
           curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      - name: Cache tools
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Caches/aemiprotobuf/tools
-          key: tools-${{ runner.os }}-${{ hashFiles('Scripts/tools.lock') }}
-      - run: Scripts/tools.sh install tla2tools modeler
-      - run: Scripts/model.sh
+      - run: Scripts/model.sh lean
 
   bench:
     name: Performance · Allocation Thresholds
