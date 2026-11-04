@@ -1,18 +1,17 @@
 #!/bin/sh
 # Every quality gate of the repository, one command each. CI, the git hooks and a developer run the same ones.
 #
-#   Scripts/quality.sh format      swift-format lint --strict over Sources, Tests, Benchmarks and Package.swift
-#   Scripts/quality.sh lint        SwiftLint metrics (.swiftlint.yml), --strict
-#   Scripts/quality.sh analyzers   deadwood, dolly, arcleak, fcheck (--strict) and `modeler check`
+#   Scripts/quality.sh quality     the quality gate CI runs, from the swift-ci commit CI pins (.ci/swift-ci): swift-format,
+#                                  SwiftLint metrics and deadwood, dolly, arcleak, fcheck against .ci/baselines
 #   Scripts/quality.sh test        the suite in debug (bounds checks live), then in release (what ships)
 #   Scripts/quality.sh model       Lean proofs, TLA+ models under TLC, modeler (Scripts/model.sh)
 #   Scripts/quality.sh bench       allocation thresholds, then the benchmark report (release)
 #   Scripts/quality.sh mutation    swift-mutation-testing on the wire core, with the wire core's tests (about 10 minutes)
-#   Scripts/quality.sh fast        format, lint, analyzers   (the pre-commit hook)
+#   Scripts/quality.sh fast        quality                   (the pre-commit hook)
 #   Scripts/quality.sh docs        DocC for every public module, warnings as errors (Scripts/docs.sh)
 #   Scripts/quality.sh coverage    line coverage per module against Scripts/coverage.floor
 #   Scripts/quality.sh sanitizers  the suite under AddressSanitizer, then ThreadSanitizer
-#   Scripts/quality.sh all         fast, docs, test, model, bench  (the pre-push hook and CI; mutation runs on its own schedule)
+#   Scripts/quality.sh all         fast, docs, test, model, bench  (the pre-push hook; mutation runs on its own schedule)
 #
 # Exit: 0 every gate held, 1 a gate failed, 2 a tool is missing or could not run.
 set -eu
@@ -21,49 +20,11 @@ cd "$ROOT"
 
 fail() { printf '[FAIL] %s\n' "$1" >&2; exit "${2:-1}"; }
 
-# What the analyzers read: the whole package, because reachability and clone detection are whole-program. Benchmarks/ is left out:
-# the Benchmark plugin finds its entry point by name, which no syntax-level analyzer can see, so every benchmark looks dead.
-CORPUS="Sources Tests"
-SWIFT_FILES="Sources Tests Benchmarks Conformance Package.swift"
-
-# The toolchain's own swift-format: on PATH from a toolchain install, otherwise Xcode's, otherwise the `swift format` subcommand.
-swift_format() {
-    if command -v swift-format >/dev/null 2>&1; then
-        swift-format "$@"
-    elif found=$(xcrun --find swift-format 2>/dev/null); then
-        "$found" "$@"
-    else
-        swift format "$@"
-    fi
-}
-
-gate_format() {
-    printf '==> swift-format lint --strict\n'
-    # shellcheck disable=SC2086
-    swift_format lint --strict -r $SWIFT_FILES || fail "formatting: run  swift-format format -i -r $SWIFT_FILES"
-}
-
-gate_lint() {
-    command -v swiftlint >/dev/null 2>&1 || fail "swiftlint is not installed (brew install swiftlint)" 2
-    printf '==> swiftlint --strict\n'
-    swiftlint lint --strict --quiet --config .swiftlint.yml || fail "SwiftLint metrics"
-}
-
-gate_analyzers() {
-    Scripts/tools.sh install deadwood dolly arcleak fcheck modeler || exit 2
-    failed=0
-    for tool in deadwood dolly arcleak fcheck; do
-        bin=$(Scripts/tools.sh path "$tool") || exit 2
-        printf '==> %s\n' "$tool"
-        baseline=""
-        [ "$tool" = dolly ] && [ -f .dolly-baseline.json ] && baseline="--baseline .dolly-baseline.json"
-        # --strict: a warning fails, a note never does. Each tool reads its own .<tool>.json. Accept a finding where it is, with a
-        # directive and a reason (`// @dl:accept -- why`, `// @fc:accept rule -- why`), never silently.
-        # shellcheck disable=SC2086
-        "$bin" analyze --strict --no-cache --relative-to . $baseline $CORPUS || failed=1
-    done
-    [ "$failed" -eq 0 ] || fail "a static analyzer reported findings"
-    printf '[OK] analyzers clean\n'
+# Formatting, SwiftLint and the analyzers are swift-ci's quality check, with .ci/action.json's scope and the tool lock
+# CI uses, so a hook and CI cannot disagree about a finding.
+gate_quality() {
+    printf '==> .ci/swift-ci run quality\n'
+    .ci/swift-ci run quality || fail "quality (formatting, SwiftLint or an analyzer): see above"
 }
 
 gate_test() {
@@ -94,9 +55,7 @@ gate_mutation() {
 }
 
 case "${1:-}" in
-    format) gate_format ;;
-    lint) gate_lint ;;
-    analyzers) gate_analyzers ;;
+    quality | format | lint | analyzers) gate_quality ;;
     test) gate_test ;;
     model) Scripts/model.sh all ;;
     bench) gate_bench ;;
@@ -108,8 +67,8 @@ case "${1:-}" in
         # 512 KB; the limit it checks holds in the builds that ship (it passes in debug and release).
         swift test --sanitize=address --skip 'deeply nested input is refused at the limit' || fail "AddressSanitizer"
         swift test --sanitize=thread || fail "ThreadSanitizer" ;;
-    fast) gate_format; gate_lint; gate_analyzers ;;
-    all) gate_format; gate_lint; gate_analyzers; Scripts/docs.sh || fail "documentation"; gate_test; Scripts/model.sh all; gate_bench ;;
-    *) fail "usage: quality.sh format|lint|analyzers|docs|coverage|sanitizers|test|model|bench|mutation|fast|all" 2 ;;
+    fast) gate_quality ;;
+    all) gate_quality; Scripts/docs.sh || fail "documentation"; gate_test; Scripts/model.sh all; gate_bench ;;
+    *) fail "usage: quality.sh quality|docs|coverage|sanitizers|test|model|bench|mutation|fast|all" 2 ;;
 esac
 printf '[OK] %s\n' "$1"

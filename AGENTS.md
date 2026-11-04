@@ -6,7 +6,7 @@ principles and leads with the evidence rule. `docs/DESIGN.md` is the architectur
 ## Commands
 
 ```sh
-Scripts/quality.sh fast                                        # format, SwiftLint, deadwood, dolly, arcleak, fcheck, modeler (~10 s)
+Scripts/quality.sh fast                                        # .ci/swift-ci run quality: format, SwiftLint, deadwood, dolly, arcleak, fcheck
 Scripts/quality.sh test                                        # debug (bounds checks live), then release (what ships)
 Scripts/quality.sh model                                       # Lean proofs, TLA+ models under TLC, modeler (~20 s)
 Scripts/quality.sh bench                                       # allocation thresholds, then the benchmark report (release)

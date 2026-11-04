@@ -4,7 +4,7 @@
 #   Scripts/tools.sh install [tool...]   install the named tools, or all that this platform can run
 #   Scripts/tools.sh path <tool>         print the executable (or jar) of an installed tool; exit 2 if it is not installed
 #
-# Tools: deadwood dolly arcleak fcheck modeler tla2tools mutation
+# Tools: modeler tla2tools mutation (the analyzers are swift-ci's, from its tool lock)
 # Exit: 0 ok, 2 a tool could not be installed or is not available on this platform.
 set -eu
 
@@ -88,10 +88,6 @@ install_mutation() {
 
 install_one() {
     case "$1" in
-        deadwood) install_release deadwood DEADWOOD ;;
-        dolly) install_release dolly DOLLY ;;
-        arcleak) install_release arcleak ARCLEAK ;;
-        fcheck) install_release fcheck FCHECK ;;
         modeler) install_release modeler MODELER ;;
         tla2tools) install_tla ;;
         mutation) install_mutation ;;
@@ -101,10 +97,6 @@ install_one() {
 
 tool_path() {
     case "$1" in
-        deadwood) echo "$CACHE/deadwood-$DEADWOOD_VERSION/deadwood" ;;
-        dolly) echo "$CACHE/dolly-$DOLLY_VERSION/dolly" ;;
-        arcleak) echo "$CACHE/arcleak-$ARCLEAK_VERSION/arcleak" ;;
-        fcheck) echo "$CACHE/fcheck-$FCHECK_VERSION/fcheck" ;;
         modeler) echo "$CACHE/modeler-$MODELER_VERSION/modeler" ;;
         tla2tools) echo "$CACHE/tla2tools-$TLA2TOOLS_VERSION.jar" ;;
         mutation) echo "$CACHE/swift-mutation-testing-$MUTATION_VERSION/swift-mutation-testing" ;;
@@ -116,7 +108,7 @@ case "${1:-}" in
     install)
         shift
         if [ "$#" -eq 0 ]; then
-            set -- deadwood dolly arcleak fcheck modeler tla2tools
+            set -- modeler tla2tools
             [ "$PLATFORM" = macos_arm64 ] && set -- "$@" mutation
         fi
         for tool in "$@"; do install_one "$tool"; done

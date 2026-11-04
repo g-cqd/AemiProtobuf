@@ -2,24 +2,12 @@
 #
 # Release archives are pinned by version and SHA-256 per platform and checked before anything runs. Baseline fingerprints move
 # between tool versions, so an unpinned tool would turn a gate red with no change of ours. To upgrade: change the version and the
-# hashes together, run `Scripts/quality.sh analyzers`, and read the findings diff before committing.
+# hashes together, run `Scripts/model.sh modeler`, and read the findings diff. The analyzers are swift-ci's: its tool lock pins them.
 
 # github.com/g-cqd/<tool>/releases
-DEADWOOD_VERSION=0.13.0
-DEADWOOD_SHA_macos_arm64=93aaf921bda754c4e18790bd56d87ec222f592bea8ca6860d7f2d3a88f37cf19
-DEADWOOD_SHA_linux_x86_64=e964ef5e1cc397059692e680c9dd12bac1546e198f5873798f251fa30d42ac69
-DOLLY_VERSION=0.13.0
-DOLLY_SHA_macos_arm64=16ba43c5b58194d808fc0899853a515669484bd08fad31673719065988eb939e
-DOLLY_SHA_linux_x86_64=70943a58683186d067f68e6ebab5233227e739ff44b0b4bc5445e7519c1b7cbc
-ARCLEAK_VERSION=0.15.0
-ARCLEAK_SHA_macos_arm64=1b7186d90ff52a293a08ad8cbe73e939127c2e007fd5f68ba88b53329e36f724
-ARCLEAK_SHA_linux_x86_64=9680abe897d0c9266843aee1c1f6457607b44aeaa3c64fe704a9137e99419503
-FCHECK_VERSION=0.4.0
-FCHECK_SHA_macos_arm64=ce39ff6b8e111d1fca314e8ef1c75a32f8469729b5f054a6d0cd3a90864f2411
-FCHECK_SHA_linux_x86_64=17b400718f2efa6133aff065ba53916acbdd27f8a84ba265d659b00b53004008
-MODELER_VERSION=0.4.0
-MODELER_SHA_macos_arm64=f59cadb95be3773dfcd57999dfe5a14be7387e0b9192883b85bb9eea19e48574
-MODELER_SHA_linux_x86_64=458d66a4c2790cad5e1387baa0ee1bee35ac014213586c664a039ca38181c3c5
+MODELER_VERSION=0.4.5
+MODELER_SHA_macos_arm64=64f2f749fddb145e3e45360570e1a4f9a2922036dc9ad13b5a03a42c6f3a3481
+MODELER_SHA_linux_x86_64=7bc5aafe72e21d37f9cb2acd830c53877b0146d3c4cc3ae1e20f0fcc3dc8588d
 
 # github.com/tlaplus/tlaplus/releases: the TLC model checker.
 TLA2TOOLS_VERSION=1.7.4
