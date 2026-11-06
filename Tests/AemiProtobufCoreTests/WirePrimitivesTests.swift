@@ -116,7 +116,7 @@ struct WirePrimitivesTests {
     }
 
     @Test func `random scalars written then read back are identical`() throws {
-        var rng = SplitMix64(state: 0xA3E1)
+        var rng = SplitMix64(seed: 0xA3E1)
         let values = (0 ..< 500).map { _ in rng.next() >> UInt64.random(in: 0 ..< 64, using: &rng) }
         let bytes = try written { w in
             for v in values {

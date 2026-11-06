@@ -1,3 +1,4 @@
+import AemiKernel
 import Foundation
 import Testing
 
@@ -54,7 +55,7 @@ struct WireVerdictTests {
     }
 
     @Test func `random buffers never trap and always end in a value or a wire error`() {
-        var rng = SplitMix64(state: 0x5EED)
+        var rng = SplitMix64(seed: 0x5EED)
         for _ in 0 ..< 5_000 {
             let length = Int(rng.next() % 64)
             let bytes = (0 ..< length).map { _ in UInt8(truncatingIfNeeded: rng.next()) }

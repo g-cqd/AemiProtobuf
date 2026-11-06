@@ -142,7 +142,7 @@ let package = Package(
         // The wire core's behaviour. `swift-mutation-testing` runs this target only (.swift-mutation-testing.yml).
         .testTarget(
             name: "AemiProtobufCoreTests",
-            dependencies: ["AemiProtobufCore"],
+            dependencies: ["AemiProtobufCore", .product(name: "AemiKernel", package: "aemi")],
             resources: [.copy("Resources")],
             swiftSettings: strictSettings
         ),
