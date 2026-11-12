@@ -49,7 +49,7 @@ let package = Package(
             revision: "0bae2edb1a89bd3d931fb3122c2184cc5c368834"
         ),
         // The JSON parser under AemiProtobufJSON. This revision pins the same aemi as above.
-        .package(url: "https://github.com/g-cqd/AemiJSON.git", revision: "5aa84e0eca14c344f4fc0b313dbb907dc1446b9e"),
+        .package(url: "https://github.com/g-cqd/AemiJSON.git", revision: "806b481d8cc7e21f07d45537b625c5ac9abfc87e"),
         // For `@ProtoMessage` only. The same wide range as AemiJSON, so a consumer of both resolves one swift-syntax.
         .package(url: "https://github.com/swiftlang/swift-syntax.git", "603.0.0" ..< "605.0.0")
     ],
