@@ -31,9 +31,9 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/Aemi-Studio/aemi.git",
-            revision: "429602d69219a9063c443b9dd6bfcc9b75ae3d33"
+            revision: "32f1d61e0ee2fe19af99c1c1a040f1fbdae91d4a"
         ),
-        .package(url: "https://github.com/g-cqd/AemiJSON.git", revision: "33ee6739c071fb1e647fa2fd8c2587534cb0f00c"),
+        .package(url: "https://github.com/g-cqd/AemiJSON.git", revision: "fdcf306b1ffbbd29161df787ae2ea97e56718d2c"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", "603.0.0" ..< "605.0.0")
     ],
     targets: [
