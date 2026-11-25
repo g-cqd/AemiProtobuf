@@ -23,7 +23,7 @@ env:
 jobs:
   ci:
     name: Checks
-    uses: g-cqd/swift-ci/.github/workflows/swift-ci.yml@f5edf0095e3033975b61e5c328cb7464ce1bb7e3 # swift-ci f5edf00
+    uses: g-cqd/swift-ci/.github/workflows/swift-ci.yml@2f915b39ab7ff1438e2cd6f998e517eabc875053 # swift-ci 2f915b3
     permissions:
       contents: write # reusable publish permission; no archives are configured for this library
 
@@ -100,7 +100,7 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Setup · Check Out Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Cache · Restore SwiftPM
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -111,7 +111,7 @@ jobs:
         id: toolchain
         run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
       - name: Setup · Install Swift ${{ steps.toolchain.outputs.version }}
-        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
+        uses: g-cqd/swift-ci/setup-swift@2f915b39ab7ff1438e2cd6f998e517eabc875053 # swift-ci 2f915b3
         with:
           swift-version: ${{ steps.toolchain.outputs.version }}
       - run: Scripts/quality.sh mutation
