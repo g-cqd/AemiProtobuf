@@ -1,11 +1,6 @@
 # AemiProtobuf
 
-Protocol Buffers for Swift 6, for high-performance API communication. The shape follows AemiJSON: a Foundation-free engine, a
-Codable surface, a macro fast path, and tools for definition and checking.
-
-**Status: the wire core, the `@ProtoMessage` macro, the coders, descriptors, a `.proto` subset parser and wire validation are built;
-the rest is planned.** See `docs/DESIGN.md` for the plan, `docs/roadmap/` for the order, and
-`docs/research/2026-10-25-aemijson-vs-aemiprotobuf.md` for measurements against AemiJSON and swift-protobuf.
+Protocol Buffers for Swift 6: a Foundation-free wire reader and writer, a `@ProtoMessage` macro fast path, Codable coders, `.proto` schema descriptors, ProtoJSON, and code-generation/validation tools.
 
 ```swift
 import AemiProtobuf
@@ -22,7 +17,7 @@ let bytes = try ProtobufEncoder().encodeToBytes(User(id: 150, name: "ann"))
 let user = try ProtobufDecoder().decode(User.self, fromBytes: bytes)
 ```
 
-The wire core underneath, for code that wants no coder:
+Low-level wire access without Codable:
 
 ```swift
 import AemiProtobufCore
@@ -32,19 +27,39 @@ writer.appendTag(1, .varint)
 writer.appendVarint(150)
 writer.appendTag(2, .lengthDelimited)
 writer.appendString("testing")
-// writer.bytes == 08 96 01 12 07 74 65 73 74 69 6e 67
-
-try WireReader.withReader(over: writer.bytes) { reader throws(WireError) in
-    while let tag = try reader.nextTag() {
-        switch (tag.fieldNumber, tag.wireType) {
-        case (1, .varint): print(try reader.readVarint())
-        case (2, .lengthDelimited): print(try reader.readString())
-        default: try reader.skipField(tag)  // unknown fields are skipped, groups included
-        }
-    }
-}
 ```
 
-Requirements: Swift 6.4 toolchain; macOS 15, iOS 18, tvOS 18, watchOS 11, visionOS 2.
+## Requirements
 
-MIT.
+- Swift 6.4+ (Swift 6 language mode)
+- macOS 15+, iOS 18+, tvOS 18+, watchOS 11+, visionOS 2+, or Linux
+
+## Installation
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/g-cqd/AemiProtobuf.git", branch: "main")
+]
+```
+
+## Products
+
+| Product | Description |
+| --- | --- |
+| `AemiProtobufCore` | Bounds-checked wire reader/writer, ZigZag, varints, zero Foundation dependency |
+| `AemiProtobuf` | `@ProtoMessage` / `@ProtoField` macros, `ProtobufEncoder`, `ProtobufDecoder` |
+| `AemiProtobufSchema` | `.proto` parser, descriptors, wire validation |
+| `AemiProtobufJSON` | Canonical ProtoJSON mapping built on `AemiJSONCore` |
+| `AemiProtobufGenerator` | Swift code generator from `.proto` descriptors |
+| `protoc-gen-aemi` | `protoc` plugin executable |
+| `aemi-proto-check` / `ProtobufCheck` | Wire/schema verification CLI and SwiftPM plugin |
+
+## Documentation
+
+- [Architecture Decisions](docs/adr/)
+- [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
+
+## License
+
+[MIT](LICENSE)
