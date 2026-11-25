@@ -23,41 +23,35 @@ env:
 jobs:
   ci:
     name: Checks
-    uses: g-cqd/swift-ci/.github/workflows/swift-ci.yml@4506ce08ced6895bbc3982efec970e3955fb348a # swift-ci 4506ce0
+    uses: g-cqd/swift-ci/.github/workflows/swift-ci.yml@84f1819c02808204384e4349d755745d76352b87 # swift-ci 84f1819
     permissions:
       contents: write # reusable publish permission; no archives are configured for this library
 
   conformance:
     name: Conformance · Protobuf ${{ vars.PROTOBUF_VERSION || '36.2' }}
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: macos-26
+    runs-on: ubuntu-latest
+    container: swift:6.4.1-noble
     env:
       PROTOBUF_VERSION: ${{ vars.PROTOBUF_VERSION || '36.2' }}
     steps:
       - name: Setup · Check Out Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Cache · Restore SwiftPM
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .build
           key: spm-conformance-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-${{ github.sha }}
           restore-keys: spm-conformance-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-
-      - name: Setup · Read Swift Version
-        id: toolchain
-        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
-      - name: Setup · Install Swift ${{ steps.toolchain.outputs.version }}
-        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
-        with:
-          swift-version: ${{ steps.toolchain.outputs.version }}
       - name: Build dependencies
         id: deps
         run: |
-          brew install abseil ninja
-          echo "abseil=$(brew list --versions abseil | tr ' ' '-')" >> "$GITHUB_OUTPUT"
+          apt-get update -qq && apt-get install -y -qq cmake ninja-build libabsl-dev
+          echo "abseil=$(dpkg-query -W -f='${Version}' libabsl-dev)" >> "$GITHUB_OUTPUT"
       - name: Protobuf sources
         run: git clone --quiet --depth 1 --branch "v$PROTOBUF_VERSION" https://github.com/protocolbuffers/protobuf.git "$RUNNER_TEMP/protobuf"
       - name: Cache the runner build
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/protobuf/build
           key: protobuf-${{ env.PROTOBUF_VERSION }}-${{ runner.os }}-${{ steps.deps.outputs.abseil }}
@@ -73,10 +67,10 @@ jobs:
   models:
     name: Verification · Lean
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: macos-26
+    runs-on: ubuntu-latest
     steps:
       - name: Setup · Check Out Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Lean
         run: |
           curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
@@ -86,23 +80,17 @@ jobs:
   bench:
     name: Performance · Allocation Thresholds
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: macos-26
+    runs-on: ubuntu-latest
+    container: swift:6.4.1-noble
     steps:
       - name: Setup · Check Out Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Cache · Restore SwiftPM
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .build
           key: spm-bench-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-${{ github.sha }}
           restore-keys: spm-bench-${{ runner.os }}-6.4.1-${{ hashFiles('Package.swift', 'Package.resolved') }}-
-      - name: Setup · Read Swift Version
-        id: toolchain
-        run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
-      - name: Setup · Install Swift ${{ steps.toolchain.outputs.version }}
-        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3.0.0-beta.1
-        with:
-          swift-version: ${{ steps.toolchain.outputs.version }}
       - run: Scripts/quality.sh bench
 
   mutation:
