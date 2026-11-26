@@ -23,7 +23,7 @@ env:
 jobs:
   ci:
     name: Checks
-    uses: g-cqd/swift-ci/.github/workflows/swift-ci.yml@077676883cebb19f6febec70d980be464a3c9d18 # swift-ci 0776768
+    uses: g-cqd/swift-ci/.github/workflows/swift-ci.yml@fda8ff085332c1883685384f975dff7227b1f7e5 # swift-ci fda8ff0
     permissions:
       contents: write # reusable publish permission; no archives are configured for this library
 
@@ -111,7 +111,7 @@ jobs:
         id: toolchain
         run: echo "version=$(cat .swift-version)" >> "$GITHUB_OUTPUT"
       - name: Setup · Install Swift ${{ steps.toolchain.outputs.version }}
-        uses: g-cqd/swift-ci/setup-swift@077676883cebb19f6febec70d980be464a3c9d18 # swift-ci 0776768
+        uses: g-cqd/swift-ci/setup-swift@fda8ff085332c1883685384f975dff7227b1f7e5 # swift-ci fda8ff0
         with:
           swift-version: ${{ steps.toolchain.outputs.version }}
       - run: Scripts/quality.sh mutation
